@@ -32,7 +32,8 @@ def consolidate(
     # Save model.
     rag_config = RagConfig.from_pretrained(config_name_or_path)
     gen_config = AutoConfig.from_pretrained(generator_name_or_path)
-    question_encoder_config = AutoConfig.from_pretrained(question_encoder_name_or_path)
+    question_encoder_config = AutoConfig.from_pretrained(
+        question_encoder_name_or_path)
 
     rag_config.generator = gen_config
     rag_config.question_encoder = question_encoder_config
@@ -46,10 +47,13 @@ def consolidate(
     model_class.from_pretrained(dest_dir)
 
     # Save tokenizers.
-    gen_tokenizer = AutoTokenizer.from_pretrained(generator_tokenizer_name_or_path)
+    gen_tokenizer = AutoTokenizer.from_pretrained(
+        generator_tokenizer_name_or_path)
     gen_tokenizer.save_pretrained(dest_dir / "generator_tokenizer/")
-    question_encoder_tokenizer = AutoTokenizer.from_pretrained(question_encoder_tokenizer_name_or_path)
-    question_encoder_tokenizer.save_pretrained(dest_dir / "question_encoder_tokenizer/")
+    question_encoder_tokenizer = AutoTokenizer.from_pretrained(
+        question_encoder_tokenizer_name_or_path)
+    question_encoder_tokenizer.save_pretrained(
+        dest_dir / "question_encoder_tokenizer/")
 
 
 if __name__ == "__main__":
@@ -61,8 +65,10 @@ if __name__ == "__main__":
         type=str,
         help="RAG model type: rag_sequence, rag_token",
     )
-    parser.add_argument("--dest", type=str, required=True, help="Path to the output checkpoint directory.")
-    parser.add_argument("--generator_name_or_path", type=str, required=True, help="Generator model identifier")
+    parser.add_argument("--dest", type=str, required=True,
+                        help="Path to the output checkpoint directory.")
+    parser.add_argument("--generator_name_or_path", type=str,
+                        required=True, help="Generator model identifier")
     parser.add_argument(
         "--question_encoder_name_or_path", type=str, required=True, help="Question encoder model identifier"
     )

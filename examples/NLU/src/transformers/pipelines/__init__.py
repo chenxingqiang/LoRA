@@ -231,10 +231,12 @@ def check_task(task: str) -> Tuple[Dict, Any]:
         if len(tokens) == 4 and tokens[0] == "translation" and tokens[2] == "to":
             targeted_task = SUPPORTED_TASKS["translation"]
             return targeted_task, (tokens[1], tokens[3])
-        raise KeyError("Invalid translation task {}, use 'translation_XX_to_YY' format".format(task))
+        raise KeyError(
+            "Invalid translation task {}, use 'translation_XX_to_YY' format".format(task))
 
     raise KeyError(
-        "Unknown task {}, available tasks are {}".format(task, list(SUPPORTED_TASKS.keys()) + ["translation_XX_to_YY"])
+        "Unknown task {}, available tasks are {}".format(
+            task, list(SUPPORTED_TASKS.keys()) + ["translation_XX_to_YY"])
     )
 
 
@@ -374,7 +376,8 @@ def pipeline(
                 tokenizer[0], use_fast=use_fast, revision=revision, **tokenizer[1]
             )
         else:
-            tokenizer = AutoTokenizer.from_pretrained(tokenizer, revision=revision, use_fast=use_fast)
+            tokenizer = AutoTokenizer.from_pretrained(
+                tokenizer, revision=revision, use_fast=use_fast)
 
     # Instantiate config if needed
     if isinstance(config, str):
@@ -405,7 +408,8 @@ def pipeline(
                 f"Pipeline using {framework} framework, but this framework is not supported by this pipeline."
             )
 
-        model = model_class.from_pretrained(model, config=config, revision=revision, **model_kwargs)
+        model = model_class.from_pretrained(
+            model, config=config, revision=revision, **model_kwargs)
         if task == "translation" and model.config.task_specific_params:
             for key in model.config.task_specific_params:
                 if key.startswith("translation"):

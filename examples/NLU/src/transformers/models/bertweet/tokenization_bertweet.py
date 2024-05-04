@@ -273,7 +273,8 @@ class BertweetTokenizer(PreTrainedTokenizer):
             return token
 
         while True:
-            bigram = min(pairs, key=lambda pair: self.bpe_ranks.get(pair, float("inf")))
+            bigram = min(pairs, key=lambda pair: self.bpe_ranks.get(
+                pair, float("inf")))
             if bigram not in self.bpe_ranks:
                 break
             first, second = bigram
@@ -385,13 +386,16 @@ class BertweetTokenizer(PreTrainedTokenizer):
 
     def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
         if not os.path.isdir(save_directory):
-            logger.error("Vocabulary path ({}) should be a directory".format(save_directory))
+            logger.error(
+                "Vocabulary path ({}) should be a directory".format(save_directory))
             return
         out_vocab_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["vocab_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["vocab_file"]
         )
         out_merge_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["merges_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["merges_file"]
         )
 
         if os.path.abspath(self.vocab_file) != os.path.abspath(out_vocab_file):
@@ -419,7 +423,8 @@ class BertweetTokenizer(PreTrainedTokenizer):
             except FileNotFoundError as fnfe:
                 raise fnfe
             except UnicodeError:
-                raise Exception("Incorrect encoding detected in {}, please " "rebuild the dataset".format(f))
+                raise Exception(
+                    "Incorrect encoding detected in {}, please " "rebuild the dataset".format(f))
             return
 
         lines = f.readlines()
@@ -427,7 +432,8 @@ class BertweetTokenizer(PreTrainedTokenizer):
             line = lineTmp.strip()
             idx = line.rfind(" ")
             if idx == -1:
-                raise ValueError("Incorrect dictionary format, expected '<token> <cnt>'")
+                raise ValueError(
+                    "Incorrect dictionary format, expected '<token> <cnt>'")
             word = line[:idx]
             self.encoder[word] = len(self.encoder)
 
@@ -592,7 +598,8 @@ REGEXPS = (
 ######################################################################
 # This is the core tokenizing regex:
 
-WORD_RE = regex.compile(r"""(%s)""" % "|".join(REGEXPS), regex.VERBOSE | regex.I | regex.UNICODE)
+WORD_RE = regex.compile(r"""(%s)""" % "|".join(
+    REGEXPS), regex.VERBOSE | regex.I | regex.UNICODE)
 
 # WORD_RE performs poorly on these patterns:
 HANG_RE = regex.compile(r"([^a-zA-Z0-9])\1{3,}")
@@ -720,7 +727,8 @@ class TweetTokenizer:
         words = WORD_RE.findall(safe_text)
         # Possibly alter the case, but avoid changing emoticons like :D into :d:
         if not self.preserve_case:
-            words = list(map((lambda x: x if EMOTICON_RE.search(x) else x.lower()), words))
+            words = list(
+                map((lambda x: x if EMOTICON_RE.search(x) else x.lower()), words))
         return words
 
 

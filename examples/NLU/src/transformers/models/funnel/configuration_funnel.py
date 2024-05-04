@@ -133,7 +133,8 @@ class FunnelConfig(PretrainedConfig):
 
         self.vocab_size = vocab_size
         self.block_sizes = block_sizes
-        self.block_repeats = [1] * len(block_sizes) if block_repeats is None else block_repeats
+        self.block_repeats = [
+            1] * len(block_sizes) if block_repeats is None else block_repeats
         assert len(block_sizes) == len(
             self.block_repeats
         ), "`block_sizes` and `block_repeats` should have the same length."

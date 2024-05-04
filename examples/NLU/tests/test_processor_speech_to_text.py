@@ -27,7 +27,8 @@ from transformers.testing_utils import require_sentencepiece, require_torch, req
 from .test_feature_extraction_speech_to_text import floats_list
 
 
-SAMPLE_SP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures/test_sentencepiece.model")
+SAMPLE_SP = os.path.join(os.path.dirname(os.path.abspath(
+    __file__)), "fixtures/test_sentencepiece.model")
 
 
 @require_torch
@@ -37,7 +38,8 @@ class Speech2TextProcessorTest(unittest.TestCase):
     def setUp(self):
         self.tmpdirname = tempfile.mkdtemp()
 
-        vocab = ["<s>", "<pad>", "</s>", "<unk>", "▁This", "▁is", "▁a", "▁t", "est"]
+        vocab = ["<s>", "<pad>", "</s>", "<unk>",
+                 "▁This", "▁is", "▁a", "▁t", "est"]
         vocab_tokens = dict(zip(vocab, range(len(vocab))))
         save_dir = Path(self.tmpdirname)
         save_json(vocab_tokens, save_dir / VOCAB_FILES_NAMES["vocab_file"])
@@ -70,16 +72,20 @@ class Speech2TextProcessorTest(unittest.TestCase):
         tokenizer = self.get_tokenizer()
         feature_extractor = self.get_feature_extractor()
 
-        processor = Speech2TextProcessor(tokenizer=tokenizer, feature_extractor=feature_extractor)
+        processor = Speech2TextProcessor(
+            tokenizer=tokenizer, feature_extractor=feature_extractor)
 
         processor.save_pretrained(self.tmpdirname)
         processor = Speech2TextProcessor.from_pretrained(self.tmpdirname)
 
-        self.assertEqual(processor.tokenizer.get_vocab(), tokenizer.get_vocab())
+        self.assertEqual(processor.tokenizer.get_vocab(),
+                         tokenizer.get_vocab())
         self.assertIsInstance(processor.tokenizer, Speech2TextTokenizer)
 
-        self.assertEqual(processor.feature_extractor.to_json_string(), feature_extractor.to_json_string())
-        self.assertIsInstance(processor.feature_extractor, Speech2TextFeatureExtractor)
+        self.assertEqual(processor.feature_extractor.to_json_string(
+        ), feature_extractor.to_json_string())
+        self.assertIsInstance(processor.feature_extractor,
+                              Speech2TextFeatureExtractor)
 
     def test_save_load_pretrained_additional_features(self):
         processor = Speech2TextProcessor(
@@ -87,24 +93,30 @@ class Speech2TextProcessorTest(unittest.TestCase):
         )
         processor.save_pretrained(self.tmpdirname)
 
-        tokenizer_add_kwargs = self.get_tokenizer(bos_token="(BOS)", eos_token="(EOS)")
-        feature_extractor_add_kwargs = self.get_feature_extractor(do_normalize=False, padding_value=1.0)
+        tokenizer_add_kwargs = self.get_tokenizer(
+            bos_token="(BOS)", eos_token="(EOS)")
+        feature_extractor_add_kwargs = self.get_feature_extractor(
+            do_normalize=False, padding_value=1.0)
 
         processor = Speech2TextProcessor.from_pretrained(
             self.tmpdirname, bos_token="(BOS)", eos_token="(EOS)", do_normalize=False, padding_value=1.0
         )
 
-        self.assertEqual(processor.tokenizer.get_vocab(), tokenizer_add_kwargs.get_vocab())
+        self.assertEqual(processor.tokenizer.get_vocab(),
+                         tokenizer_add_kwargs.get_vocab())
         self.assertIsInstance(processor.tokenizer, Speech2TextTokenizer)
 
-        self.assertEqual(processor.feature_extractor.to_json_string(), feature_extractor_add_kwargs.to_json_string())
-        self.assertIsInstance(processor.feature_extractor, Speech2TextFeatureExtractor)
+        self.assertEqual(processor.feature_extractor.to_json_string(
+        ), feature_extractor_add_kwargs.to_json_string())
+        self.assertIsInstance(processor.feature_extractor,
+                              Speech2TextFeatureExtractor)
 
     def test_feature_extractor(self):
         feature_extractor = self.get_feature_extractor()
         tokenizer = self.get_tokenizer()
 
-        processor = Speech2TextProcessor(tokenizer=tokenizer, feature_extractor=feature_extractor)
+        processor = Speech2TextProcessor(
+            tokenizer=tokenizer, feature_extractor=feature_extractor)
 
         raw_speech = floats_list((3, 1000))
 
@@ -112,13 +124,15 @@ class Speech2TextProcessorTest(unittest.TestCase):
         input_processor = processor(raw_speech, return_tensors="np")
 
         for key in input_feat_extract.keys():
-            self.assertAlmostEqual(input_feat_extract[key].sum(), input_processor[key].sum(), delta=1e-2)
+            self.assertAlmostEqual(input_feat_extract[key].sum(
+            ), input_processor[key].sum(), delta=1e-2)
 
     def test_tokenizer(self):
         feature_extractor = self.get_feature_extractor()
         tokenizer = self.get_tokenizer()
 
-        processor = Speech2TextProcessor(tokenizer=tokenizer, feature_extractor=feature_extractor)
+        processor = Speech2TextProcessor(
+            tokenizer=tokenizer, feature_extractor=feature_extractor)
 
         input_str = "This is a test string"
 
@@ -134,7 +148,8 @@ class Speech2TextProcessorTest(unittest.TestCase):
         feature_extractor = self.get_feature_extractor()
         tokenizer = self.get_tokenizer()
 
-        processor = Speech2TextProcessor(tokenizer=tokenizer, feature_extractor=feature_extractor)
+        processor = Speech2TextProcessor(
+            tokenizer=tokenizer, feature_extractor=feature_extractor)
 
         predicted_ids = [[1, 4, 5, 8, 1, 0, 8], [3, 4, 3, 1, 1, 8, 9]]
 

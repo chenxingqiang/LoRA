@@ -24,7 +24,8 @@ from .test_pipelines_common import CustomInputPipelineCommonMixin
 if is_torch_available():
     import numpy as np
 
-VALID_INPUTS = ["A simple string", ["list of strings", "A simple string that is quite a bit longer"]]
+VALID_INPUTS = ["A simple string", ["list of strings",
+                                    "A simple string that is quite a bit longer"]]
 
 
 class NerPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
@@ -206,17 +207,21 @@ class NerPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
                     "start": 23,
                     "end": 37,
                 },
-                {"entity_group": "ORG", "score": 0.9989739060401917, "word": "Farc", "start": 39, "end": 43},
+                {"entity_group": "ORG", "score": 0.9989739060401917,
+                    "word": "Farc", "start": 39, "end": 43},
             ],
             [
-                {"entity_group": "PER", "score": 0.9968166351318359, "word": "Enzo", "start": 0, "end": 4},
-                {"entity_group": "ORG", "score": 0.9986497163772583, "word": "UN", "start": 11, "end": 13},
+                {"entity_group": "PER", "score": 0.9968166351318359,
+                    "word": "Enzo", "start": 0, "end": 4},
+                {"entity_group": "ORG", "score": 0.9986497163772583,
+                    "word": "UN", "start": 11, "end": 13},
             ],
         ]
 
         expected_grouped_ner_results_w_subword = [
             [
-                {"entity_group": "PER", "score": 0.9994944930076599, "word": "Cons", "start": 0, "end": 4},
+                {"entity_group": "PER", "score": 0.9994944930076599,
+                    "word": "Cons", "start": 0, "end": 4},
                 {
                     "entity_group": "PER",
                     "score": 0.9663328925768534,
@@ -231,11 +236,14 @@ class NerPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
                     "start": 23,
                     "end": 37,
                 },
-                {"entity_group": "ORG", "score": 0.8589080572128296, "word": "Farc", "start": 39, "end": 43},
+                {"entity_group": "ORG", "score": 0.8589080572128296,
+                    "word": "Farc", "start": 39, "end": 43},
             ],
             [
-                {"entity_group": "PER", "score": 0.9962901175022125, "word": "Enzo", "start": 0, "end": 4},
-                {"entity_group": "ORG", "score": 0.9986497163772583, "word": "UN", "start": 11, "end": 13},
+                {"entity_group": "PER", "score": 0.9962901175022125,
+                    "word": "Enzo", "start": 0, "end": 4},
+                {"entity_group": "ORG", "score": 0.9986497163772583,
+                    "word": "UN", "start": 11, "end": 13},
             ],
         ]
 
@@ -265,12 +273,14 @@ class NerPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
         if nlp.grouped_entities:
             if nlp.ignore_subwords:
                 for ungrouped_input, grouped_result in zip(ungrouped_ner_inputs, expected_grouped_ner_results):
-                    self.assertEqual(nlp.group_entities(ungrouped_input), grouped_result)
+                    self.assertEqual(nlp.group_entities(
+                        ungrouped_input), grouped_result)
             else:
                 for ungrouped_input, grouped_result in zip(
                     ungrouped_ner_inputs, expected_grouped_ner_results_w_subword
                 ):
-                    self.assertEqual(nlp.group_entities(ungrouped_input), grouped_result)
+                    self.assertEqual(nlp.group_entities(
+                        ungrouped_input), grouped_result)
 
     @require_tf
     def test_tf_only(self):
@@ -282,14 +292,17 @@ class NerPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
     @require_tf
     def test_tf_defaults(self):
         for model_name in self.small_models:
-            tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
-            nlp = pipeline(task="ner", model=model_name, tokenizer=tokenizer, framework="tf")
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_name, use_fast=True)
+            nlp = pipeline(task="ner", model=model_name,
+                           tokenizer=tokenizer, framework="tf")
         self._test_pipeline(nlp)
 
     @require_tf
     def test_tf_small_ignore_subwords_available_for_fast_tokenizers(self):
         for model_name in self.small_models:
-            tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_name, use_fast=True)
             nlp = pipeline(
                 task="ner",
                 model=model_name,
@@ -301,7 +314,8 @@ class NerPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
             self._test_pipeline(nlp)
 
         for model_name in self.small_models:
-            tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_name, use_fast=True)
             nlp = pipeline(
                 task="ner",
                 model=model_name,
@@ -315,10 +329,12 @@ class NerPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
     @require_torch
     def test_pt_ignore_subwords_slow_tokenizer_raises(self):
         for model_name in self.small_models:
-            tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_name, use_fast=False)
 
             with self.assertRaises(ValueError):
-                pipeline(task="ner", model=model_name, tokenizer=tokenizer, ignore_subwords=True, use_fast=False)
+                pipeline(task="ner", model=model_name, tokenizer=tokenizer,
+                         ignore_subwords=True, use_fast=False)
 
     @require_torch
     def test_pt_defaults_slow_tokenizer(self):
@@ -336,7 +352,8 @@ class NerPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
     @slow
     @require_torch
     def test_simple(self):
-        nlp = pipeline(task="ner", model="dslim/bert-base-NER", grouped_entities=True)
+        nlp = pipeline(task="ner", model="dslim/bert-base-NER",
+                       grouped_entities=True)
         sentence = "Hello Sarah Jessica Parker who Jessica lives in New York"
         sentence2 = "This is a simple test"
         output = nlp(sentence)
@@ -365,8 +382,10 @@ class NerPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
                     "start": 6,
                     "end": 26,
                 },
-                {"entity_group": "PER", "score": 0.977, "word": "Jessica", "start": 31, "end": 38},
-                {"entity_group": "LOC", "score": 0.999, "word": "New York", "start": 48, "end": 56},
+                {"entity_group": "PER", "score": 0.977,
+                    "word": "Jessica", "start": 31, "end": 38},
+                {"entity_group": "LOC", "score": 0.999,
+                    "word": "New York", "start": 48, "end": 56},
             ],
         )
 
@@ -377,9 +396,12 @@ class NerPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
             output_,
             [
                 [
-                    {"entity_group": "PER", "score": 0.996, "word": "Sarah Jessica Parker", "start": 6, "end": 26},
-                    {"entity_group": "PER", "score": 0.977, "word": "Jessica", "start": 31, "end": 38},
-                    {"entity_group": "LOC", "score": 0.999, "word": "New York", "start": 48, "end": 56},
+                    {"entity_group": "PER", "score": 0.996,
+                        "word": "Sarah Jessica Parker", "start": 6, "end": 26},
+                    {"entity_group": "PER", "score": 0.977,
+                        "word": "Jessica", "start": 31, "end": 38},
+                    {"entity_group": "LOC", "score": 0.999,
+                        "word": "New York", "start": 48, "end": 56},
                 ],
                 [],
             ],
@@ -388,14 +410,16 @@ class NerPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
     @require_torch
     def test_pt_small_ignore_subwords_available_for_fast_tokenizers(self):
         for model_name in self.small_models:
-            tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_name, use_fast=True)
             nlp = pipeline(
                 task="ner", model=model_name, tokenizer=tokenizer, grouped_entities=True, ignore_subwords=True
             )
             self._test_pipeline(nlp)
 
         for model_name in self.small_models:
-            tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_name, use_fast=True)
             nlp = pipeline(
                 task="ner", model=model_name, tokenizer=tokenizer, grouped_entities=True, ignore_subwords=False
             )
@@ -417,12 +441,14 @@ class TokenClassificationArgumentHandlerTestCase(unittest.TestCase):
         self.assertEqual(inputs, [string, string])
         self.assertEqual(offset_mapping, None)
 
-        inputs, offset_mapping = self.args_parser(string, offset_mapping=[(0, 1), (1, 2)])
+        inputs, offset_mapping = self.args_parser(
+            string, offset_mapping=[(0, 1), (1, 2)])
         self.assertEqual(inputs, [string])
         self.assertEqual(offset_mapping, [[(0, 1), (1, 2)]])
 
         inputs, offset_mapping = self.args_parser(
-            [string, string], offset_mapping=[[(0, 1), (1, 2)], [(0, 2), (2, 3)]]
+            [string, string], offset_mapping=[
+                [(0, 1), (1, 2)], [(0, 2), (2, 3)]]
         )
         self.assertEqual(inputs, [string, string])
         self.assertEqual(offset_mapping, [[(0, 1), (1, 2)], [(0, 2), (2, 3)]])
@@ -440,7 +466,8 @@ class TokenClassificationArgumentHandlerTestCase(unittest.TestCase):
 
         # 2 sentences, 1 offset_mapping, input_list
         with self.assertRaises(ValueError):
-            self.args_parser([string, string], offset_mapping=[[(0, 1), (1, 2)]])
+            self.args_parser([string, string], offset_mapping=[
+                             [(0, 1), (1, 2)]])
 
         # 2 sentences, 1 offset_mapping, input_list
         with self.assertRaises(ValueError):
@@ -448,7 +475,8 @@ class TokenClassificationArgumentHandlerTestCase(unittest.TestCase):
 
         # 1 sentences, 2 offset_mapping
         with self.assertRaises(ValueError):
-            self.args_parser(string, offset_mapping=[[(0, 1), (1, 2)], [(0, 2), (2, 3)]])
+            self.args_parser(string, offset_mapping=[
+                             [(0, 1), (1, 2)], [(0, 2), (2, 3)]])
 
         # 0 sentences, 1 offset_mapping
         with self.assertRaises(TypeError):

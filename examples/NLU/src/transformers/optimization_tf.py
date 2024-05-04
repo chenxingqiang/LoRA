@@ -61,7 +61,8 @@ class WarmUp(tf.keras.optimizers.schedules.LearningRateSchedule):
             global_step_float = tf.cast(step, tf.float32)
             warmup_steps_float = tf.cast(self.warmup_steps, tf.float32)
             warmup_percent_done = global_step_float / warmup_steps_float
-            warmup_learning_rate = self.initial_learning_rate * tf.math.pow(warmup_percent_done, self.power)
+            warmup_learning_rate = self.initial_learning_rate * \
+                tf.math.pow(warmup_percent_done, self.power)
             return tf.cond(
                 global_step_float < warmup_steps_float,
                 lambda: warmup_learning_rate,
@@ -190,7 +191,8 @@ class AdamWeightDecay(tf.keras.optimizers.Adam):
 
     def __init__(
         self,
-        learning_rate: Union[float, tf.keras.optimizers.schedules.LearningRateSchedule] = 0.001,
+        learning_rate: Union[float,
+                             tf.keras.optimizers.schedules.LearningRateSchedule] = 0.001,
         beta_1: float = 0.9,
         beta_2: float = 0.999,
         epsilon: float = 1e-7,
@@ -213,7 +215,8 @@ class AdamWeightDecay(tf.keras.optimizers.Adam):
         return super(AdamWeightDecay, cls).from_config(config, custom_objects=custom_objects)
 
     def _prepare_local(self, var_device, var_dtype, apply_state):
-        super(AdamWeightDecay, self)._prepare_local(var_device, var_dtype, apply_state)
+        super(AdamWeightDecay, self)._prepare_local(
+            var_device, var_dtype, apply_state)
         apply_state[(var_device, var_dtype)]["weight_decay_rate"] = tf.constant(
             self.weight_decay_rate, name="adam_weight_decay_rate"
         )
@@ -222,7 +225,9 @@ class AdamWeightDecay(tf.keras.optimizers.Adam):
         do_decay = self._do_use_weight_decay(var.name)
         if do_decay:
             return var.assign_sub(
-                learning_rate * var * apply_state[(var.device, var.dtype.base_dtype)]["weight_decay_rate"],
+                learning_rate * var *
+                apply_state[(var.device, var.dtype.base_dtype)
+                            ]["weight_decay_rate"],
                 use_locking=self._use_locking,
             )
         return tf.no_op()
@@ -245,13 +250,15 @@ class AdamWeightDecay(tf.keras.optimizers.Adam):
         return coefficients["lr_t"], dict(apply_state=apply_state)
 
     def _resource_apply_dense(self, grad, var, apply_state=None):
-        lr_t, kwargs = self._get_lr(var.device, var.dtype.base_dtype, apply_state)
+        lr_t, kwargs = self._get_lr(
+            var.device, var.dtype.base_dtype, apply_state)
         decay = self._decay_weights_op(var, lr_t, apply_state)
         with tf.control_dependencies([decay]):
             return super(AdamWeightDecay, self)._resource_apply_dense(grad, var, **kwargs)
 
     def _resource_apply_sparse(self, grad, var, indices, apply_state=None):
-        lr_t, kwargs = self._get_lr(var.device, var.dtype.base_dtype, apply_state)
+        lr_t, kwargs = self._get_lr(
+            var.device, var.dtype.base_dtype, apply_state)
         decay = self._decay_weights_op(var, lr_t, apply_state)
         with tf.control_dependencies([decay]):
             return super(AdamWeightDecay, self)._resource_apply_sparse(grad, var, indices, **kwargs)
@@ -312,7 +319,8 @@ class GradientAccumulator(object):
     def gradients(self):
         """The accumulated gradients on the current replica."""
         if not self._gradients:
-            raise ValueError("The accumulator should be called first to initialize the gradients")
+            raise ValueError(
+                "The accumulator should be called first to initialize the gradients")
         return list(gradient.value() if gradient is not None else gradient for gradient in self._gradients)
 
     def __call__(self, gradients):
@@ -333,7 +341,8 @@ class GradientAccumulator(object):
                 ]
             )
         if len(gradients) != len(self._gradients):
-            raise ValueError("Expected %s gradients, but got %d" % (len(self._gradients), len(gradients)))
+            raise ValueError("Expected %s gradients, but got %d" %
+                             (len(self._gradients), len(gradients)))
 
         for accum_gradient, gradient in zip(self._gradients, gradients):
             if accum_gradient is not None and gradient is not None:

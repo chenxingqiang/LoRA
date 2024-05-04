@@ -168,7 +168,8 @@ class Seq2SeqTrainer(Trainer):
         )
         # in case the batch is shorter than max length, the output should be padded
         if generated_tokens.shape[-1] < gen_kwargs["max_length"]:
-            generated_tokens = self._pad_tensors_to_max_len(generated_tokens, gen_kwargs["max_length"])
+            generated_tokens = self._pad_tensors_to_max_len(
+                generated_tokens, gen_kwargs["max_length"])
 
         with torch.no_grad():
             if self.use_amp:
@@ -178,9 +179,11 @@ class Seq2SeqTrainer(Trainer):
                 outputs = model(**inputs)
             if has_labels:
                 if self.label_smoother is not None:
-                    loss = self.label_smoother(outputs, inputs["labels"]).mean().detach()
+                    loss = self.label_smoother(
+                        outputs, inputs["labels"]).mean().detach()
                 else:
-                    loss = (outputs["loss"] if isinstance(outputs, dict) else outputs[0]).mean().detach()
+                    loss = (outputs["loss"] if isinstance(
+                        outputs, dict) else outputs[0]).mean().detach()
             else:
                 loss = None
 
@@ -189,7 +192,8 @@ class Seq2SeqTrainer(Trainer):
 
         labels = inputs["labels"]
         if labels.shape[-1] < gen_kwargs["max_length"]:
-            labels = self._pad_tensors_to_max_len(labels, gen_kwargs["max_length"])
+            labels = self._pad_tensors_to_max_len(
+                labels, gen_kwargs["max_length"])
 
         return (loss, generated_tokens, labels)
 
@@ -205,7 +209,8 @@ class Seq2SeqTrainer(Trainer):
         )
 
         padded_tensor = pad_token_id * torch.ones(
-            (tensor.shape[0], max_length), dtype=tensor.dtype, device=tensor.device
+            (tensor.shape[0],
+             max_length), dtype=tensor.dtype, device=tensor.device
         )
         padded_tensor[:, : tensor.shape[-1]] = tensor
         return padded_tensor

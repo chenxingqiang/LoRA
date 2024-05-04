@@ -24,7 +24,8 @@ from transformers.testing_utils import require_sentencepiece, slow
 from .test_tokenization_common import TokenizerTesterMixin
 
 
-SAMPLE_VOCAB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures/test_sentencepiece.model")
+SAMPLE_VOCAB = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), "fixtures/test_sentencepiece.model")
 
 
 @require_sentencepiece
@@ -123,4 +124,5 @@ class XLMProphetNetTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
     def test_tokenization_base_easy_symbols(self):
         symbols = "Hello World!"
         original_tokenizer_encodings = [35389, 6672, 49, 2]
-        self.assertListEqual(original_tokenizer_encodings, self.big_tokenizer.encode(symbols))
+        self.assertListEqual(original_tokenizer_encodings,
+                             self.big_tokenizer.encode(symbols))

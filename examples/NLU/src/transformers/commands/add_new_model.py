@@ -41,8 +41,10 @@ class AddNewModelCommand(BaseTransformersCLICommand):
     @staticmethod
     def register_subcommand(parser: ArgumentParser):
         add_new_model_parser = parser.add_parser("add-new-model")
-        add_new_model_parser.add_argument("--testing", action="store_true", help="If in testing mode.")
-        add_new_model_parser.add_argument("--testing_file", type=str, help="Configuration file on which to run.")
+        add_new_model_parser.add_argument(
+            "--testing", action="store_true", help="If in testing mode.")
+        add_new_model_parser.add_argument(
+            "--testing_file", type=str, help="Configuration file on which to run.")
         add_new_model_parser.add_argument(
             "--path", type=str, help="Path to cookiecutter. Should only be used for testing purposes."
         )
@@ -60,7 +62,8 @@ class AddNewModelCommand(BaseTransformersCLICommand):
                 "the folowing at the root of your `transformers` clone:\n\n\t$ pip install -e .[modelcreation]\n"
             )
         # Ensure that there is no other `cookiecutter-template-xxx` directory in the current working directory
-        directories = [directory for directory in os.listdir() if "cookiecutter-template-" == directory[:22]]
+        directories = [directory for directory in os.listdir(
+        ) if "cookiecutter-template-" == directory[:22]]
         if len(directories) > 0:
             raise ValueError(
                 "Several directories starting with `cookiecutter-template-` in current working directory. "
@@ -69,9 +72,11 @@ class AddNewModelCommand(BaseTransformersCLICommand):
             )
 
         path_to_transformer_root = (
-            Path(__file__).parent.parent.parent.parent if self._path is None else Path(self._path).parent.parent
+            Path(__file__).parent.parent.parent.parent if self._path is None else Path(
+                self._path).parent.parent
         )
-        path_to_cookiecutter = path_to_transformer_root / "templates" / "adding_a_new_model"
+        path_to_cookiecutter = path_to_transformer_root / \
+            "templates" / "adding_a_new_model"
 
         # Execute cookiecutter
         if not self._testing:
@@ -86,7 +91,8 @@ class AddNewModelCommand(BaseTransformersCLICommand):
                 extra_context=testing_configuration,
             )
 
-        directory = [directory for directory in os.listdir() if "cookiecutter-template-" in directory[:22]][0]
+        directory = [directory for directory in os.listdir(
+        ) if "cookiecutter-template-" in directory[:22]][0]
 
         # Retrieve configuration
         with open(directory + "/configuration.json", "r") as configuration_file:
@@ -121,7 +127,8 @@ class AddNewModelCommand(BaseTransformersCLICommand):
 
         if output_pytorch:
             if not self._testing:
-                remove_copy_lines(f"{directory}/modeling_{lowercase_model_name}.py")
+                remove_copy_lines(
+                    f"{directory}/modeling_{lowercase_model_name}.py")
 
             shutil.move(
                 f"{directory}/modeling_{lowercase_model_name}.py",
@@ -138,7 +145,8 @@ class AddNewModelCommand(BaseTransformersCLICommand):
 
         if output_tensorflow:
             if not self._testing:
-                remove_copy_lines(f"{directory}/modeling_tf_{lowercase_model_name}.py")
+                remove_copy_lines(
+                    f"{directory}/modeling_tf_{lowercase_model_name}.py")
 
             shutil.move(
                 f"{directory}/modeling_tf_{lowercase_model_name}.py",
@@ -151,7 +159,8 @@ class AddNewModelCommand(BaseTransformersCLICommand):
             )
         else:
             os.remove(f"{directory}/modeling_tf_{lowercase_model_name}.py")
-            os.remove(f"{directory}/test_modeling_tf_{lowercase_model_name}.py")
+            os.remove(
+                f"{directory}/test_modeling_tf_{lowercase_model_name}.py")
 
         shutil.move(
             f"{directory}/{lowercase_model_name}.rst",
@@ -186,7 +195,8 @@ class AddNewModelCommand(BaseTransformersCLICommand):
                                 new_file.write(line_to_copy)
 
             if not line_found:
-                raise ValueError(f"Line {line_to_copy_below} was not found in file.")
+                raise ValueError(
+                    f"Line {line_to_copy_below} was not found in file.")
 
             # Copy the file permissions from the old file to the new file
             copymode(original_file, abs_path)
@@ -214,7 +224,8 @@ class AddNewModelCommand(BaseTransformersCLICommand):
                         skip_snippet = skip_units(line)
                     elif "# End." in line and "##" not in line:
                         if not skip_file and not skip_snippet:
-                            replace(file_to_replace_in, line_to_copy_below, lines_to_copy)
+                            replace(file_to_replace_in,
+                                    line_to_copy_below, lines_to_copy)
 
                         lines_to_copy = []
                     elif "# Replace with" in line and "##" not in line:

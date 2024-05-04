@@ -54,7 +54,8 @@ class CopyCheckTester(unittest.TestCase):
         os.makedirs(os.path.join(self.transformer_dir, "models/bert/"))
         check_copies.TRANSFORMER_PATH = self.transformer_dir
         shutil.copy(
-            os.path.join(git_repo_path, "src/transformers/models/bert/modeling_bert.py"),
+            os.path.join(
+                git_repo_path, "src/transformers/models/bert/modeling_bert.py"),
             os.path.join(self.transformer_dir, "models/bert/modeling_bert.py"),
         )
 
@@ -65,7 +66,8 @@ class CopyCheckTester(unittest.TestCase):
     def check_copy_consistency(self, comment, class_name, class_code, overwrite_result=None):
         code = comment + f"\nclass {class_name}(nn.Module):\n" + class_code
         if overwrite_result is not None:
-            expected = comment + f"\nclass {class_name}(nn.Module):\n" + overwrite_result
+            expected = comment + \
+                f"\nclass {class_name}(nn.Module):\n" + overwrite_result
         fname = os.path.join(self.transformer_dir, "new_code.py")
         with open(fname, "w") as f:
             f.write(code)
@@ -77,7 +79,8 @@ class CopyCheckTester(unittest.TestCase):
                 self.assertTrue(f.read(), expected)
 
     def test_find_code_in_transformers(self):
-        code = check_copies.find_code_in_transformers("models.bert.modeling_bert.BertLMPredictionHead")
+        code = check_copies.find_code_in_transformers(
+            "models.bert.modeling_bert.BertLMPredictionHead")
         self.assertEqual(code, REFERENCE_CODE)
 
     def test_is_copy_consistent(self):

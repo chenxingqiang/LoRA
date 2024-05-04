@@ -14,10 +14,14 @@
 # limitations under the License.
 """Tokenization classes for {{cookiecutter.modelname}}."""
 
-{%- if cookiecutter.tokenizer_type == "Based on BERT" %}
-from ...utils import logging
-from ..bert.tokenization_bert_fast import BertTokenizerFast
+from ...tokenization_utils_fast import PreTrainedTokenizerFast
+from tokenizers import ByteLevelBPETokenizer
+from typing import List, Optional
+from ..bart.tokenization_bart_fast import BartTokenizerFast
 from .tokenization_{{cookiecutter.lowercase_modelname}} import {{cookiecutter.camelcase_modelname}}Tokenizer
+from ..bert.tokenization_bert_fast import BertTokenizerFast
+from ...utils import logging
+{%- if cookiecutter.tokenizer_type == "Based on BERT" %}
 
 
 logger = logging.get_logger(__name__)
@@ -57,15 +61,14 @@ class {{cookiecutter.camelcase_modelname}}TokenizerFast(BertTokenizerFast):
     pretrained_init_configuration = PRETRAINED_INIT_CONFIGURATION
     slow_tokenizer_class = {{cookiecutter.camelcase_modelname}}Tokenizer
 
-{%- elif cookiecutter.tokenizer_type == "Based on BART" %}
-from ...utils import logging
-from ..bart.tokenization_bart_fast import BartTokenizerFast
-from .tokenization_{{cookiecutter.lowercase_modelname}} import {{cookiecutter.camelcase_modelname}}Tokenizer
+
+{%- elif cookiecutter.tokenizer_type == "Based on BART" % }
 
 
 logger = logging.get_logger(__name__)
 
-VOCAB_FILES_NAMES = {"vocab_file": "vocab.json", "merges_file": "merges.txt", "tokenizer_file": "tokenizer.json"}
+VOCAB_FILES_NAMES = {"vocab_file": "vocab.json",
+                     "merges_file": "merges.txt", "tokenizer_file": "tokenizer.json"}
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
@@ -100,19 +103,14 @@ class {{cookiecutter.camelcase_modelname}}TokenizerFast(BartTokenizerFast):
     max_model_input_sizes = PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES
     slow_tokenizer_class = {{cookiecutter.camelcase_modelname}}Tokenizer
 
-{%- elif cookiecutter.tokenizer_type == "Standalone" %}
-from typing import List, Optional
 
-from tokenizers import ByteLevelBPETokenizer
-
-from ...tokenization_utils_fast import PreTrainedTokenizerFast
-from ...utils import logging
-from .tokenization_{{cookiecutter.lowercase_modelname}} import {{cookiecutter.camelcase_modelname}}Tokenizer
+{%- elif cookiecutter.tokenizer_type == "Standalone" % }
 
 
 logger = logging.get_logger(__name__)
 
-VOCAB_FILES_NAMES = {"vocab_file": "vocab.txt", "tokenizer_file": "tokenizer.json"}
+VOCAB_FILES_NAMES = {"vocab_file": "vocab.txt",
+                     "tokenizer_file": "tokenizer.json"}
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
@@ -126,6 +124,7 @@ PRETRAINED_VOCAB_FILES_MAP = {
 PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
     "{{cookiecutter.checkpoint_identifier}}": 1024,
 }
+
 
 class {{cookiecutter.camelcase_modelname}}TokenizerFast(PreTrainedTokenizerFast):
     """
@@ -173,7 +172,6 @@ class {{cookiecutter.camelcase_modelname}}TokenizerFast(PreTrainedTokenizerFast)
 
         return output + [self.eos_token_id] + token_ids_1 + [self.eos_token_id]
 
-
     def create_token_type_ids_from_sequences(
             self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None
     ) -> List[int]:
@@ -198,4 +196,4 @@ class {{cookiecutter.camelcase_modelname}}TokenizerFast(PreTrainedTokenizerFast)
         return len(cls + token_ids_0 + sep + sep + token_ids_1 + sep) * [0]
 
 
-{% endif %}
+{ % endif % }

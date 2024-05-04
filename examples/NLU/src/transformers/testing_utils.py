@@ -79,9 +79,12 @@ def parse_int_from_env(key, default=None):
 
 
 _run_slow_tests = parse_flag_from_env("RUN_SLOW", default=False)
-_run_pt_tf_cross_tests = parse_flag_from_env("RUN_PT_TF_CROSS_TESTS", default=False)
-_run_pt_flax_cross_tests = parse_flag_from_env("RUN_PT_FLAX_CROSS_TESTS", default=False)
-_run_custom_tokenizers = parse_flag_from_env("RUN_CUSTOM_TOKENIZERS", default=False)
+_run_pt_tf_cross_tests = parse_flag_from_env(
+    "RUN_PT_TF_CROSS_TESTS", default=False)
+_run_pt_flax_cross_tests = parse_flag_from_env(
+    "RUN_PT_FLAX_CROSS_TESTS", default=False)
+_run_custom_tokenizers = parse_flag_from_env(
+    "RUN_CUSTOM_TOKENIZERS", default=False)
 _run_pipeline_tests = parse_flag_from_env("RUN_PIPELINE_TESTS", default=False)
 _run_git_lfs_tests = parse_flag_from_env("RUN_GIT_LFS_TESTS", default=False)
 _tf_gpu_memory_limit = parse_int_from_env("TF_GPU_MEMORY_LIMIT", default=None)
@@ -716,7 +719,8 @@ class TestCasePlus(unittest.TestCase):
         if tmp_dir:
             self._repo_root_dir = tmp_dir
         else:
-            raise ValueError(f"can't figure out the root of the repo from {self._test_file_path}")
+            raise ValueError(
+                f"can't figure out the root of the repo from {self._test_file_path}")
         self._tests_dir = self._repo_root_dir / "tests"
         self._examples_dir = self._repo_root_dir / "examples"
         self._src_dir = self._repo_root_dir / "src"
@@ -1001,7 +1005,8 @@ def pytest_terminal_summary_main(tr, id):
             f.write("slowest durations\n")
             for i, rep in enumerate(dlist):
                 if rep.duration < durations_min:
-                    f.write(f"{len(dlist)-i} durations < {durations_min} secs were omitted")
+                    f.write(
+                        f"{len(dlist)-i} durations < {durations_min} secs were omitted")
                     break
                 f.write(f"{rep.duration:02.2f}s {rep.when:<8} {rep.nodeid}\n")
 
@@ -1015,7 +1020,8 @@ def pytest_terminal_summary_main(tr, id):
             msg = tr._getfailureheadline(rep)
             tr.write_sep("_", msg, red=True, bold=True)
             # chop off the optional leading extra frames, leaving only the last one
-            longrepr = re.sub(r".*_ _ _ (_ ){10,}_ _ ", "", rep.longreprtext, 0, re.M | re.S)
+            longrepr = re.sub(
+                r".*_ _ _ (_ ){10,}_ _ ", "", rep.longreprtext, 0, re.M | re.S)
             tr._tw.line(longrepr)
             # note: not printing out any rep.sections to keep the report short
 
@@ -1049,7 +1055,8 @@ def pytest_terminal_summary_main(tr, id):
         tr.summary_warnings()  # normal warnings
         tr.summary_warnings()  # final warnings
 
-    tr.reportchars = "wPpsxXEf"  # emulate -rA (used in summary_passes() and short_test_summary())
+    # emulate -rA (used in summary_passes() and short_test_summary())
+    tr.reportchars = "wPpsxXEf"
     with open(report_files["passes"], "w") as f:
         tr._tw = create_terminal_writer(config, f)
         tr.summary_passes()
@@ -1123,8 +1130,10 @@ async def _stream_subprocess(cmd, env=None, stdin=None, timeout=None, quiet=Fals
     # XXX: the timeout doesn't seem to make any difference here
     await asyncio.wait(
         [
-            _read_stream(p.stdout, lambda l: tee(l, out, sys.stdout, label="stdout:")),
-            _read_stream(p.stderr, lambda l: tee(l, err, sys.stderr, label="stderr:")),
+            _read_stream(p.stdout, lambda l: tee(
+                l, out, sys.stdout, label="stdout:")),
+            _read_stream(p.stderr, lambda l: tee(
+                l, err, sys.stderr, label="stderr:")),
         ],
         timeout=timeout,
     )
@@ -1135,7 +1144,8 @@ def execute_subprocess_async(cmd, env=None, stdin=None, timeout=180, quiet=False
 
     loop = asyncio.get_event_loop()
     result = loop.run_until_complete(
-        _stream_subprocess(cmd, env=env, stdin=stdin, timeout=timeout, quiet=quiet, echo=echo)
+        _stream_subprocess(cmd, env=env, stdin=stdin,
+                           timeout=timeout, quiet=quiet, echo=echo)
     )
 
     cmd_str = " ".join(cmd)

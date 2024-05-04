@@ -87,11 +87,13 @@ class FlaxPreTrainedModel(ABC):
         random_params = self.init(self.key, input_shape)
 
         # save required_params as set
-        self._required_params = set(flatten_dict(unfreeze(random_params)).keys())
+        self._required_params = set(
+            flatten_dict(unfreeze(random_params)).keys())
         self.params = random_params
 
     def init(self, rng: jax.random.PRNGKey, input_shape: Tuple) -> Dict:
-        raise NotImplementedError(f"init method has to be implemented for {self}")
+        raise NotImplementedError(
+            f"init method has to be implemented for {self}")
 
     @property
     def config(self) -> PretrainedConfig:
@@ -134,7 +136,6 @@ class FlaxPreTrainedModel(ABC):
         *model_args,
         **kwargs
     ):
-
         r"""
         Instantiate a pretrained flax model from a pre-trained model configuration.
 
@@ -260,10 +261,12 @@ class FlaxPreTrainedModel(ABC):
             if os.path.isdir(pretrained_model_name_or_path):
                 if from_pt and os.path.isfile(os.path.join(pretrained_model_name_or_path, WEIGHTS_NAME)):
                     # Load from a PyTorch checkpoint
-                    archive_file = os.path.join(pretrained_model_name_or_path, WEIGHTS_NAME)
+                    archive_file = os.path.join(
+                        pretrained_model_name_or_path, WEIGHTS_NAME)
                 elif os.path.isfile(os.path.join(pretrained_model_name_or_path, FLAX_WEIGHTS_NAME)):
                     # Load from a Flax checkpoint
-                    archive_file = os.path.join(pretrained_model_name_or_path, FLAX_WEIGHTS_NAME)
+                    archive_file = os.path.join(
+                        pretrained_model_name_or_path, FLAX_WEIGHTS_NAME)
                 else:
                     raise EnvironmentError(
                         "Error no file named {} found in directory {} or `from_pt` set to False".format(
@@ -303,7 +306,8 @@ class FlaxPreTrainedModel(ABC):
             if resolved_archive_file == archive_file:
                 logger.info(f"loading weights file {archive_file}")
             else:
-                logger.info(f"loading weights file {archive_file} from cache at {resolved_archive_file}")
+                logger.info(
+                    f"loading weights file {archive_file} from cache at {resolved_archive_file}")
         else:
             resolved_archive_file = None
 
@@ -351,7 +355,8 @@ class FlaxPreTrainedModel(ABC):
                 f"to be exactly identical (initializing a BertForSequenceClassification model from a BertForSequenceClassification model)."
             )
         else:
-            logger.info(f"All model checkpoint weights were used when initializing {model.__class__.__name__}.\n")
+            logger.info(
+                f"All model checkpoint weights were used when initializing {model.__class__.__name__}.\n")
 
         if len(missing_keys) > 0:
             logger.warning(
@@ -380,7 +385,8 @@ class FlaxPreTrainedModel(ABC):
                 Directory to which to save. Will be created if it doesn't exist.
         """
         if os.path.isfile(save_directory):
-            logger.error("Provided path ({}) should be a directory, not a file".format(save_directory))
+            logger.error(
+                "Provided path ({}) should be a directory, not a file".format(save_directory))
             return
         os.makedirs(save_directory, exist_ok=True)
 

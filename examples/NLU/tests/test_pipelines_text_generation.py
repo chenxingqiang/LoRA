@@ -23,7 +23,8 @@ from .test_pipelines_common import MonoInputPipelineCommonMixin
 class TextGenerationPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCase):
     pipeline_task = "text-generation"
     pipeline_running_kwargs = {"prefix": "This is "}
-    small_models = ["sshleifer/tiny-ctrl"]  # Models tested without the @slow decorator
+    # Models tested without the @slow decorator
+    small_models = ["sshleifer/tiny-ctrl"]
     large_models = []  # Models tested with the @slow decorator
 
     def test_simple_generation(self):
@@ -45,7 +46,8 @@ class TextGenerationPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCas
 
     @require_torch
     def test_generation_output_style(self):
-        text_generator = pipeline(task="text-generation", model=self.small_models[0])
+        text_generator = pipeline(
+            task="text-generation", model=self.small_models[0])
         # text-generation is non-deterministic by nature, we can't fully test the output
 
         outputs = text_generator("This is a test")
@@ -54,7 +56,8 @@ class TextGenerationPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCas
         outputs = text_generator("This is a test", return_full_text=False)
         self.assertNotIn("This is a test", outputs[0]["generated_text"])
 
-        text_generator = pipeline(task="text-generation", model=self.small_models[0], return_full_text=False)
+        text_generator = pipeline(
+            task="text-generation", model=self.small_models[0], return_full_text=False)
         outputs = text_generator("This is a test")
         self.assertNotIn("This is a test", outputs[0]["generated_text"])
 

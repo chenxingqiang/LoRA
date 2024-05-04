@@ -102,9 +102,11 @@ pip install -e .
 ```
 
 This command performs a magical link between the folder you cloned the repository to and your python library paths, and it'll look inside this folder in addition to the normal library-wide paths. So if normally your python packages get installed into:
+
 ```
 ~/anaconda3/envs/main/lib/python3.7/site-packages/
 ```
+
 now this editable install will reside where you clone the folder to, e.g. `~/transformers/` and python will search it too.
 
 Do note that you have to keep that `transformers` folder around and not delete it to continue using the  `transfomers` library.
@@ -117,7 +119,6 @@ git pull
 ```
 
 There is nothing else to do. Your python environment will find the bleeding edge version of `transformers` on the next run.
-
 
 ## With conda
 
@@ -138,9 +139,9 @@ This library provides pretrained models that will be downloaded and cached local
 folder given by the shell environment variable ``TRANSFORMERS_CACHE``. The default value for it will be the Hugging
 Face cache home followed by ``/transformers/``. This is (by order of priority):
 
-  * shell environment variable ``HF_HOME``
-  * shell environment variable ``XDG_CACHE_HOME`` + ``/huggingface/``
-  * default: ``~/.cache/huggingface/``
+* shell environment variable ``HF_HOME``
+* shell environment variable ``XDG_CACHE_HOME`` + ``/huggingface/``
+* default: ``~/.cache/huggingface/``
 
 So if you don't have any specific environment variable set, the cache directory will be at
 ``~/.cache/huggingface/transformers/``.
@@ -172,13 +173,13 @@ python examples/seq2seq/run_translation.py --model_name_or_path t5-small --datas
 ```
 
 and then with the same filesystem you can now run the same program on a firewalled instance:
+
 ```
 HF_DATASETS_OFFLINE=1 TRANSFORMERS_OFFLINE=1 \
 python examples/seq2seq/run_translation.py --model_name_or_path t5-small --dataset_name wmt16 --dataset_config ro-en ...
 ```
+
 and it should succeed without any hanging waiting to timeout.
-
-
 
 ## Do you want to run a Transformer model on a mobile device?
 

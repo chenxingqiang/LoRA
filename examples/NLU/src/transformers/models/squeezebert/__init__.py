@@ -27,7 +27,8 @@ _import_structure = {
 }
 
 if is_tokenizers_available():
-    _import_structure["tokenization_squeezebert_fast"] = ["SqueezeBertTokenizerFast"]
+    _import_structure["tokenization_squeezebert_fast"] = [
+        "SqueezeBertTokenizerFast"]
 
 if is_torch_available():
     _import_structure["modeling_squeezebert"] = [

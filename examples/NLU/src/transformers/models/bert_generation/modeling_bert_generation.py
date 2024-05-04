@@ -87,7 +87,8 @@ def load_tf_weights_in_bert_generation(
                 elif sub_layer == "LayerNorm":
                     is_embedding = False
                 if "layer" in sub_layer:
-                    model_pointer = model_pointer.layer[int(sub_layer.split("_")[-1])]
+                    model_pointer = model_pointer.layer[int(
+                        sub_layer.split("_")[-1])]
                 elif sub_layer in ["kernel", "gamma"]:
                     model_pointer = model_pointer.weight
                 elif sub_layer == "beta":
@@ -104,12 +105,14 @@ def load_tf_weights_in_bert_generation(
                     try:
                         model_pointer = getattr(model_pointer, sub_layer)
                     except AttributeError:
-                        logger.info(f"Skipping to initialize {key} at {sub_layer}...")
+                        logger.info(
+                            f"Skipping to initialize {key} at {sub_layer}...")
                         raise AttributeError
 
             array = np.asarray(sess.run(all_variables[key]))
             if not is_embedding:
-                logger.info("Transposing numpy weight of shape {} for {}".format(array.shape, key))
+                logger.info(
+                    "Transposing numpy weight of shape {} for {}".format(array.shape, key))
                 array = np.transpose(array)
             else:
                 model_pointer = model_pointer.weight
@@ -126,7 +129,8 @@ def load_tf_weights_in_bert_generation(
             model_pointer.data = torch.from_numpy(array.astype(np.float32))
             keep_track_variables.pop(key, None)
 
-        logger.info("Weights not copied to PyTorch model: {}".format(", ".join(keep_track_variables.keys())))
+        logger.info("Weights not copied to PyTorch model: {}".format(
+            ", ".join(keep_track_variables.keys())))
         return model
 
 
@@ -135,15 +139,19 @@ class BertGenerationEmbeddings(nn.Module):
 
     def __init__(self, config):
         super().__init__()
-        self.word_embeddings = nn.Embedding(config.vocab_size, config.hidden_size, padding_idx=config.pad_token_id)
-        self.position_embeddings = nn.Embedding(config.max_position_embeddings, config.hidden_size)
+        self.word_embeddings = nn.Embedding(
+            config.vocab_size, config.hidden_size, padding_idx=config.pad_token_id)
+        self.position_embeddings = nn.Embedding(
+            config.max_position_embeddings, config.hidden_size)
         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be able to load
         # any TensorFlow checkpoint file
-        self.LayerNorm = torch.nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.LayerNorm = torch.nn.LayerNorm(
+            config.hidden_size, eps=config.layer_norm_eps)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
         # position_ids (1, len position emb) is contiguous in memory and exported when serialized
-        self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand((1, -1)))
+        self.register_buffer("position_ids", torch.arange(
+            config.max_position_embeddings).expand((1, -1)))
 
     def forward(self, input_ids=None, position_ids=None, inputs_embeds=None, past_key_values_length=0):
         if input_ids is not None:
@@ -154,7 +162,8 @@ class BertGenerationEmbeddings(nn.Module):
         seq_length = input_shape[1]
 
         if position_ids is None:
-            position_ids = self.position_ids[:, past_key_values_length : seq_length + past_key_values_length]
+            position_ids = self.position_ids[:,
+                                             past_key_values_length: seq_length + past_key_values_length]
 
         if inputs_embeds is None:
             inputs_embeds = self.word_embeddings(input_ids)
@@ -181,11 +190,13 @@ class BertGenerationPreTrainedModel(PreTrainedModel):
         if isinstance(module, nn.Linear):
             # Slightly different from the TF version which uses truncated_normal for initialization
             # cf https://github.com/pytorch/pytorch/pull/5617
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            module.weight.data.normal_(
+                mean=0.0, std=self.config.initializer_range)
             if module.bias is not None:
                 module.bias.data.zero_()
         elif isinstance(module, nn.Embedding):
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            module.weight.data.normal_(
+                mean=0.0, std=self.config.initializer_range)
             if module.padding_idx is not None:
                 module.weight.data[module.padding_idx].zero_()
         elif isinstance(module, nn.LayerNorm):
@@ -350,7 +361,8 @@ class BertGenerationEncoder(BertGenerationPreTrainedModel):
             use_cache = False
 
         if input_ids is not None and inputs_embeds is not None:
-            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both input_ids and inputs_embeds at the same time")
         elif input_ids is not None:
             input_shape = input_ids.size()
             batch_size, seq_length = input_shape
@@ -358,7 +370,8 @@ class BertGenerationEncoder(BertGenerationPreTrainedModel):
             input_shape = inputs_embeds.size()[:-1]
             batch_size, seq_length = input_shape
         else:
-            raise ValueError("You have to specify either input_ids or inputs_embeds")
+            raise ValueError(
+                "You have to specify either input_ids or inputs_embeds")
 
         device = input_ids.device if input_ids is not None else inputs_embeds.device
 
@@ -366,7 +379,8 @@ class BertGenerationEncoder(BertGenerationPreTrainedModel):
         past_key_values_length = past_key_values[0][0].shape[2] if past_key_values is not None else 0
 
         if attention_mask is None:
-            attention_mask = torch.ones(((batch_size, seq_length + past_key_values_length)), device=device)
+            attention_mask = torch.ones(
+                ((batch_size, seq_length + past_key_values_length)), device=device)
 
         # We can provide a self-attention mask of dimensions [batch_size, from_seq_length, to_seq_length]
         # ourselves in which case we just need to make it broadcastable to all heads.
@@ -380,10 +394,13 @@ class BertGenerationEncoder(BertGenerationPreTrainedModel):
         # we need to make broadcastable to [batch_size, num_heads, seq_length, seq_length]
         if self.config.is_decoder and encoder_hidden_states is not None:
             encoder_batch_size, encoder_sequence_length, _ = encoder_hidden_states.size()
-            encoder_hidden_shape = (encoder_batch_size, encoder_sequence_length)
+            encoder_hidden_shape = (
+                encoder_batch_size, encoder_sequence_length)
             if encoder_attention_mask is None:
-                encoder_attention_mask = torch.ones(encoder_hidden_shape, device=device)
-            encoder_extended_attention_mask = self.invert_attention_mask(encoder_attention_mask)
+                encoder_attention_mask = torch.ones(
+                    encoder_hidden_shape, device=device)
+            encoder_extended_attention_mask = self.invert_attention_mask(
+                encoder_attention_mask)
         else:
             encoder_extended_attention_mask = None
 
@@ -392,7 +409,8 @@ class BertGenerationEncoder(BertGenerationPreTrainedModel):
         # attention_probs has shape bsz x n_heads x N x N
         # input head_mask has shape [num_heads] or [num_hidden_layers x num_heads]
         # and head_mask is converted to shape [num_hidden_layers x batch x num_heads x seq_length x seq_length]
-        head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
+        head_mask = self.get_head_mask(
+            head_mask, self.config.num_hidden_layers)
 
         embedding_output = self.embeddings(
             input_ids=input_ids,
@@ -430,7 +448,8 @@ class BertGenerationEncoder(BertGenerationPreTrainedModel):
 class BertGenerationOnlyLMHead(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.decoder = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
+        self.decoder = nn.Linear(
+            config.hidden_size, config.vocab_size, bias=False)
         self.bias = nn.Parameter(torch.zeros(config.vocab_size))
 
         # Need a link between the two variables so that the bias is correctly resized with `resize_token_embeddings`
@@ -450,7 +469,8 @@ class BertGenerationDecoder(BertGenerationPreTrainedModel):
         super().__init__(config)
 
         if not config.is_decoder:
-            logger.warn("If you want to use `BertGenerationDecoder` as a standalone, add `is_decoder=True.`")
+            logger.warn(
+                "If you want to use `BertGenerationDecoder` as a standalone, add `is_decoder=True.`")
 
         self.bert = BertGenerationEncoder(config)
         self.lm_head = BertGenerationOnlyLMHead(config)
@@ -547,10 +567,12 @@ class BertGenerationDecoder(BertGenerationPreTrainedModel):
         lm_loss = None
         if labels is not None:
             # we are doing next-token prediction; shift prediction scores and input ids by one
-            shifted_prediction_scores = prediction_scores[:, :-1, :].contiguous()
+            shifted_prediction_scores = prediction_scores[:,
+                                                          :-1, :].contiguous()
             labels = labels[:, 1:].contiguous()
             loss_fct = CrossEntropyLoss()
-            lm_loss = loss_fct(shifted_prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
+            lm_loss = loss_fct(
+                shifted_prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
 
         if not return_dict:
             output = (prediction_scores,) + outputs[1:]
@@ -580,5 +602,6 @@ class BertGenerationDecoder(BertGenerationPreTrainedModel):
     def _reorder_cache(self, past, beam_idx):
         reordered_past = ()
         for layer_past in past:
-            reordered_past += (tuple(past_state.index_select(0, beam_idx) for past_state in layer_past),)
+            reordered_past += (tuple(past_state.index_select(0, beam_idx)
+                               for past_state in layer_past),)
         return reordered_past

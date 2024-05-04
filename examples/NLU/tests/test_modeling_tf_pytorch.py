@@ -102,11 +102,13 @@ class TFPTAutoModelTest(unittest.TestCase):
             self.assertIsNotNone(config)
             self.assertIsInstance(config, BertConfig)
 
-            model = TFAutoModelForPreTraining.from_pretrained(model_name, from_pt=True)
+            model = TFAutoModelForPreTraining.from_pretrained(
+                model_name, from_pt=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, TFBertForPreTraining)
 
-            model = AutoModelForPreTraining.from_pretrained(model_name, from_tf=True)
+            model = AutoModelForPreTraining.from_pretrained(
+                model_name, from_tf=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, BertForPreTraining)
 
@@ -117,14 +119,16 @@ class TFPTAutoModelTest(unittest.TestCase):
             self.assertIsNotNone(config)
             self.assertIsInstance(config, GPT2Config)
 
-            model = TFAutoModelForCausalLM.from_pretrained(model_name, from_pt=True)
+            model = TFAutoModelForCausalLM.from_pretrained(
+                model_name, from_pt=True)
             model, loading_info = TFAutoModelForCausalLM.from_pretrained(
                 model_name, output_loading_info=True, from_pt=True
             )
             self.assertIsNotNone(model)
             self.assertIsInstance(model, TFGPT2LMHeadModel)
 
-            model = AutoModelForCausalLM.from_pretrained(model_name, from_tf=True)
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name, from_tf=True)
             model, loading_info = AutoModelForCausalLM.from_pretrained(
                 model_name, output_loading_info=True, from_tf=True
             )
@@ -138,11 +142,13 @@ class TFPTAutoModelTest(unittest.TestCase):
             self.assertIsNotNone(config)
             self.assertIsInstance(config, BertConfig)
 
-            model = TFAutoModelWithLMHead.from_pretrained(model_name, from_pt=True)
+            model = TFAutoModelWithLMHead.from_pretrained(
+                model_name, from_pt=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, TFBertForMaskedLM)
 
-            model = AutoModelWithLMHead.from_pretrained(model_name, from_tf=True)
+            model = AutoModelWithLMHead.from_pretrained(
+                model_name, from_tf=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, BertForMaskedLM)
 
@@ -153,14 +159,16 @@ class TFPTAutoModelTest(unittest.TestCase):
             self.assertIsNotNone(config)
             self.assertIsInstance(config, BertConfig)
 
-            model = TFAutoModelForMaskedLM.from_pretrained(model_name, from_pt=True)
+            model = TFAutoModelForMaskedLM.from_pretrained(
+                model_name, from_pt=True)
             model, loading_info = TFAutoModelForMaskedLM.from_pretrained(
                 model_name, output_loading_info=True, from_pt=True
             )
             self.assertIsNotNone(model)
             self.assertIsInstance(model, TFBertForMaskedLM)
 
-            model = AutoModelForMaskedLM.from_pretrained(model_name, from_tf=True)
+            model = AutoModelForMaskedLM.from_pretrained(
+                model_name, from_tf=True)
             model, loading_info = AutoModelForMaskedLM.from_pretrained(
                 model_name, output_loading_info=True, from_tf=True
             )
@@ -174,14 +182,16 @@ class TFPTAutoModelTest(unittest.TestCase):
             self.assertIsNotNone(config)
             self.assertIsInstance(config, T5Config)
 
-            model = TFAutoModelForSeq2SeqLM.from_pretrained(model_name, from_pt=True)
+            model = TFAutoModelForSeq2SeqLM.from_pretrained(
+                model_name, from_pt=True)
             model, loading_info = TFAutoModelForSeq2SeqLM.from_pretrained(
                 model_name, output_loading_info=True, from_pt=True
             )
             self.assertIsNotNone(model)
             self.assertIsInstance(model, TFT5ForConditionalGeneration)
 
-            model = AutoModelForSeq2SeqLM.from_pretrained(model_name, from_tf=True)
+            model = AutoModelForSeq2SeqLM.from_pretrained(
+                model_name, from_tf=True)
             model, loading_info = AutoModelForSeq2SeqLM.from_pretrained(
                 model_name, output_loading_info=True, from_tf=True
             )
@@ -196,11 +206,13 @@ class TFPTAutoModelTest(unittest.TestCase):
             self.assertIsNotNone(config)
             self.assertIsInstance(config, BertConfig)
 
-            model = TFAutoModelForSequenceClassification.from_pretrained(model_name, from_pt=True)
+            model = TFAutoModelForSequenceClassification.from_pretrained(
+                model_name, from_pt=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, TFBertForSequenceClassification)
 
-            model = AutoModelForSequenceClassification.from_pretrained(model_name, from_tf=True)
+            model = AutoModelForSequenceClassification.from_pretrained(
+                model_name, from_tf=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, BertForSequenceClassification)
 
@@ -212,32 +224,38 @@ class TFPTAutoModelTest(unittest.TestCase):
             self.assertIsNotNone(config)
             self.assertIsInstance(config, BertConfig)
 
-            model = TFAutoModelForQuestionAnswering.from_pretrained(model_name, from_pt=True)
+            model = TFAutoModelForQuestionAnswering.from_pretrained(
+                model_name, from_pt=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, TFBertForQuestionAnswering)
 
-            model = AutoModelForQuestionAnswering.from_pretrained(model_name, from_tf=True)
+            model = AutoModelForQuestionAnswering.from_pretrained(
+                model_name, from_tf=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, BertForQuestionAnswering)
 
     def test_from_pretrained_identifier(self):
-        model = TFAutoModelWithLMHead.from_pretrained(SMALL_MODEL_IDENTIFIER, from_pt=True)
+        model = TFAutoModelWithLMHead.from_pretrained(
+            SMALL_MODEL_IDENTIFIER, from_pt=True)
         self.assertIsInstance(model, TFBertForMaskedLM)
         self.assertEqual(model.num_parameters(), 14410)
         self.assertEqual(model.num_parameters(only_trainable=True), 14410)
 
-        model = AutoModelWithLMHead.from_pretrained(SMALL_MODEL_IDENTIFIER, from_tf=True)
+        model = AutoModelWithLMHead.from_pretrained(
+            SMALL_MODEL_IDENTIFIER, from_tf=True)
         self.assertIsInstance(model, BertForMaskedLM)
         self.assertEqual(model.num_parameters(), 14410)
         self.assertEqual(model.num_parameters(only_trainable=True), 14410)
 
     def test_from_identifier_from_model_type(self):
-        model = TFAutoModelWithLMHead.from_pretrained(DUMMY_UNKWOWN_IDENTIFIER, from_pt=True)
+        model = TFAutoModelWithLMHead.from_pretrained(
+            DUMMY_UNKWOWN_IDENTIFIER, from_pt=True)
         self.assertIsInstance(model, TFRobertaForMaskedLM)
         self.assertEqual(model.num_parameters(), 14410)
         self.assertEqual(model.num_parameters(only_trainable=True), 14410)
 
-        model = AutoModelWithLMHead.from_pretrained(DUMMY_UNKWOWN_IDENTIFIER, from_tf=True)
+        model = AutoModelWithLMHead.from_pretrained(
+            DUMMY_UNKWOWN_IDENTIFIER, from_tf=True)
         self.assertIsInstance(model, RobertaForMaskedLM)
         self.assertEqual(model.num_parameters(), 14410)
         self.assertEqual(model.num_parameters(only_trainable=True), 14410)

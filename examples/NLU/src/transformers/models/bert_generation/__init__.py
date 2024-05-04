@@ -26,7 +26,8 @@ _import_structure = {
 }
 
 if is_sentencepiece_available():
-    _import_structure["tokenization_bert_generation"] = ["BertGenerationTokenizer"]
+    _import_structure["tokenization_bert_generation"] = [
+        "BertGenerationTokenizer"]
 
 if is_torch_available():
     _import_structure["modeling_bert_generation"] = [

@@ -8,7 +8,7 @@ import json
 
 
 with open(sys.argv[1], 'r', encoding='utf8') as reader, \
-     open(sys.argv[2], 'w', encoding='utf8') as writer :
+        open(sys.argv[2], 'w', encoding='utf8') as writer:
     lines_dict = json.load(reader)
 
     full_rela_lst = []
@@ -38,6 +38,6 @@ with open(sys.argv[1], 'r', encoding='utf8') as reader, \
 
     for src, tgt in zip(full_src_lst, full_tgt_lst):
         x = {}
-        x['context'] =  src # context #+ '||'
-        x['completion'] = tgt #completion
+        x['context'] = src  # context #+ '||'
+        x['completion'] = tgt  # completion
         writer.write(json.dumps(x)+'\n')

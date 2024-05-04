@@ -117,9 +117,11 @@ def prepare_fsmt_inputs_dict(
     if attention_mask is None:
         attention_mask = input_ids.ne(config.pad_token_id)
     if head_mask is None:
-        head_mask = torch.ones(config.encoder_layers, config.encoder_attention_heads, device=torch_device)
+        head_mask = torch.ones(
+            config.encoder_layers, config.encoder_attention_heads, device=torch_device)
     if decoder_head_mask is None:
-        decoder_head_mask = torch.ones(config.decoder_layers, config.decoder_attention_heads, device=torch_device)
+        decoder_head_mask = torch.ones(
+            config.decoder_layers, config.decoder_attention_heads, device=torch_device)
     return {
         "input_ids": input_ids,
         "attention_mask": attention_mask,
@@ -130,8 +132,10 @@ def prepare_fsmt_inputs_dict(
 
 @require_torch
 class FSMTModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase):
-    all_model_classes = (FSMTModel, FSMTForConditionalGeneration) if is_torch_available() else ()
-    all_generative_model_classes = (FSMTForConditionalGeneration,) if is_torch_available() else ()
+    all_model_classes = (
+        FSMTModel, FSMTForConditionalGeneration) if is_torch_available() else ()
+    all_generative_model_classes = (
+        FSMTForConditionalGeneration,) if is_torch_available() else ()
     is_encoder_decoder = True
     test_pruning = False
     test_missing_keys = False
@@ -146,7 +150,8 @@ class FSMTModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase):
         }
         # XXX: hack to appease to all other models requiring `vocab_size`
         config["vocab_size"] = 99  # no such thing in FSMT
-        self.config_tester = ConfigTester(self, config_class=FSMTConfig, **config)
+        self.config_tester = ConfigTester(
+            self, config_class=FSMTConfig, **config)
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -157,10 +162,12 @@ class FSMTModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase):
 
         for model_class in self.all_model_classes:
             model = model_class(config)
-            self.assertIsInstance(model.get_input_embeddings(), (torch.nn.Embedding))
+            self.assertIsInstance(
+                model.get_input_embeddings(), (torch.nn.Embedding))
             model.set_input_embeddings(torch.nn.Embedding(10, 10))
             x = model.get_output_embeddings()
-            self.assertTrue(x is None or isinstance(x, torch.nn.modules.sparse.Embedding))
+            self.assertTrue(x is None or isinstance(
+                x, torch.nn.modules.sparse.Embedding))
 
     def test_initialization_more(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs()
@@ -172,7 +179,8 @@ class FSMTModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase):
 
         def _check_var(module):
             """Check that we initialized various parameters from N(0, config.init_std)."""
-            self.assertAlmostEqual(torch.std(module.weight).item(), config.init_std, 2)
+            self.assertAlmostEqual(
+                torch.std(module.weight).item(), config.init_std, 2)
 
         _check_var(model.encoder.embed_tokens)
         _check_var(model.encoder.layers[0].self_attn.k_proj)
@@ -193,22 +201,28 @@ class FSMTModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase):
         decoder_features_with_passed_mask = model(
             decoder_attention_mask=invert_mask(decoder_attn_mask), decoder_input_ids=decoder_input_ids, **inputs_dict
         )[0]
-        _assert_tensors_equal(decoder_features_with_passed_mask, decoder_features_with_created_mask)
+        _assert_tensors_equal(decoder_features_with_passed_mask,
+                              decoder_features_with_created_mask)
         useless_mask = torch.zeros_like(decoder_attn_mask)
-        decoder_features = model(decoder_attention_mask=useless_mask, **inputs_dict)[0]
-        self.assertTrue(isinstance(decoder_features, torch.Tensor))  # no hidden states or attentions
+        decoder_features = model(
+            decoder_attention_mask=useless_mask, **inputs_dict)[0]
+        # no hidden states or attentions
+        self.assertTrue(isinstance(decoder_features, torch.Tensor))
         self.assertEqual(
             decoder_features.size(),
-            (self.model_tester.batch_size, self.model_tester.seq_length, config.tgt_vocab_size),
+            (self.model_tester.batch_size,
+             self.model_tester.seq_length, config.tgt_vocab_size),
         )
         if decoder_attn_mask.min().item() < -1e3:  # some tokens were masked
-            self.assertFalse((decoder_features_with_created_mask == decoder_features).all().item())
+            self.assertFalse(
+                (decoder_features_with_created_mask == decoder_features).all().item())
 
         # Test different encoder attention masks
         decoder_features_with_long_encoder_mask = model(
             inputs_dict["input_ids"], attention_mask=inputs_dict["attention_mask"].long()
         )[0]
-        _assert_tensors_equal(decoder_features_with_long_encoder_mask, decoder_features_with_created_mask)
+        _assert_tensors_equal(
+            decoder_features_with_long_encoder_mask, decoder_features_with_created_mask)
 
     def test_save_load_missing_keys(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs()
@@ -218,7 +232,8 @@ class FSMTModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase):
 
             with tempfile.TemporaryDirectory() as tmpdirname:
                 model.save_pretrained(tmpdirname)
-                model2, info = model_class.from_pretrained(tmpdirname, output_loading_info=True)
+                model2, info = model_class.from_pretrained(
+                    tmpdirname, output_loading_info=True)
             self.assertEqual(info["missing_keys"], [])
 
     @unittest.skip("Test has a segmentation fault on torch 1.8.0")
@@ -302,7 +317,8 @@ class FSMTHeadTests(unittest.TestCase):
         return config, input_ids, batch_size
 
     def test_generate_beam_search(self):
-        input_ids = torch.Tensor([[71, 82, 2], [68, 34, 2]]).long().to(torch_device)
+        input_ids = torch.Tensor(
+            [[71, 82, 2], [68, 34, 2]]).long().to(torch_device)
         config = self._get_config()
         lm_model = FSMTForConditionalGeneration(config).to(torch_device)
         lm_model.eval()
@@ -319,7 +335,8 @@ class FSMTHeadTests(unittest.TestCase):
         self.assertEqual(new_input_ids.shape, (input_ids.shape[0], max_length))
 
     def test_shift_tokens_right(self):
-        input_ids = torch.Tensor([[71, 82, 18, 33, 2, 1, 1], [68, 34, 26, 58, 30, 82, 2]]).long()
+        input_ids = torch.Tensor(
+            [[71, 82, 18, 33, 2, 1, 1], [68, 34, 26, 58, 30, 82, 2]]).long()
         shifted = shift_tokens_right(input_ids, 1)
         n_pad_before = input_ids.eq(1).float().sum()
         n_pad_after = shifted.eq(1).float().sum()
@@ -334,7 +351,8 @@ class FSMTHeadTests(unittest.TestCase):
         if torch_device == "cuda":
             model.half()
         model.generate(input_ids, attention_mask=attention_mask)
-        model.generate(num_beams=4, do_sample=True, early_stopping=False, num_return_sequences=3)
+        model.generate(num_beams=4, do_sample=True,
+                       early_stopping=False, num_return_sequences=3)
 
     def test_dummy_inputs(self):
         config, *_ = self._get_config_and_data()
@@ -350,7 +368,8 @@ class FSMTHeadTests(unittest.TestCase):
             config, input_ids, decoder_input_ids
         )
         expected_causal_mask = torch.tensor(
-            [[0, ignore, ignore], [0, 0, ignore], [0, 0, 0]]  # never attend to the final token, because its pad
+            # never attend to the final token, because its pad
+            [[0, ignore, ignore], [0, 0, ignore], [0, 0, 0]]
         ).to(input_ids.device)
         self.assertEqual(decoder_attn_mask.size(), decoder_input_ids.size())
         self.assertTrue(torch.eq(expected_causal_mask, causal_mask).all())
@@ -409,7 +428,8 @@ class FSMTModelIntegrationTests(unittest.TestCase):
 
     def get_model(self, mname):
         if mname not in self.models_cache:
-            self.models_cache[mname] = FSMTForConditionalGeneration.from_pretrained(mname).to(torch_device)
+            self.models_cache[mname] = FSMTForConditionalGeneration.from_pretrained(
+                mname).to(torch_device)
             if torch_device == "cuda":
                 self.models_cache[mname].half()
         return self.models_cache[mname]
@@ -430,9 +450,11 @@ class FSMTModelIntegrationTests(unittest.TestCase):
         # expected numbers were generated when en-ru model, using just fairseq's model4.pt
         # may have to adjust if switched to a different checkpoint
         expected_slice = torch.tensor(
-            [[-1.5753, -1.5753, 2.8975], [-0.9540, -0.9540, 1.0299], [-3.3131, -3.3131, 0.5219]]
+            [[-1.5753, -1.5753, 2.8975], [-0.9540, -0.9540, 1.0299],
+                [-3.3131, -3.3131, 0.5219]]
         ).to(torch_device)
-        self.assertTrue(torch.allclose(output[:, :3, :3], expected_slice, atol=TOLERANCE))
+        self.assertTrue(torch.allclose(
+            output[:, :3, :3], expected_slice, atol=TOLERANCE))
 
     def translation_setup(self, pair):
         text = {
@@ -457,7 +479,8 @@ class FSMTModelIntegrationTests(unittest.TestCase):
     def test_translation_direct(self, pair):
         tokenizer, model, src_text, tgt_text = self.translation_setup(pair)
 
-        input_ids = tokenizer.encode(src_text, return_tensors="pt").to(torch_device)
+        input_ids = tokenizer.encode(
+            src_text, return_tensors="pt").to(torch_device)
 
         outputs = model.generate(input_ids)
         decoded = tokenizer.decode(outputs[0], skip_special_tokens=True)
@@ -468,7 +491,8 @@ class FSMTModelIntegrationTests(unittest.TestCase):
     def test_translation_pipeline(self, pair):
         tokenizer, model, src_text, tgt_text = self.translation_setup(pair)
         device = 0 if torch_device == "cuda" else -1
-        pipeline = TranslationPipeline(model, tokenizer, framework="pt", device=device)
+        pipeline = TranslationPipeline(
+            model, tokenizer, framework="pt", device=device)
         output = pipeline([src_text])
         self.assertEqual([tgt_text], [x["translation_text"] for x in output])
 
@@ -479,15 +503,18 @@ class TestSinusoidalPositionalEmbeddings(unittest.TestCase):
     tolerance = 1e-4
 
     def test_basic(self):
-        input_ids = torch.tensor([[4, 10]], dtype=torch.long, device=torch_device)
+        input_ids = torch.tensor(
+            [[4, 10]], dtype=torch.long, device=torch_device)
         emb1 = SinusoidalPositionalEmbedding(num_positions=6, embedding_dim=6, padding_idx=self.padding_idx).to(
             torch_device
         )
         emb = emb1(input_ids)
         desired_weights = torch.tensor(
             [
-                [9.0930e-01, 1.9999e-02, 2.0000e-04, -4.1615e-01, 9.9980e-01, 1.0000e00],
-                [1.4112e-01, 2.9995e-02, 3.0000e-04, -9.8999e-01, 9.9955e-01, 1.0000e00],
+                [9.0930e-01, 1.9999e-02, 2.0000e-04, -
+                    4.1615e-01, 9.9980e-01, 1.0000e00],
+                [1.4112e-01, 2.9995e-02, 3.0000e-04, -
+                    9.8999e-01, 9.9955e-01, 1.0000e00],
             ]
         ).to(torch_device)
         self.assertTrue(
@@ -497,10 +524,12 @@ class TestSinusoidalPositionalEmbeddings(unittest.TestCase):
 
     def test_odd_embed_dim(self):
         # odd embedding_dim  is allowed
-        SinusoidalPositionalEmbedding(num_positions=4, embedding_dim=5, padding_idx=self.padding_idx).to(torch_device)
+        SinusoidalPositionalEmbedding(
+            num_positions=4, embedding_dim=5, padding_idx=self.padding_idx).to(torch_device)
 
         # odd num_embeddings is allowed
-        SinusoidalPositionalEmbedding(num_positions=5, embedding_dim=4, padding_idx=self.padding_idx).to(torch_device)
+        SinusoidalPositionalEmbedding(
+            num_positions=5, embedding_dim=4, padding_idx=self.padding_idx).to(torch_device)
 
     @unittest.skip("different from marian (needs more research)")
     def test_positional_emb_weights_against_marian(self):
@@ -530,5 +559,6 @@ class TestSinusoidalPositionalEmbeddings(unittest.TestCase):
         no_cache_pad_zero = emb1(input_ids)[0]
         # XXX: only the 1st line matches the 3rd
         self.assertTrue(
-            torch.allclose(torch.tensor(desired_weights, device=torch_device), no_cache_pad_zero[:3, :5], atol=1e-3)
+            torch.allclose(torch.tensor(
+                desired_weights, device=torch_device), no_cache_pad_zero[:3, :5], atol=1e-3)
         )

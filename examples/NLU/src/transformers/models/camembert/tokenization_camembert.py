@@ -110,7 +110,8 @@ class CamembertTokenizer(PreTrainedTokenizer):
         **kwargs
     ):
         # Mask token behave like a normal word, i.e. include the space before it
-        mask_token = AddedToken(mask_token, lstrip=True, rstrip=False) if isinstance(mask_token, str) else mask_token
+        mask_token = AddedToken(mask_token, lstrip=True, rstrip=False) if isinstance(
+            mask_token, str) else mask_token
 
         super().__init__(
             bos_token=bos_token,
@@ -128,10 +129,13 @@ class CamembertTokenizer(PreTrainedTokenizer):
         self.vocab_file = vocab_file
         # HACK: These tokens were added by fairseq but don't seem to be actually used when duplicated in the actual
         # sentencepiece vocabulary (this is the case for <s> and </s>
-        self.fairseq_tokens_to_ids = {"<s>NOTUSED": 0, "<pad>": 1, "</s>NOTUSED": 2, "<unk>": 3}
+        self.fairseq_tokens_to_ids = {
+            "<s>NOTUSED": 0, "<pad>": 1, "</s>NOTUSED": 2, "<unk>": 3}
         self.fairseq_offset = len(self.fairseq_tokens_to_ids)
-        self.fairseq_tokens_to_ids["<mask>"] = len(self.sp_model) + len(self.fairseq_tokens_to_ids)
-        self.fairseq_ids_to_tokens = {v: k for k, v in self.fairseq_tokens_to_ids.items()}
+        self.fairseq_tokens_to_ids["<mask>"] = len(
+            self.sp_model) + len(self.fairseq_tokens_to_ids)
+        self.fairseq_ids_to_tokens = {v: k for k,
+                                      v in self.fairseq_tokens_to_ids.items()}
 
     def build_inputs_with_special_tokens(
         self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None
@@ -217,7 +221,8 @@ class CamembertTokenizer(PreTrainedTokenizer):
         return len(self.fairseq_tokens_to_ids) + len(self.sp_model)
 
     def get_vocab(self):
-        vocab = {self.convert_ids_to_tokens(i): i for i in range(self.vocab_size)}
+        vocab = {self.convert_ids_to_tokens(
+            i): i for i in range(self.vocab_size)}
         vocab.update(self.added_tokens_encoder)
         return vocab
 
@@ -256,10 +261,12 @@ class CamembertTokenizer(PreTrainedTokenizer):
 
     def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
         if not os.path.isdir(save_directory):
-            logger.error("Vocabulary path ({}) should be a directory".format(save_directory))
+            logger.error(
+                "Vocabulary path ({}) should be a directory".format(save_directory))
             return
         out_vocab_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["vocab_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["vocab_file"]
         )
 
         if os.path.abspath(self.vocab_file) != os.path.abspath(out_vocab_file):

@@ -44,7 +44,8 @@ class TransfoXLTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
             "low",
             "l",
         ]
-        self.vocab_file = os.path.join(self.tmpdirname, VOCAB_FILES_NAMES["vocab_file"])
+        self.vocab_file = os.path.join(
+            self.tmpdirname, VOCAB_FILES_NAMES["vocab_file"])
         with open(self.vocab_file, "w", encoding="utf-8") as vocab_writer:
             vocab_writer.write("".join([x + "\n" for x in vocab_tokens]))
 
@@ -58,25 +59,29 @@ class TransfoXLTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         return input_text, output_text
 
     def test_full_tokenizer(self):
-        tokenizer = TransfoXLTokenizer(vocab_file=self.vocab_file, lower_case=True)
+        tokenizer = TransfoXLTokenizer(
+            vocab_file=self.vocab_file, lower_case=True)
 
         tokens = tokenizer.tokenize("<unk> UNwanted , running")
         self.assertListEqual(tokens, ["<unk>", "unwanted", ",", "running"])
 
-        self.assertListEqual(tokenizer.convert_tokens_to_ids(tokens), [0, 4, 8, 7])
+        self.assertListEqual(
+            tokenizer.convert_tokens_to_ids(tokens), [0, 4, 8, 7])
 
     def test_full_tokenizer_lower(self):
         tokenizer = TransfoXLTokenizer(lower_case=True)
 
         self.assertListEqual(
-            tokenizer.tokenize(" \tHeLLo ! how  \n Are yoU ?  "), ["hello", "!", "how", "are", "you", "?"]
+            tokenizer.tokenize(" \tHeLLo ! how  \n Are yoU ?  "), [
+                "hello", "!", "how", "are", "you", "?"]
         )
 
     def test_full_tokenizer_no_lower(self):
         tokenizer = TransfoXLTokenizer(lower_case=False)
 
         self.assertListEqual(
-            tokenizer.tokenize(" \tHeLLo ! how  \n Are yoU ?  "), ["HeLLo", "!", "how", "Are", "yoU", "?"]
+            tokenizer.tokenize(" \tHeLLo ! how  \n Are yoU ?  "), [
+                "HeLLo", "!", "how", "Are", "yoU", "?"]
         )
 
     def test_full_tokenizer_moses_numbers(self):
@@ -115,7 +120,8 @@ class TransfoXLTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 
         self.assertListEqual(tokenizer.tokenize(text_in), tokens_out)
 
-        self.assertEqual(tokenizer.convert_tokens_to_string(tokens_out), text_in)
+        self.assertEqual(
+            tokenizer.convert_tokens_to_string(tokens_out), text_in)
 
     def test_move_added_token(self):
         tokenizer = self.get_tokenizer()

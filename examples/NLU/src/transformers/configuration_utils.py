@@ -184,7 +184,8 @@ class PretrainedConfig(object):
         self.return_dict = kwargs.pop("return_dict", True)
         self.output_hidden_states = kwargs.pop("output_hidden_states", False)
         self.output_attentions = kwargs.pop("output_attentions", False)
-        self.torchscript = kwargs.pop("torchscript", False)  # Only used by PyTorch models
+        # Only used by PyTorch models
+        self.torchscript = kwargs.pop("torchscript", False)
         self.use_bfloat16 = kwargs.pop("use_bfloat16", False)
         self.pruned_heads = kwargs.pop("pruned_heads", {})
         self.tie_word_embeddings = kwargs.pop(
@@ -211,12 +212,14 @@ class PretrainedConfig(object):
         self.repetition_penalty = kwargs.pop("repetition_penalty", 1.0)
         self.length_penalty = kwargs.pop("length_penalty", 1.0)
         self.no_repeat_ngram_size = kwargs.pop("no_repeat_ngram_size", 0)
-        self.encoder_no_repeat_ngram_size = kwargs.pop("encoder_no_repeat_ngram_size", 0)
+        self.encoder_no_repeat_ngram_size = kwargs.pop(
+            "encoder_no_repeat_ngram_size", 0)
         self.bad_words_ids = kwargs.pop("bad_words_ids", None)
         self.num_return_sequences = kwargs.pop("num_return_sequences", 1)
         self.chunk_size_feed_forward = kwargs.pop("chunk_size_feed_forward", 0)
         self.output_scores = kwargs.pop("output_scores", False)
-        self.return_dict_in_generate = kwargs.pop("return_dict_in_generate", False)
+        self.return_dict_in_generate = kwargs.pop(
+            "return_dict_in_generate", False)
         self.forced_bos_token_id = kwargs.pop("forced_bos_token_id", None)
         self.forced_eos_token_id = kwargs.pop("forced_eos_token_id", None)
 
@@ -227,7 +230,8 @@ class PretrainedConfig(object):
         self.label2id = kwargs.pop("label2id", None)
         if self.id2label is not None:
             kwargs.pop("num_labels", None)
-            self.id2label = dict((int(key), value) for key, value in self.id2label.items())
+            self.id2label = dict((int(key), value)
+                                 for key, value in self.id2label.items())
             # Keys are always strings in JSON so convert ids to int here.
         else:
             self.num_labels = kwargs.pop("num_labels", 2)
@@ -240,7 +244,8 @@ class PretrainedConfig(object):
         self.eos_token_id = kwargs.pop("eos_token_id", None)
         self.sep_token_id = kwargs.pop("sep_token_id", None)
 
-        self.decoder_start_token_id = kwargs.pop("decoder_start_token_id", None)
+        self.decoder_start_token_id = kwargs.pop(
+            "decoder_start_token_id", None)
 
         # task specific arguments
         self.task_specific_params = kwargs.pop("task_specific_params", None)
@@ -263,7 +268,8 @@ class PretrainedConfig(object):
             try:
                 setattr(self, key, value)
             except AttributeError as err:
-                logger.error("Can't set {} with value {} for {}".format(key, value, self))
+                logger.error(
+                    "Can't set {} with value {} for {}".format(key, value, self))
                 raise err
 
     @property
@@ -272,7 +278,8 @@ class PretrainedConfig(object):
 
     @name_or_path.setter
     def name_or_path(self, value):
-        self._name_or_path = str(value)  # Make sure that name_or_path is a string (for JSON encoding)
+        # Make sure that name_or_path is a string (for JSON encoding)
+        self._name_or_path = str(value)
 
     @property
     def use_return_dict(self) -> bool:
@@ -292,8 +299,10 @@ class PretrainedConfig(object):
     @num_labels.setter
     def num_labels(self, num_labels: int):
         if self.id2label is None or len(self.id2label) != num_labels:
-            self.id2label = {i: "LABEL_{}".format(i) for i in range(num_labels)}
-            self.label2id = dict(zip(self.id2label.values(), self.id2label.keys()))
+            self.id2label = {i: "LABEL_{}".format(
+                i) for i in range(num_labels)}
+            self.label2id = dict(
+                zip(self.id2label.values(), self.id2label.keys()))
 
     def save_pretrained(self, save_directory: Union[str, os.PathLike]):
         """
@@ -305,7 +314,8 @@ class PretrainedConfig(object):
                 Directory where the configuration JSON file will be saved (will be created if it does not exist).
         """
         if os.path.isfile(save_directory):
-            raise AssertionError("Provided path ({}) should be a directory, not a file".format(save_directory))
+            raise AssertionError(
+                "Provided path ({}) should be a directory, not a file".format(save_directory))
         os.makedirs(save_directory, exist_ok=True)
         # If we save using the predefined names, we can load using `from_pretrained`
         output_config_file = os.path.join(save_directory, CONFIG_NAME)
@@ -383,7 +393,8 @@ class PretrainedConfig(object):
             assert unused_kwargs == {'foo': False}
 
         """
-        config_dict, kwargs = cls.get_config_dict(pretrained_model_name_or_path, **kwargs)
+        config_dict, kwargs = cls.get_config_dict(
+            pretrained_model_name_or_path, **kwargs)
         return cls.from_dict(config_dict, **kwargs)
 
     @classmethod
@@ -418,7 +429,8 @@ class PretrainedConfig(object):
 
         pretrained_model_name_or_path = str(pretrained_model_name_or_path)
         if os.path.isdir(pretrained_model_name_or_path):
-            config_file = os.path.join(pretrained_model_name_or_path, CONFIG_NAME)
+            config_file = os.path.join(
+                pretrained_model_name_or_path, CONFIG_NAME)
         elif os.path.isfile(pretrained_model_name_or_path) or is_remote_url(pretrained_model_name_or_path):
             config_file = pretrained_model_name_or_path
         else:
@@ -453,14 +465,16 @@ class PretrainedConfig(object):
             msg = (
                 "Couldn't reach server at '{}' to download configuration file or "
                 "configuration file is not a valid JSON file. "
-                "Please check network or file content here: {}.".format(config_file, resolved_config_file)
+                "Please check network or file content here: {}.".format(
+                    config_file, resolved_config_file)
             )
             raise EnvironmentError(msg)
 
         if resolved_config_file == config_file:
             logger.info("loading configuration file {}".format(config_file))
         else:
-            logger.info("loading configuration file {} from cache at {}".format(config_file, resolved_config_file))
+            logger.info("loading configuration file {} from cache at {}".format(
+                config_file, resolved_config_file))
 
         return config_dict, kwargs
 
@@ -485,7 +499,8 @@ class PretrainedConfig(object):
         config = cls(**config_dict)
 
         if hasattr(config, "pruned_heads"):
-            config.pruned_heads = dict((int(key), value) for key, value in config.pruned_heads.items())
+            config.pruned_heads = dict((int(key), value)
+                                       for key, value in config.pruned_heads.items())
 
         # Update config with kwargs if needed
         to_remove = []

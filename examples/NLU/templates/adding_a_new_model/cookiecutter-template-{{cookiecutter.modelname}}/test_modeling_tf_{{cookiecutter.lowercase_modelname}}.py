@@ -13,15 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-{% if cookiecutter.is_encoder_decoder_model == "False" %}
-
-import unittest
-
-from transformers import is_tf_available, {{cookiecutter.camelcase_modelname}}Config
-from transformers.testing_utils import require_tf, slow
-
-from .test_configuration_common import ConfigTester
+from transformers.testing_utils import require_sentencepiece, require_tf, require_tokenizers, slow
+from transformers import (
+    is_tf_available,
+    {{cookiecutter.camelcase_modelname}}Config,
+    {{cookiecutter.camelcase_modelname}}Tokenizer,
+)
 from .test_modeling_tf_common import TFModelTesterMixin, ids_tensor
+from .test_configuration_common import ConfigTester
+from transformers.testing_utils import require_tf, slow
+from transformers import is_tf_available, {{cookiecutter.camelcase_modelname}}Config
+import unittest
+{% if cookiecutter.is_encoder_decoder_model == "False" % }
 
 
 if is_tf_available():
@@ -88,22 +91,27 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTester:
         self.scope = None
 
     def prepare_config_and_inputs(self):
-        input_ids = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+        input_ids = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size)
 
         input_mask = None
         if self.use_input_mask:
-            input_mask = ids_tensor([self.batch_size, self.seq_length], vocab_size=2)
+            input_mask = ids_tensor(
+                [self.batch_size, self.seq_length], vocab_size=2)
 
         token_type_ids = None
         if self.use_token_type_ids:
-            token_type_ids = ids_tensor([self.batch_size, self.seq_length], self.type_vocab_size)
+            token_type_ids = ids_tensor(
+                [self.batch_size, self.seq_length], self.type_vocab_size)
 
         sequence_labels = None
         token_labels = None
         choice_labels = None
         if self.use_labels:
-            sequence_labels = ids_tensor([self.batch_size], self.type_sequence_label_size)
-            token_labels = ids_tensor([self.batch_size, self.seq_length], self.num_labels)
+            sequence_labels = ids_tensor(
+                [self.batch_size], self.type_sequence_label_size)
+            token_labels = ids_tensor(
+                [self.batch_size, self.seq_length], self.num_labels)
             choice_labels = ids_tensor([self.batch_size], self.num_choices)
 
         config = {{cookiecutter.camelcase_modelname}}Config(
@@ -127,14 +135,16 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTester:
         self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
     ):
         model = TF{{cookiecutter.camelcase_modelname}}Model(config=config)
-        inputs = {"input_ids": input_ids, "attention_mask": input_mask, "token_type_ids": token_type_ids}
+        inputs = {"input_ids": input_ids, "attention_mask": input_mask,
+                  "token_type_ids": token_type_ids}
 
         inputs = [input_ids, input_mask]
         result = model(inputs)
 
         result = model(input_ids)
 
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, self.seq_length, self.hidden_size))
+        self.parent.assertEqual(result.last_hidden_state.shape,
+                                (self.batch_size, self.seq_length, self.hidden_size))
 
     def create_and_check_lm_head(
             self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
@@ -148,7 +158,8 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTester:
         }
         prediction_scores = model(inputs)["logits"]
         self.parent.assertListEqual(
-            list(prediction_scores.numpy().shape), [self.batch_size, self.seq_length, self.vocab_size]
+            list(prediction_scores.numpy().shape), [
+                self.batch_size, self.seq_length, self.vocab_size]
         )
 
     def create_and_check_for_masked_lm(
@@ -161,7 +172,8 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTester:
             "token_type_ids": token_type_ids,
         }
         result = model(inputs)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
 
     def create_and_check_for_sequence_classification(
         self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
@@ -175,23 +187,28 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTester:
         }
 
         result = model(inputs)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.num_labels))
+        self.parent.assertEqual(result.logits.shape,
+                                (self.batch_size, self.num_labels))
 
     def create_and_check_for_multiple_choice(
         self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
     ):
         config.num_choices = self.num_choices
         model = TF{{cookiecutter.camelcase_modelname}}ForMultipleChoice(config=config)
-        multiple_choice_inputs_ids = tf.tile(tf.expand_dims(input_ids, 1), (1, self.num_choices, 1))
-        multiple_choice_input_mask = tf.tile(tf.expand_dims(input_mask, 1), (1, self.num_choices, 1))
-        multiple_choice_token_type_ids = tf.tile(tf.expand_dims(token_type_ids, 1), (1, self.num_choices, 1))
+        multiple_choice_inputs_ids = tf.tile(
+            tf.expand_dims(input_ids, 1), (1, self.num_choices, 1))
+        multiple_choice_input_mask = tf.tile(
+            tf.expand_dims(input_mask, 1), (1, self.num_choices, 1))
+        multiple_choice_token_type_ids = tf.tile(
+            tf.expand_dims(token_type_ids, 1), (1, self.num_choices, 1))
         inputs = {
             "input_ids": multiple_choice_inputs_ids,
             "attention_mask": multiple_choice_input_mask,
             "token_type_ids": multiple_choice_token_type_ids,
         }
         result = model(inputs)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.num_choices))
+        self.parent.assertEqual(result.logits.shape,
+                                (self.batch_size, self.num_choices))
 
     def create_and_check_for_token_classification(
         self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
@@ -204,7 +221,8 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTester:
             "token_type_ids": token_type_ids,
         }
         result = model(inputs)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.seq_length, self.num_labels))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.seq_length, self.num_labels))
 
     def create_and_check_for_question_answering(
         self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
@@ -217,8 +235,10 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTester:
         }
 
         result = model(inputs)
-        self.parent.assertEqual(result.start_logits.shape, (self.batch_size, self.seq_length))
-        self.parent.assertEqual(result.end_logits.shape, (self.batch_size, self.seq_length))
+        self.parent.assertEqual(result.start_logits.shape,
+                                (self.batch_size, self.seq_length))
+        self.parent.assertEqual(result.end_logits.shape,
+                                (self.batch_size, self.seq_length))
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -231,7 +251,8 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTester:
             token_labels,
             choice_labels,
         ) = config_and_inputs
-        inputs_dict = {"input_ids": input_ids, "token_type_ids": token_type_ids, "attention_mask": input_mask}
+        inputs_dict = {"input_ids": input_ids,
+                       "token_type_ids": token_type_ids, "attention_mask": input_mask}
         return config, inputs_dict
 
 
@@ -276,24 +297,29 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTest(TFModelTesterMixin, unitte
 
     def test_for_multiple_choice(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_for_multiple_choice(*config_and_inputs)
+        self.model_tester.create_and_check_for_multiple_choice(
+            *config_and_inputs)
 
     def test_for_question_answering(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_for_question_answering(*config_and_inputs)
+        self.model_tester.create_and_check_for_question_answering(
+            *config_and_inputs)
 
     def test_for_sequence_classification(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_for_sequence_classification(*config_and_inputs)
+        self.model_tester.create_and_check_for_sequence_classification(
+            *config_and_inputs)
 
     def test_for_token_classification(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_for_token_classification(*config_and_inputs)
+        self.model_tester.create_and_check_for_token_classification(
+            *config_and_inputs)
 
     @slow
     def test_model_from_pretrained(self):
         model = TF{{cookiecutter.camelcase_modelname}}Model.from_pretrained("{{cookiecutter.checkpoint_identifier}}")
         self.assertIsNotNone(model)
+
 
 @require_tf
 class TF{{cookiecutter.camelcase_modelname}}ModelIntegrationTest(unittest.TestCase):
@@ -323,18 +349,7 @@ class TF{{cookiecutter.camelcase_modelname}}ModelIntegrationTest(unittest.TestCa
         )
         tf.debugging.assert_near(output[:, :3, :3], expected_slice, atol=1e-4)
 
-{% else %}
-import unittest
-
-from transformers import (
-    is_tf_available,
-    {{cookiecutter.camelcase_modelname}}Config,
-    {{cookiecutter.camelcase_modelname}}Tokenizer,
-)
-from transformers.testing_utils import require_sentencepiece, require_tf, require_tokenizers, slow
-
-from .test_configuration_common import ConfigTester
-from .test_modeling_tf_common import TFModelTesterMixin, ids_tensor
+{% else % }
 
 
 if is_tf_available():
@@ -390,11 +405,14 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTester:
         self.bos_token_id = bos_token_id
 
     def prepare_config_and_inputs_for_common(self):
-        input_ids = ids_tensor([self.batch_size, self.seq_length - 1], self.vocab_size)
-        eos_tensor = tf.expand_dims(tf.constant([self.eos_token_id] * self.batch_size), 1)
+        input_ids = ids_tensor(
+            [self.batch_size, self.seq_length - 1], self.vocab_size)
+        eos_tensor = tf.expand_dims(tf.constant(
+            [self.eos_token_id] * self.batch_size), 1)
         input_ids = tf.concat([input_ids, eos_tensor], axis=1)
 
-        decoder_input_ids = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+        decoder_input_ids = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size)
 
         config = self.config_cls(
             vocab_size=self.vocab_size,
@@ -426,7 +444,8 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTester:
         self.batch_size = 1
 
         # first forward pass
-        outputs = model(input_ids, attention_mask=attention_mask, use_cache=True)
+        outputs = model(
+            input_ids, attention_mask=attention_mask, use_cache=True)
 
         output, past_key_values = outputs.to_tuple()
         past_key_values = past_key_values[1]
@@ -437,20 +456,26 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTester:
 
         # append to next input_ids and
         next_input_ids = tf.concat([input_ids, next_tokens], axis=-1)
-        next_attention_mask = tf.concat([attention_mask, next_attn_mask], axis=-1)
+        next_attention_mask = tf.concat(
+            [attention_mask, next_attn_mask], axis=-1)
 
-        output_from_no_past = model(next_input_ids, attention_mask=next_attention_mask)[0]
-        output_from_past = model(next_tokens, attention_mask=next_attention_mask, past_key_values=past_key_values)[0]
+        output_from_no_past = model(
+            next_input_ids, attention_mask=next_attention_mask)[0]
+        output_from_past = model(
+            next_tokens, attention_mask=next_attention_mask, past_key_values=past_key_values)[0]
 
-        self.parent.assertEqual(next_tokens.shape[1], output_from_past.shape[1])
+        self.parent.assertEqual(
+            next_tokens.shape[1], output_from_past.shape[1])
 
         # select random slice
         random_slice_idx = int(ids_tensor((1,), output_from_past.shape[-1]))
-        output_from_no_past_slice = output_from_no_past[:, -3:, random_slice_idx]
+        output_from_no_past_slice = output_from_no_past[:, -
+                                                        3:, random_slice_idx]
         output_from_past_slice = output_from_past[:, :, random_slice_idx]
 
         # test that outputs are equal for slice
-        tf.debugging.assert_near(output_from_past_slice, output_from_no_past_slice, rtol=1e-3)
+        tf.debugging.assert_near(
+            output_from_past_slice, output_from_no_past_slice, rtol=1e-3)
 
 
 def prepare_{{cookiecutter.lowercase_modelname}}_inputs_dict(
@@ -461,9 +486,11 @@ def prepare_{{cookiecutter.lowercase_modelname}}_inputs_dict(
     decoder_attention_mask=None,
 ):
     if attention_mask is None:
-        attention_mask = tf.cast(tf.math.not_equal(input_ids, config.pad_token_id), tf.int8)
+        attention_mask = tf.cast(tf.math.not_equal(
+            input_ids, config.pad_token_id), tf.int8)
     if decoder_attention_mask is None:
-        decoder_attention_mask = tf.concat([tf.ones(decoder_input_ids[:, :1].shape, dtype=tf.int8), tf.cast(tf.math.not_equal(decoder_input_ids[:, 1:], config.pad_token_id), tf.int8)], axis=-1)
+        decoder_attention_mask = tf.concat([tf.ones(decoder_input_ids[:, :1].shape, dtype=tf.int8), tf.cast(
+            tf.math.not_equal(decoder_input_ids[:, 1:], config.pad_token_id), tf.int8)], axis=-1)
     return {
         "input_ids": input_ids,
         "decoder_input_ids": decoder_input_ids,
@@ -490,14 +517,16 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTest(TFModelTesterMixin, unitte
 
     def test_decoder_model_past_large_inputs(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs_for_common()
-        self.model_tester.check_decoder_model_past_large_inputs(*config_and_inputs)
+        self.model_tester.check_decoder_model_past_large_inputs(
+            *config_and_inputs)
 
     def test_model_common_attributes(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
 
         for model_class in self.all_model_classes:
             model = model_class(config)
-            assert isinstance(model.get_input_embeddings(), tf.keras.layers.Layer)
+            assert isinstance(model.get_input_embeddings(),
+                              tf.keras.layers.Layer)
 
             if model_class in self.all_generative_model_classes:
                 x = model.get_output_embeddings()
@@ -531,14 +560,18 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTest(TFModelTesterMixin, unitte
             for size in [config.vocab_size - 10, config.vocab_size + 10, None]:
                 # build the embeddings
                 model = model_class(config=config)
-                old_input_embeddings = _get_word_embedding_weight(model, model.get_input_embeddings())
-                old_output_embeddings = _get_word_embedding_weight(model, model.get_output_embeddings())
+                old_input_embeddings = _get_word_embedding_weight(
+                    model, model.get_input_embeddings())
+                old_output_embeddings = _get_word_embedding_weight(
+                    model, model.get_output_embeddings())
                 old_final_logits_bias = model.get_bias()
 
                 # reshape the embeddings
                 model.resize_token_embeddings(size)
-                new_input_embeddings = _get_word_embedding_weight(model, model.get_input_embeddings())
-                new_output_embeddings = _get_word_embedding_weight(model, model.get_output_embeddings())
+                new_input_embeddings = _get_word_embedding_weight(
+                    model, model.get_input_embeddings())
+                new_output_embeddings = _get_word_embedding_weight(
+                    model, model.get_output_embeddings())
                 new_final_logits_bias = model.get_bias()
 
                 # check that the resized embeddings size matches the desired size.
@@ -554,7 +587,8 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTest(TFModelTesterMixin, unitte
                 self.assertTrue(models_equal)
 
                 if old_output_embeddings is not None and new_output_embeddings is not None:
-                    self.assertEqual(new_output_embeddings.shape[0], assert_size)
+                    self.assertEqual(
+                        new_output_embeddings.shape[0], assert_size)
 
                     models_equal = True
                     for p1, p2 in zip(old_output_embeddings.value(), new_output_embeddings.value()):
@@ -566,7 +600,8 @@ class TF{{cookiecutter.camelcase_modelname}}ModelTest(TFModelTesterMixin, unitte
                     old_final_logits_bias = old_final_logits_bias["final_logits_bias"]
                     new_final_logits_bias = new_final_logits_bias["final_logits_bias"]
                     self.assertEqual(new_final_logits_bias.shape[0], 1)
-                    self.assertEqual(new_final_logits_bias.shape[1], assert_size)
+                    self.assertEqual(
+                        new_final_logits_bias.shape[1], assert_size)
 
                     models_equal = True
                     for old, new in zip(old_final_logits_bias.value(), new_final_logits_bias.value()):
@@ -606,32 +641,40 @@ class TF{{cookiecutter.camelcase_modelname}}ModelIntegrationTest(unittest.TestCa
     def test_inference_no_head(self):
         model = TF{{cookiecutter.camelcase_modelname}}Model.from_pretrained('{{cookiecutter.checkpoint_identifier}}')
         # change to intended input here
-        input_ids = _long_tensor([[0, 31414, 232, 328, 740, 1140, 12695, 69, 46078, 1588, 2]])
-        decoder_input_ids = _long_tensor([[0, 31414, 232, 328, 740, 1140, 12695, 69, 46078, 1588, 2]])
+        input_ids = _long_tensor(
+            [[0, 31414, 232, 328, 740, 1140, 12695, 69, 46078, 1588, 2]])
+        decoder_input_ids = _long_tensor(
+            [[0, 31414, 232, 328, 740, 1140, 12695, 69, 46078, 1588, 2]])
         inputs_dict = prepare_{{cookiecutter.lowercase_modelname}}_inputs_dict(model.config, input_ids, decoder_input_ids)
         output = model(**inputs_dict)[0]
         expected_shape = (1, 11, 1024)
         self.assertEqual(output.shape, expected_shape)
         # change to expected output here
         expected_slice = tf.Tensor(
-            [[0.7144, 0.8143, -1.2813], [0.7144, 0.8143, -1.2813], [-0.0467, 2.5911, -2.1845]],
+            [[0.7144, 0.8143, -1.2813], [0.7144, 0.8143, -1.2813],
+                [-0.0467, 2.5911, -2.1845]],
         )
-        tf.debugging.assert_near(output[:, :3, :3], expected_slice, atol=TOLERANCE)
+        tf.debugging.assert_near(
+            output[:, :3, :3], expected_slice, atol=TOLERANCE)
 
     def test_inference_with_head(self):
         model = TF{{cookiecutter.camelcase_modelname}}ForConditionalGeneration.from_pretrained('{{cookiecutter.checkpoint_identifier}}')
         # change to intended input here
-        input_ids = _long_tensor([[0, 31414, 232, 328, 740, 1140, 12695, 69, 46078, 1588, 2]])
-        decoder_input_ids = _long_tensor([[0, 31414, 232, 328, 740, 1140, 12695, 69, 46078, 1588, 2]])
+        input_ids = _long_tensor(
+            [[0, 31414, 232, 328, 740, 1140, 12695, 69, 46078, 1588, 2]])
+        decoder_input_ids = _long_tensor(
+            [[0, 31414, 232, 328, 740, 1140, 12695, 69, 46078, 1588, 2]])
         inputs_dict = prepare_{{cookiecutter.lowercase_modelname}}_inputs_dict(model.config, input_ids, decoder_input_ids)
         output = model(**inputs_dict)[0]
         expected_shape = (1, 11, 1024)
         self.assertEqual(output.shape, expected_shape)
         # change to expected output here
         expected_slice = tf.Tensor(
-            [[0.7144, 0.8143, -1.2813], [0.7144, 0.8143, -1.2813], [-0.0467, 2.5911, -2.1845]],
+            [[0.7144, 0.8143, -1.2813], [0.7144, 0.8143, -1.2813],
+                [-0.0467, 2.5911, -2.1845]],
         )
-        tf.debugging.assert_near(output[:, :3, :3], expected_slice, atol=TOLERANCE)
+        tf.debugging.assert_near(
+            output[:, :3, :3], expected_slice, atol=TOLERANCE)
 
     def test_seq_to_seq_generation(self):
         hf = TF{{cookiecutter.camelcase_modelname}}ForConditionalGeneration.from_pretrained('{{cookiecutter.checkpoint_identifier}}')
@@ -671,4 +714,6 @@ class TF{{cookiecutter.camelcase_modelname}}ModelIntegrationTest(unittest.TestCa
             hypotheses_batch.tolist(), clean_up_tokenization_spaces=True, skip_special_tokens=True
         )
         assert generated == EXPECTED
-{%- endif %}
+
+
+{%- endif % }

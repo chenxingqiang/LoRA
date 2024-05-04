@@ -102,7 +102,8 @@ class Conversation:
             else:
                 logger.warning(
                     'User input added while unprocessed input was existing: "{}" new input ignored: "{}". '
-                    "Set `overwrite` to True to overwrite unprocessed user input".format(self.new_user_input, text)
+                    "Set `overwrite` to True to overwrite unprocessed user input".format(
+                        self.new_user_input, text)
                 )
         else:
             self.new_user_input = text
@@ -241,7 +242,8 @@ class ConversationalPipeline(Pipeline):
                 self.tokenizer.pad_token_id is not None or self.tokenizer.eos_token_id is not None
             ), "Please make sure that the tokenizer has a pad_token_id or eos_token_id when using a batch input"
         else:
-            raise ValueError("ConversationalPipeline expects a Conversation or list of Conversations as an input")
+            raise ValueError(
+                "ConversationalPipeline expects a Conversation or list of Conversations as an input")
 
         with self.device_placement():
 
@@ -262,9 +264,11 @@ class ConversationalPipeline(Pipeline):
 
             if self.model.config.is_encoder_decoder:
                 if self.framework == "pt":
-                    history = torch.cat((inputs["input_ids"], generated_responses[:, 1:]), 1)
+                    history = torch.cat(
+                        (inputs["input_ids"], generated_responses[:, 1:]), 1)
                 elif self.framework == "tf":
-                    history = tf.concat([inputs["input_ids"], generated_responses[:, 1:]], 1)
+                    history = tf.concat(
+                        [inputs["input_ids"], generated_responses[:, 1:]], 1)
             else:
                 history = generated_responses
 
@@ -327,18 +331,21 @@ class ConversationalPipeline(Pipeline):
         eos_token_id = self.tokenizer.eos_token_id
         input_ids = []
         for is_user, text in conversation.iter_texts():
-            input_ids.extend(self.tokenizer.encode(text, add_special_tokens=False) + [eos_token_id])
+            input_ids.extend(self.tokenizer.encode(
+                text, add_special_tokens=False) + [eos_token_id])
 
         if len(input_ids) > self.tokenizer.model_max_length:
-            input_ids = input_ids[-self.model_max_length :]
+            input_ids = input_ids[-self.model_max_length:]
         return input_ids
 
     def _parse_and_tokenize(self, conversations: List[Conversation]) -> Dict[str, Any]:
         if hasattr(self.tokenizer, "_build_conversation_input_ids"):
-            input_ids = [self.tokenizer._build_conversation_input_ids(conversation) for conversation in conversations]
+            input_ids = [self.tokenizer._build_conversation_input_ids(
+                conversation) for conversation in conversations]
         else:
             # If the tokenizer cannot handle conversations, we default to only the old version
-            input_ids = [self._legacy_parse_and_tokenize(conversation) for conversation in conversations]
+            input_ids = [self._legacy_parse_and_tokenize(
+                conversation) for conversation in conversations]
         inputs = self.tokenizer.pad(
             {"input_ids": input_ids}, padding="longest", return_attention_mask=True, return_tensors=self.framework
         )

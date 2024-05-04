@@ -35,7 +35,8 @@ if is_sentencepiece_available():
     _import_structure["tokenization_xlm_roberta"] = ["XLMRobertaTokenizer"]
 
 if is_tokenizers_available():
-    _import_structure["tokenization_xlm_roberta_fast"] = ["XLMRobertaTokenizerFast"]
+    _import_structure["tokenization_xlm_roberta_fast"] = [
+        "XLMRobertaTokenizerFast"]
 
 if is_torch_available():
     _import_structure["modeling_xlm_roberta"] = [

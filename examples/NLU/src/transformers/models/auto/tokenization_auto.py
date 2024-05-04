@@ -380,7 +380,8 @@ class AutoTokenizer:
         """
         config = kwargs.pop("config", None)
         if not isinstance(config, PretrainedConfig):
-            config = AutoConfig.from_pretrained(pretrained_model_name_or_path, **kwargs)
+            config = AutoConfig.from_pretrained(
+                pretrained_model_name_or_path, **kwargs)
 
         use_fast = kwargs.pop("use_fast", True)
 
@@ -388,14 +389,17 @@ class AutoTokenizer:
             tokenizer_class = None
             if use_fast and not config.tokenizer_class.endswith("Fast"):
                 tokenizer_class_candidate = f"{config.tokenizer_class}Fast"
-                tokenizer_class = tokenizer_class_from_name(tokenizer_class_candidate)
+                tokenizer_class = tokenizer_class_from_name(
+                    tokenizer_class_candidate)
             if tokenizer_class is None:
                 tokenizer_class_candidate = config.tokenizer_class
-                tokenizer_class = tokenizer_class_from_name(tokenizer_class_candidate)
+                tokenizer_class = tokenizer_class_from_name(
+                    tokenizer_class_candidate)
 
             if tokenizer_class is None:
                 raise ValueError(
-                    "Tokenizer class {} does not exist or is not currently imported.".format(tokenizer_class_candidate)
+                    "Tokenizer class {} does not exist or is not currently imported.".format(
+                        tokenizer_class_candidate)
                 )
             return tokenizer_class.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
 
@@ -411,7 +415,8 @@ class AutoTokenizer:
             config = config.encoder
 
         if type(config) in TOKENIZER_MAPPING.keys():
-            tokenizer_class_py, tokenizer_class_fast = TOKENIZER_MAPPING[type(config)]
+            tokenizer_class_py, tokenizer_class_fast = TOKENIZER_MAPPING[type(
+                config)]
             if tokenizer_class_fast and (use_fast or tokenizer_class_py is None):
                 return tokenizer_class_fast.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
             else:
@@ -426,6 +431,7 @@ class AutoTokenizer:
         raise ValueError(
             "Unrecognized configuration class {} to build an AutoTokenizer.\n"
             "Model type should be one of {}.".format(
-                config.__class__, ", ".join(c.__name__ for c in TOKENIZER_MAPPING.keys())
+                config.__class__, ", ".join(
+                    c.__name__ for c in TOKENIZER_MAPPING.keys())
             )
         )

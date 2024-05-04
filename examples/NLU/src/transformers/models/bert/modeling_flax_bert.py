@@ -100,7 +100,8 @@ class FlaxBertLayerNorm(nn.Module):
     epsilon: float = 1e-6
     dtype: jnp.dtype = jnp.float32  # the dtype of the computation
     bias: bool = True  # If True, bias (beta) is added.
-    scale: bool = True  # If True, multiply by scale (gamma). When the next layer is linear
+    # If True, multiply by scale (gamma). When the next layer is linear
+    scale: bool = True
     # (also e.g. nn.relu), this can be disabled since the scaling will be
     # done by the next layer.
     scale_init: Callable[..., np.ndarray] = jax.nn.initializers.ones
@@ -126,11 +127,13 @@ class FlaxBertLayerNorm(nn.Module):
         mul = jax.lax.rsqrt(var + self.epsilon)
 
         if self.scale:
-            mul = mul * jnp.asarray(self.param("gamma", self.scale_init, (features,)))
+            mul = mul * jnp.asarray(self.param("gamma",
+                                    self.scale_init, (features,)))
         y = (x - mean) * mul
 
         if self.bias:
-            y = y + jnp.asarray(self.param("beta", self.bias_init, (features,)))
+            y = y + jnp.asarray(self.param("beta",
+                                self.bias_init, (features,)))
         return y
 
 
@@ -143,12 +146,14 @@ class FlaxBertEmbedding(nn.Module):
     vocab_size: int
     hidden_size: int
     kernel_init_scale: float = 0.2
-    emb_init: Callable[..., np.ndarray] = jax.nn.initializers.normal(stddev=kernel_init_scale)
+    emb_init: Callable[..., np.ndarray] = jax.nn.initializers.normal(
+        stddev=kernel_init_scale)
     dtype: jnp.dtype = jnp.float32  # the dtype of the computation
 
     @nn.compact
     def __call__(self, inputs):
-        embedding = self.param("weight", self.emb_init, (self.vocab_size, self.hidden_size))
+        embedding = self.param("weight", self.emb_init,
+                               (self.vocab_size, self.hidden_size))
         return jnp.take(embedding, inputs, axis=0)
 
 
@@ -193,8 +198,10 @@ class FlaxBertEmbeddings(nn.Module):
         summed_emb = w_emb + jnp.broadcast_to(p_emb, w_emb.shape) + t_emb
 
         # Layer Norm
-        layer_norm = FlaxBertLayerNorm(name="layer_norm", dtype=self.dtype)(summed_emb)
-        embeddings = nn.Dropout(rate=self.dropout_rate)(layer_norm, deterministic=deterministic)
+        layer_norm = FlaxBertLayerNorm(
+            name="layer_norm", dtype=self.dtype)(summed_emb)
+        embeddings = nn.Dropout(rate=self.dropout_rate)(
+            layer_norm, deterministic=deterministic)
         return embeddings
 
 
@@ -216,13 +223,15 @@ class FlaxBertAttention(nn.Module):
             qkv_features=self.head_size,
             dropout_rate=self.dropout_rate,
             deterministic=deterministic,
-            kernel_init=jax.nn.initializers.normal(self.kernel_init_scale, self.dtype),
+            kernel_init=jax.nn.initializers.normal(
+                self.kernel_init_scale, self.dtype),
             bias_init=jax.nn.initializers.zeros,
             name="self",
             dtype=self.dtype,
         )(hidden_states, attention_mask)
 
-        layer_norm = FlaxBertLayerNorm(name="layer_norm", dtype=self.dtype)(self_att + hidden_states)
+        layer_norm = FlaxBertLayerNorm(
+            name="layer_norm", dtype=self.dtype)(self_att + hidden_states)
         return layer_norm
 
 
@@ -236,7 +245,8 @@ class FlaxBertIntermediate(nn.Module):
     def __call__(self, hidden_states):
         hidden_states = nn.Dense(
             features=self.output_size,
-            kernel_init=jax.nn.initializers.normal(self.kernel_init_scale, self.dtype),
+            kernel_init=jax.nn.initializers.normal(
+                self.kernel_init_scale, self.dtype),
             name="dense",
             dtype=self.dtype,
         )(hidden_states)
@@ -253,12 +263,15 @@ class FlaxBertOutput(nn.Module):
     def __call__(self, intermediate_output, attention_output, deterministic: bool = True):
         hidden_states = nn.Dense(
             attention_output.shape[-1],
-            kernel_init=jax.nn.initializers.normal(self.kernel_init_scale, self.dtype),
+            kernel_init=jax.nn.initializers.normal(
+                self.kernel_init_scale, self.dtype),
             name="dense",
             dtype=self.dtype,
         )(intermediate_output)
-        hidden_states = nn.Dropout(rate=self.dropout_rate)(hidden_states, deterministic=deterministic)
-        hidden_states = FlaxBertLayerNorm(name="layer_norm", dtype=self.dtype)(hidden_states + attention_output)
+        hidden_states = nn.Dropout(rate=self.dropout_rate)(
+            hidden_states, deterministic=deterministic)
+        hidden_states = FlaxBertLayerNorm(name="layer_norm", dtype=self.dtype)(
+            hidden_states + attention_output)
         return hidden_states
 
 
@@ -328,7 +341,8 @@ class FlaxBertLayerCollection(nn.Module):
                 name=f"{i}",
                 dtype=self.dtype,
             )
-            input_i = layer(input_i, attention_mask, deterministic=deterministic)
+            input_i = layer(input_i, attention_mask,
+                            deterministic=deterministic)
         return input_i
 
 
@@ -367,7 +381,8 @@ class FlaxBertPooler(nn.Module):
         cls_token = hidden_states[:, 0]
         out = nn.Dense(
             hidden_states.shape[-1],
-            kernel_init=jax.nn.initializers.normal(self.kernel_init_scale, self.dtype),
+            kernel_init=jax.nn.initializers.normal(
+                self.kernel_init_scale, self.dtype),
             name="dense",
             dtype=self.dtype,
         )(cls_token)
@@ -380,7 +395,8 @@ class FlaxBertPredictionHeadTransform(nn.Module):
 
     @nn.compact
     def __call__(self, hidden_states):
-        hidden_states = nn.Dense(hidden_states.shape[-1], name="dense", dtype=self.dtype)(hidden_states)
+        hidden_states = nn.Dense(
+            hidden_states.shape[-1], name="dense", dtype=self.dtype)(hidden_states)
         hidden_states = ACT2FN[self.hidden_act](hidden_states)
         return FlaxBertLayerNorm(name="layer_norm", dtype=self.dtype)(hidden_states)
 
@@ -400,7 +416,8 @@ class FlaxBertLMPredictionHead(nn.Module):
         hidden_states = FlaxBertPredictionHeadTransform(
             name="transform", hidden_act=self.hidden_act, dtype=self.dtype
         )(hidden_states)
-        hidden_states = nn.Dense(self.vocab_size, name="decoder", dtype=self.dtype)(hidden_states)
+        hidden_states = nn.Dense(
+            self.vocab_size, name="decoder", dtype=self.dtype)(hidden_states)
         return hidden_states
 
 
@@ -473,23 +490,27 @@ class FlaxBertPreTrainedModel(FlaxPreTrainedModel):
 
                 # Flax SelfAttention decomposes the heads (num_head, size // num_heads)
                 if "bias" in key:
-                    jax_state[key] = tensor.reshape((config.num_attention_heads, -1))
+                    jax_state[key] = tensor.reshape(
+                        (config.num_attention_heads, -1))
                 elif "weight":
                     del jax_state[key]
                     key = key.replace("weight", "kernel")
-                    tensor = tensor.reshape((config.num_attention_heads, -1, config.hidden_size)).transpose((2, 0, 1))
+                    tensor = tensor.reshape(
+                        (config.num_attention_heads, -1, config.hidden_size)).transpose((2, 0, 1))
                     jax_state[key] = tensor
 
             # SelfAttention output is not a separate layer, remove one nesting
             if "attention.output.dense" in key:
                 del jax_state[key]
-                key = key.replace("attention.output.dense", "attention.self.out")
+                key = key.replace("attention.output.dense",
+                                  "attention.self.out")
                 jax_state[key] = tensor
 
             # SelfAttention output is not a separate layer, remove nesting on layer norm
             if "attention.output.LayerNorm" in key:
                 del jax_state[key]
-                key = key.replace("attention.output.LayerNorm", "attention.LayerNorm")
+                key = key.replace("attention.output.LayerNorm",
+                                  "attention.LayerNorm")
                 jax_state[key] = tensor
 
             # There are some transposed parameters w.r.t their PyTorch counterpart
@@ -509,7 +530,8 @@ class FlaxBertPreTrainedModel(FlaxPreTrainedModel):
             # Hack to correctly load some pytorch models
             if "predictions.bias" in key:
                 del jax_state[key]
-                jax_state[".".join(key.split(".")[:2]) + ".decoder.bias"] = tensor
+                jax_state[".".join(key.split(".")[:2]) +
+                          ".decoder.bias"] = tensor
 
             # Handle LayerNorm conversion
             if "LayerNorm" in key:
@@ -637,7 +659,8 @@ class FlaxBertModule(nn.Module):
         if not self.add_pooling_layer:
             return encoder
 
-        pooled = FlaxBertPooler(kernel_init_scale=self.kernel_init_scale, name="pooler", dtype=self.dtype)(encoder)
+        pooled = FlaxBertPooler(
+            kernel_init_scale=self.kernel_init_scale, name="pooler", dtype=self.dtype)(encoder)
         return encoder, pooled
 
 
@@ -725,7 +748,8 @@ class FlaxBertForMaskedLMModule(nn.Module):
         )(input_ids, attention_mask, token_type_ids, position_ids, deterministic=deterministic)
 
         # Compute the prediction scores
-        encoder = nn.Dropout(rate=self.dropout_rate)(encoder, deterministic=deterministic)
+        encoder = nn.Dropout(rate=self.dropout_rate)(
+            encoder, deterministic=deterministic)
         logits = FlaxBertOnlyMLMHead(
             vocab_size=self.vocab_size, hidden_act=self.hidden_act, name="cls", dtype=self.dtype
         )(encoder)

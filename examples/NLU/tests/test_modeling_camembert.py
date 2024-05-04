@@ -44,7 +44,8 @@ class CamembertModelIntegrationTest(unittest.TestCase):
         self.assertEqual(output.shape, expected_shape)
         # compare the actual values for a slice.
         expected_slice = torch.tensor(
-            [[[-0.0254, 0.0235, 0.1027], [0.0606, -0.1811, -0.0418], [-0.1561, -0.1127, 0.2687]]],
+            [[[-0.0254, 0.0235, 0.1027], [0.0606, -0.1811, -0.0418],
+                [-0.1561, -0.1127, 0.2687]]],
             device=torch_device,
             dtype=torch.float,
         )
@@ -52,4 +53,5 @@ class CamembertModelIntegrationTest(unittest.TestCase):
         # camembert.eval()
         # expected_slice = roberta.model.forward(input_ids)[0][:, :3, :3].detach()
 
-        self.assertTrue(torch.allclose(output[:, :3, :3], expected_slice, atol=1e-4))
+        self.assertTrue(torch.allclose(
+            output[:, :3, :3], expected_slice, atol=1e-4))

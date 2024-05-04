@@ -32,13 +32,14 @@ python examples/multiple-choice/run_swag.py \
 --per_device_train_batch_size=16 \
 --overwrite_output
 ```
+
 Training with the defined hyper-parameters yields the following results:
+
 ```
 ***** Eval results *****
 eval_acc = 0.8338998300509847
 eval_loss = 0.44457291918821606
 ```
-
 
 ## Tensorflow
 
@@ -62,4 +63,5 @@ python ./examples/multiple-choice/run_tf_multiple_choice.py \
 ```
 
 # Run it in colab
+
 [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ViktorAlm/notebooks/blob/master/MPC_GPU_Demo_for_TF_and_PT.ipynb)

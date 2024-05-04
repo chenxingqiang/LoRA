@@ -54,22 +54,26 @@ class BertAbs(BertAbsPreTrainedModel):
         load_bert_pretrained_extractive = True if bert_extractive_checkpoint else False
         if load_bert_pretrained_extractive:
             self.bert.model.load_state_dict(
-                dict([(n[11:], p) for n, p in bert_extractive_checkpoint.items() if n.startswith("bert.model")]),
+                dict([(n[11:], p) for n, p in bert_extractive_checkpoint.items(
+                ) if n.startswith("bert.model")]),
                 strict=True,
             )
 
         self.vocab_size = self.bert.model.config.vocab_size
 
         if args.max_pos > 512:
-            my_pos_embeddings = nn.Embedding(args.max_pos, self.bert.model.config.hidden_size)
+            my_pos_embeddings = nn.Embedding(
+                args.max_pos, self.bert.model.config.hidden_size)
             my_pos_embeddings.weight.data[:512] = self.bert.model.embeddings.position_embeddings.weight.data
             my_pos_embeddings.weight.data[512:] = self.bert.model.embeddings.position_embeddings.weight.data[-1][
                 None, :
             ].repeat(args.max_pos - 512, 1)
             self.bert.model.embeddings.position_embeddings = my_pos_embeddings
-        tgt_embeddings = nn.Embedding(self.vocab_size, self.bert.model.config.hidden_size, padding_idx=0)
+        tgt_embeddings = nn.Embedding(
+            self.vocab_size, self.bert.model.config.hidden_size, padding_idx=0)
 
-        tgt_embeddings.weight = copy.deepcopy(self.bert.model.embeddings.word_embeddings.weight)
+        tgt_embeddings.weight = copy.deepcopy(
+            self.bert.model.embeddings.word_embeddings.weight)
 
         self.decoder = TransformerDecoder(
             self.args.dec_layers,
@@ -82,7 +86,8 @@ class BertAbs(BertAbsPreTrainedModel):
         )
 
         gen_func = nn.LogSoftmax(dim=-1)
-        self.generator = nn.Sequential(nn.Linear(args.dec_hidden_size, args.vocab_size), gen_func)
+        self.generator = nn.Sequential(
+            nn.Linear(args.dec_hidden_size, args.vocab_size), gen_func)
         self.generator[0].weight = self.decoder.embeddings.weight
 
         load_from_checkpoints = False if checkpoint is None else True
@@ -118,8 +123,10 @@ class BertAbs(BertAbsPreTrainedModel):
             attention_mask=encoder_attention_mask,
         )
         encoder_hidden_states = encoder_output[0]
-        dec_state = self.decoder.init_decoder_state(encoder_input_ids, encoder_hidden_states)
-        decoder_outputs, _ = self.decoder(decoder_input_ids[:, :-1], encoder_hidden_states, dec_state)
+        dec_state = self.decoder.init_decoder_state(
+            encoder_input_ids, encoder_hidden_states)
+        decoder_outputs, _ = self.decoder(
+            decoder_input_ids[:, :-1], encoder_hidden_states, dec_state)
         return decoder_outputs
 
 
@@ -162,11 +169,13 @@ class TransformerDecoder(nn.Module):
         self.decoder_type = "transformer"
         self.num_layers = num_layers
         self.embeddings = embeddings
-        self.pos_emb = PositionalEncoding(dropout, self.embeddings.embedding_dim)
+        self.pos_emb = PositionalEncoding(
+            dropout, self.embeddings.embedding_dim)
 
         # Build TransformerDecoder.
         self.transformer_layers = nn.ModuleList(
-            [TransformerDecoderLayer(d_model, heads, d_ff, dropout) for _ in range(num_layers)]
+            [TransformerDecoderLayer(d_model, heads, d_ff, dropout)
+             for _ in range(num_layers)]
         )
 
         self.layer_norm = nn.LayerNorm(d_model, eps=1e-6)
@@ -203,14 +212,16 @@ class TransformerDecoder(nn.Module):
         # Decoder padding mask
         tgt_words = tgt
         tgt_batch, tgt_len = tgt_words.size()
-        tgt_pad_mask = tgt_words.data.eq(padding_idx).unsqueeze(1).expand(tgt_batch, tgt_len, tgt_len)
+        tgt_pad_mask = tgt_words.data.eq(padding_idx).unsqueeze(
+            1).expand(tgt_batch, tgt_len, tgt_len)
 
         # Encoder padding mask
         if memory_mask is not None:
             src_len = memory_mask.size(-1)
             src_pad_mask = memory_mask.expand(src_batch, tgt_len, src_len)
         else:
-            src_pad_mask = src_words.data.eq(padding_idx).unsqueeze(1).expand(src_batch, tgt_len, src_len)
+            src_pad_mask = src_words.data.eq(padding_idx).unsqueeze(
+                1).expand(src_batch, tgt_len, src_len)
 
         # Pass through the embeddings
         emb = self.embeddings(input_ids)
@@ -232,7 +243,8 @@ class TransformerDecoder(nn.Module):
                 src_pad_mask,
                 tgt_pad_mask,
                 previous_input=prev_layer_input,
-                layer_cache=state.cache["layer_{}".format(i)] if state.cache is not None else None,
+                layer_cache=state.cache["layer_{}".format(
+                    i)] if state.cache is not None else None,
                 step=step,
             )
             if state.cache is None:
@@ -262,7 +274,8 @@ class PositionalEncoding(nn.Module):
     def __init__(self, dropout, dim, max_len=5000):
         pe = torch.zeros(max_len, dim)
         position = torch.arange(0, max_len).unsqueeze(1)
-        div_term = torch.exp((torch.arange(0, dim, 2, dtype=torch.float) * -(math.log(10000.0) / dim)))
+        div_term = torch.exp(
+            (torch.arange(0, dim, 2, dtype=torch.float) * -(math.log(10000.0) / dim)))
         pe[:, 0::2] = torch.sin(position.float() * div_term)
         pe[:, 1::2] = torch.cos(position.float() * div_term)
         pe = pe.unsqueeze(0)
@@ -302,7 +315,8 @@ class TransformerDecoderLayer(nn.Module):
 
         self.self_attn = MultiHeadedAttention(heads, d_model, dropout=dropout)
 
-        self.context_attn = MultiHeadedAttention(heads, d_model, dropout=dropout)
+        self.context_attn = MultiHeadedAttention(
+            heads, d_model, dropout=dropout)
         self.feed_forward = PositionwiseFeedForward(d_model, d_ff, dropout)
         self.layer_norm_1 = nn.LayerNorm(d_model, eps=1e-6)
         self.layer_norm_2 = nn.LayerNorm(d_model, eps=1e-6)
@@ -337,7 +351,8 @@ class TransformerDecoderLayer(nn.Module):
             * all_input `[batch_size x current_step x model_dim]`
 
         """
-        dec_mask = torch.gt(tgt_pad_mask + self.mask[:, : tgt_pad_mask.size(1), : tgt_pad_mask.size(1)], 0)
+        dec_mask = torch.gt(
+            tgt_pad_mask + self.mask[:, : tgt_pad_mask.size(1), : tgt_pad_mask.size(1)], 0)
         input_norm = self.layer_norm_1(inputs)
         all_input = input_norm
         if previous_input is not None:
@@ -438,8 +453,10 @@ class MultiHeadedAttention(nn.Module):
         self.head_count = head_count
 
         self.linear_keys = nn.Linear(model_dim, head_count * self.dim_per_head)
-        self.linear_values = nn.Linear(model_dim, head_count * self.dim_per_head)
-        self.linear_query = nn.Linear(model_dim, head_count * self.dim_per_head)
+        self.linear_values = nn.Linear(
+            model_dim, head_count * self.dim_per_head)
+        self.linear_query = nn.Linear(
+            model_dim, head_count * self.dim_per_head)
         self.softmax = nn.Softmax(dim=-1)
         self.dropout = nn.Dropout(dropout)
         self.use_final_linear = use_final_linear
@@ -501,16 +518,19 @@ class MultiHeadedAttention(nn.Module):
                 if layer_cache is not None:
                     device = key.device
                     if layer_cache["self_keys"] is not None:
-                        key = torch.cat((layer_cache["self_keys"].to(device), key), dim=2)
+                        key = torch.cat(
+                            (layer_cache["self_keys"].to(device), key), dim=2)
                     if layer_cache["self_values"] is not None:
-                        value = torch.cat((layer_cache["self_values"].to(device), value), dim=2)
+                        value = torch.cat(
+                            (layer_cache["self_values"].to(device), value), dim=2)
                     layer_cache["self_keys"] = key
                     layer_cache["self_values"] = value
             elif type == "context":
                 query = self.linear_query(query)
                 if layer_cache is not None:
                     if layer_cache["memory_keys"] is None:
-                        key, value = self.linear_keys(key), self.linear_values(value)
+                        key, value = self.linear_keys(
+                            key), self.linear_values(value)
                         key = shape(key)
                         value = shape(value)
                     else:
@@ -521,7 +541,8 @@ class MultiHeadedAttention(nn.Module):
                     layer_cache["memory_keys"] = key
                     layer_cache["memory_values"] = value
                 else:
-                    key, value = self.linear_keys(key), self.linear_values(value)
+                    key, value = self.linear_keys(
+                        key), self.linear_values(value)
                     key = shape(key)
                     value = shape(value)
         else:
@@ -547,7 +568,8 @@ class MultiHeadedAttention(nn.Module):
 
         if predefined_graph_1 is not None:
             attn_masked = attn[:, -1] * predefined_graph_1
-            attn_masked = attn_masked / (torch.sum(attn_masked, 2).unsqueeze(2) + 1e-9)
+            attn_masked = attn_masked / \
+                (torch.sum(attn_masked, 2).unsqueeze(2) + 1e-9)
 
             attn = torch.cat([attn[:, :-1], attn_masked.unsqueeze(1)], 1)
 
@@ -581,9 +603,11 @@ class DecoderState(object):
             sizes = e.size()
             br = sizes[1]
             if len(sizes) == 3:
-                sent_states = e.view(sizes[0], beam_size, br // beam_size, sizes[2])[:, :, idx]
+                sent_states = e.view(
+                    sizes[0], beam_size, br // beam_size, sizes[2])[:, :, idx]
             else:
-                sent_states = e.view(sizes[0], beam_size, br // beam_size, sizes[2], sizes[3])[:, :, idx]
+                sent_states = e.view(
+                    sizes[0], beam_size, br // beam_size, sizes[2], sizes[3])[:, :, idx]
 
             sent_states.data.copy_(sent_states.data.index_select(1, positions))
 
@@ -694,7 +718,8 @@ class PositionwiseFeedForward(nn.Module):
 def build_predictor(args, tokenizer, symbols, model, logger=None):
     # we should be able to refactor the global scorer a lot
     scorer = GNMTGlobalScorer(args.alpha, length_penalty="wu")
-    translator = Translator(args, model, tokenizer, symbols, global_scorer=scorer, logger=logger)
+    translator = Translator(args, model, tokenizer,
+                            symbols, global_scorer=scorer, logger=logger)
     return translator
 
 
@@ -838,18 +863,24 @@ class Translator(object):
         mask_src = batch.mask_src
 
         src_features = self.model.bert(src, segs, mask_src)
-        dec_states = self.model.decoder.init_decoder_state(src, src_features, with_cache=True)
+        dec_states = self.model.decoder.init_decoder_state(
+            src, src_features, with_cache=True)
         device = src_features.device
 
         # Tile states and memory beam_size times.
-        dec_states.map_batch_fn(lambda state, dim: tile(state, beam_size, dim=dim))
+        dec_states.map_batch_fn(
+            lambda state, dim: tile(state, beam_size, dim=dim))
         src_features = tile(src_features, beam_size, dim=0)
-        batch_offset = torch.arange(batch_size, dtype=torch.long, device=device)
-        beam_offset = torch.arange(0, batch_size * beam_size, step=beam_size, dtype=torch.long, device=device)
-        alive_seq = torch.full([batch_size * beam_size, 1], self.start_token, dtype=torch.long, device=device)
+        batch_offset = torch.arange(
+            batch_size, dtype=torch.long, device=device)
+        beam_offset = torch.arange(
+            0, batch_size * beam_size, step=beam_size, dtype=torch.long, device=device)
+        alive_seq = torch.full([batch_size * beam_size, 1],
+                               self.start_token, dtype=torch.long, device=device)
 
         # Give full probability to the first beam on the first step.
-        topk_log_probs = torch.tensor([0.0] + [float("-inf")] * (beam_size - 1), device=device).repeat(batch_size)
+        topk_log_probs = torch.tensor(
+            [0.0] + [float("-inf")] * (beam_size - 1), device=device).repeat(batch_size)
 
         # Structure that holds finished hypotheses.
         hypotheses = [[] for _ in range(batch_size)]  # noqa: F812
@@ -866,7 +897,8 @@ class Translator(object):
             # Decoder forward.
             decoder_input = decoder_input.transpose(0, 1)
 
-            dec_out, dec_states = self.model.decoder(decoder_input, src_features, dec_states, step=step)
+            dec_out, dec_states = self.model.decoder(
+                decoder_input, src_features, dec_states, step=step)
 
             # Generator forward.
             log_probs = self.generator(dec_out.transpose(0, 1).squeeze(0))
@@ -894,7 +926,8 @@ class Translator(object):
                         words = " ".join(words).replace(" ##", "").split()
                         if len(words) <= 3:
                             continue
-                        trigrams = [(words[i - 1], words[i], words[i + 1]) for i in range(1, len(words) - 1)]
+                        trigrams = [(words[i - 1], words[i], words[i + 1])
+                                    for i in range(1, len(words) - 1)]
                         trigram = tuple(trigrams[-1])
                         if trigram in trigrams[:-1]:
                             fail = True
@@ -912,11 +945,13 @@ class Translator(object):
             topk_ids = topk_ids.fmod(vocab_size)
 
             # Map beam_index to batch_index in the flat representation.
-            batch_index = topk_beam_index + beam_offset[: topk_beam_index.size(0)].unsqueeze(1)
+            batch_index = topk_beam_index + \
+                beam_offset[: topk_beam_index.size(0)].unsqueeze(1)
             select_indices = batch_index.view(-1)
 
             # Append last prediction.
-            alive_seq = torch.cat([alive_seq.index_select(0, select_indices), topk_ids.view(-1, 1)], -1)
+            alive_seq = torch.cat([alive_seq.index_select(
+                0, select_indices), topk_ids.view(-1, 1)], -1)
 
             is_finished = topk_ids.eq(self.end_token)
             if step + 1 == max_length:
@@ -933,10 +968,12 @@ class Translator(object):
                     finished_hyp = is_finished[i].nonzero().view(-1)
                     # Store finished hypotheses for this batch.
                     for j in finished_hyp:
-                        hypotheses[b].append((topk_scores[i, j], predictions[i, j, 1:]))
+                        hypotheses[b].append(
+                            (topk_scores[i, j], predictions[i, j, 1:]))
                     # If the batch reached the end, save the n_best hypotheses.
                     if end_condition[i]:
-                        best_hyp = sorted(hypotheses[b], key=lambda x: x[0], reverse=True)
+                        best_hyp = sorted(
+                            hypotheses[b], key=lambda x: x[0], reverse=True)
                         score, pred = best_hyp[0]
 
                         results["scores"][b].append(score)
@@ -949,17 +986,20 @@ class Translator(object):
                 topk_log_probs = topk_log_probs.index_select(0, non_finished)
                 batch_index = batch_index.index_select(0, non_finished)
                 batch_offset = batch_offset.index_select(0, non_finished)
-                alive_seq = predictions.index_select(0, non_finished).view(-1, alive_seq.size(-1))
+                alive_seq = predictions.index_select(
+                    0, non_finished).view(-1, alive_seq.size(-1))
             # Reorder states.
             select_indices = batch_index.view(-1)
             src_features = src_features.index_select(0, select_indices)
-            dec_states.map_batch_fn(lambda state, dim: state.index_select(dim, select_indices))
+            dec_states.map_batch_fn(
+                lambda state, dim: state.index_select(dim, select_indices))
 
         return results
 
     def from_batch(self, translation_batch):
         batch = translation_batch["batch"]
-        assert len(translation_batch["gold_score"]) == len(translation_batch["predictions"])
+        assert len(translation_batch["gold_score"]) == len(
+            translation_batch["predictions"])
         batch_size = batch.batch_size
 
         preds, _, _, tgt_str, src = (
@@ -972,7 +1012,8 @@ class Translator(object):
 
         translations = []
         for b in range(batch_size):
-            pred_sents = self.vocab.convert_ids_to_tokens([int(n) for n in preds[b][0]])
+            pred_sents = self.vocab.convert_ids_to_tokens(
+                [int(n) for n in preds[b][0]])
             pred_sents = " ".join(pred_sents).replace(" ##", "")
             gold_sent = " ".join(tgt_str[b].split())
             raw_src = [self.vocab.ids_to_tokens[int(t)] for t in src[b]][:500]
@@ -994,7 +1035,8 @@ def tile(x, count, dim=0):
     out_size = list(x.size())
     out_size[0] *= count
     batch = x.size(0)
-    x = x.view(batch, -1).transpose(0, 1).repeat(count, 1).transpose(0, 1).contiguous().view(*out_size)
+    x = x.view(batch, -1).transpose(0, 1).repeat(count,
+                                                 1).transpose(0, 1).contiguous().view(*out_size)
     if dim != 0:
         x = x.permute(perm).contiguous()
     return x

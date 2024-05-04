@@ -28,9 +28,10 @@ helped you, or simply star the repo to say "thank you".
 Whichever way you choose to contribute, please be mindful to respect our
 [code of conduct](https://github.com/huggingface/transformers/blob/master/CODE_OF_CONDUCT.md).
 
-## You can contribute in so many ways!
+## You can contribute in so many ways
 
 There are 4 ways you can contribute to transformers:
+
 * Fixing outstanding issues with the existing code;
 * Implementing new models;
 * Contributing to the examples or to the documentation;
@@ -72,7 +73,6 @@ or from the root of the repository the following command:
 python src/transformers/commands/transformers_cli.py env
 ```
 
-
 ### Do you want to implement a new model?
 
 Awesome! Please provide the following information:
@@ -92,12 +92,14 @@ in the [`templates`](https://github.com/huggingface/transformers/tree/master/tem
 A world-class feature request addresses the following points:
 
 1. Motivation first:
-  * Is it related to a problem/frustration with the library? If so, please explain
+
+* Is it related to a problem/frustration with the library? If so, please explain
     why. Providing a code snippet that demonstrates the problem is best.
-  * Is it related to something you would need for a project? We'd love to hear
+* Is it related to something you would need for a project? We'd love to hear
     about it!
-  * Is it something you worked on and think could benefit the community?
+* Is it something you worked on and think could benefit the community?
     Awesome! Tell us what problem it solved for you.
+
 2. Write a *full paragraph* describing the feature;
 3. Provide a **code snippet** that demonstrates its future use;
 4. In case this is related to a paper, please attach a link;
@@ -130,15 +132,15 @@ Follow these steps to start contributing:
 2. Clone your fork to your local disk, and add the base repository as a remote:
 
    ```bash
-   $ git clone git@github.com:<your Github handle>/transformers.git
-   $ cd transformers
-   $ git remote add upstream https://github.com/huggingface/transformers.git
+   git clone git@github.com:<your Github handle>/transformers.git
+   cd transformers
+   git remote add upstream https://github.com/huggingface/transformers.git
    ```
 
 3. Create a new branch to hold your development changes:
 
    ```bash
-   $ git checkout -b a-descriptive-name-for-my-changes
+   git checkout -b a-descriptive-name-for-my-changes
    ```
 
    **Do not** work on the `master` branch.
@@ -146,7 +148,7 @@ Follow these steps to start contributing:
 4. Set up a development environment by running the following command in a virtual environment:
 
    ```bash
-   $ pip install -e ".[dev]"
+   pip install -e ".[dev]"
    ```
 
    (If transformers was already installed in the virtual environment, remove
@@ -157,9 +159,9 @@ Follow these steps to start contributing:
    install:
 
    ```bash
-   $ git clone https://github.com/huggingface/datasets
-   $ cd datasets
-   $ pip install -e .
+   git clone https://github.com/huggingface/datasets
+   cd datasets
+   pip install -e .
    ```
 
    If you have already cloned that repo, you might need to `git pull` to get the most recent changes in the `datasets`
@@ -171,13 +173,13 @@ Follow these steps to start contributing:
    passes:
 
    ```bash
-   $ make test
+   make test
    ```
 
    Note, that this command uses `-n auto` pytest flag, therefore, it will start as many parallel `pytest` processes as the number of your computer's CPU-cores, and if you have lots of those and a few GPUs and not a great amount of RAM, it's likely to overload your computer. Therefore, to run the test suite, you may want to consider using this command instead:
 
    ```bash
-   $ python -m pytest -n 3 --dist=loadfile -s -v ./tests/
+   python -m pytest -n 3 --dist=loadfile -s -v ./tests/
    ```
 
    Adjust the value of `-n` to fit the load your hardware can support.
@@ -186,19 +188,20 @@ Follow these steps to start contributing:
    consistently. After you make changes, format them with:
 
    ```bash
-   $ make style
+   make style
    ```
 
    `transformers` also uses `flake8` and a few custom scripts to check for coding mistakes. Quality
    control runs in CI, however you can also run the same checks with:
 
    ```bash
-   $ make quality
+   make quality
    ```
+
    You can do the automatic style corrections and code verifications that can't be automated in one go:
 
    ```bash
-   $ make fixup
+   make fixup
    ```
 
    This target is also optimized to only work with files modified by the PR you're working on.
@@ -210,15 +213,15 @@ Follow these steps to start contributing:
    and then run:
 
    ```bash
-   $ make docs
+   make docs
    ```
 
    Once you're happy with your changes, add changed files using `git add` and
    make a commit with `git commit` to record your changes locally:
 
    ```bash
-   $ git add modified_file.py
-   $ git commit
+   git add modified_file.py
+   git commit
    ```
 
    Please write [good commit
@@ -228,14 +231,14 @@ Follow these steps to start contributing:
    repository regularly. This way you can quickly account for changes:
 
    ```bash
-   $ git fetch upstream
-   $ git rebase upstream/master
+   git fetch upstream
+   git rebase upstream/master
    ```
 
    Push the changes to your account using:
 
    ```bash
-   $ git push -u origin a-descriptive-name-for-my-changes
+   git push -u origin a-descriptive-name-for-my-changes
    ```
 
 6. Once you are satisfied (**and the checklist below is happy too**), go to the
@@ -246,7 +249,6 @@ Follow these steps to start contributing:
    too! So everyone can see the changes in the Pull request, work in your local
    branch and push the changes to your fork. They will automatically appear in
    the pull request.
-
 
 ### Checklist
 
@@ -259,11 +261,11 @@ Follow these steps to start contributing:
    to be merged;
 4. Make sure existing tests pass;
 5. Add high-coverage tests. No quality testing = no merge.
-   - If you are adding a new model, make sure that you use
+   * If you are adding a new model, make sure that you use
      `ModelTester.all_model_classes = (MyModel, MyModelWithLMHead,...)`, which triggers the common tests.
-   - If you are adding new `@slow` tests, make sure they pass using
+   * If you are adding new `@slow` tests, make sure they pass using
      `RUN_SLOW=1 python -m pytest tests/test_my_new_model.py`.
-   - If you are adding a new tokenizer, write tests, and make sure
+   * If you are adding a new tokenizer, write tests, and make sure
      `RUN_SLOW=1 python -m pytest tests/test_tokenization_{your_model_name}.py` passes.
    CircleCI does not run the slow tests, but github actions does every night!
 6. All public methods must have informative docstrings that work nicely with sphinx. See `modeling_ctrl.py` for an
@@ -279,15 +281,16 @@ We like `pytest` and `pytest-xdist` because it's faster. From the root of the
 repository, here's how to run tests with `pytest` for the library:
 
 ```bash
-$ python -m pytest -n auto --dist=loadfile -s -v ./tests/
+python -m pytest -n auto --dist=loadfile -s -v ./tests/
 ```
 
 and for the examples:
 
 ```bash
-$ pip install -r examples/requirements.txt  # only needed the first time
-$ python -m pytest -n auto --dist=loadfile -s -v ./examples/
+pip install -r examples/requirements.txt  # only needed the first time
+python -m pytest -n auto --dist=loadfile -s -v ./examples/
 ```
+
 In fact, that's how `make test` and `make test-examples` are implemented (sans the `pip install` line)!
 
 You can specify a smaller set of tests in order to test only the feature
@@ -298,8 +301,8 @@ By default, slow tests are skipped. Set the `RUN_SLOW` environment variable to
 have enough disk space and a good Internet connection, or a lot of patience!
 
 ```bash
-$ RUN_SLOW=yes python -m pytest -n auto --dist=loadfile -s -v ./tests/
-$ RUN_SLOW=yes python -m pytest -n auto --dist=loadfile -s -v ./examples/
+RUN_SLOW=yes python -m pytest -n auto --dist=loadfile -s -v ./tests/
+RUN_SLOW=yes python -m pytest -n auto --dist=loadfile -s -v ./examples/
 ```
 
 Likewise, set the `RUN_CUSTOM_TOKENIZERS` environment variable to `yes` to run
@@ -312,10 +315,9 @@ This means `unittest` is fully supported. Here's how to run tests with
 `unittest`:
 
 ```bash
-$ python -m unittest discover -s tests -t . -v
-$ python -m unittest discover -s examples -t examples -v
+python -m unittest discover -s tests -t . -v
+python -m unittest discover -s examples -t examples -v
 ```
-
 
 ### Style guide
 
@@ -324,7 +326,6 @@ Check our [documentation writing guide](https://github.com/huggingface/transform
 for more information.
 
 #### This guide was heavily inspired by the awesome [scikit-learn guide to contributing](https://github.com/scikit-learn/scikit-learn/blob/master/CONTRIBUTING.md)
-
 
 ### Develop on Windows
 
@@ -343,13 +344,15 @@ You can now use `make` from any terminal (Powershell, cmd.exe, etc) 🎉
 
 ### Syncing forked master with upstream (HuggingFace) master
 
-To avoid pinging the upstream repository which adds reference notes to each upstream PR and sends unnessary notifications to the developers involved in these PRs, 
+To avoid pinging the upstream repository which adds reference notes to each upstream PR and sends unnessary notifications to the developers involved in these PRs,
 when syncing the master branch of a forked repository, please, follow these steps:
+
 1. When possible, avoid syncing with the upstream using a branch and PR on the forked repository. Instead merge directly into the forked master.
 2. If a PR is absolutely necessary, use the following steps after checking out your branch:
+
 ```
-$ git checkout -b your-branch-for-syncing
-$ git pull --squash --no-commit upstream master
-$ git commit -m '<your message without GitHub references>'
-$ git push --set-upstream origin your-branch-for-syncing
+git checkout -b your-branch-for-syncing
+git pull --squash --no-commit upstream master
+git commit -m '<your message without GitHub references>'
+git push --set-upstream origin your-branch-for-syncing
 ```

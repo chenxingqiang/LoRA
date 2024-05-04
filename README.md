@@ -6,8 +6,8 @@ See our paper for a detailed description of LoRA.
 
 **LoRA: Low-Rank Adaptation of Large Language Models** <br>
 *Edward J. Hu\*, Yelong Shen\*, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen* <br>
-Paper: https://arxiv.org/abs/2106.09685 <br>
-Video explainer: https://www.youtube.com/watch?v=DhRoTONcyZE <br>
+Paper: <https://arxiv.org/abs/2106.09685> <br>
+Video explainer: <https://www.youtube.com/watch?v=DhRoTONcyZE> <br>
 
 *Update 2/2023: LoRA is now supported by the [State-of-the-art Parameter-Efficient Fine-Tuning (PEFT)](https://github.com/huggingface/peft) library by Hugging Face.*
 
@@ -50,19 +50,22 @@ On GPT-2, LoRA compares favorably to both full finetuning and other efficient tu
 Non-LoRA baselines, except for adapter on GPT-2 large, are taken from [Li and Liang (2021)](https://arxiv.org/abs/2101.00190). We include confidence intervals on results from our experiments.
 
 Download the GPT-2 LoRA checkpoints:
- * [GPT-2 Medium E2E](https://github.com/microsoft/LoRA/releases/download/GPT-2/gpt2_md_lora_e2e.pt) (1.5 MB)
- * [GPT-2 Medium DART](https://github.com/microsoft/LoRA/releases/download/GPT-2/gpt2_md_lora_dart.pt) (1.5 MB)
- * [GPT-2 Medium WebNLG](https://github.com/microsoft/LoRA/releases/download/GPT-2/gpt2_md_lora_webnlg.pt) (1.5 MB)
- * [GPT-2 Large E2E](https://github.com/microsoft/LoRA/releases/download/GPT-2/gpt2_lg_lora_e2e.pt) (2.3 MB)
- * [GPT-2 Large DART](https://github.com/microsoft/LoRA/releases/download/GPT-2/gpt2_lg_lora_dart.pt) (2.3 MB)
- * [GPT-2 Large WebNLG](https://github.com/microsoft/LoRA/releases/download/GPT-2/gpt2_lg_lora_webnlg.pt) (2.3 MB)
+
+* [GPT-2 Medium E2E](https://github.com/microsoft/LoRA/releases/download/GPT-2/gpt2_md_lora_e2e.pt) (1.5 MB)
+* [GPT-2 Medium DART](https://github.com/microsoft/LoRA/releases/download/GPT-2/gpt2_md_lora_dart.pt) (1.5 MB)
+* [GPT-2 Medium WebNLG](https://github.com/microsoft/LoRA/releases/download/GPT-2/gpt2_md_lora_webnlg.pt) (1.5 MB)
+* [GPT-2 Large E2E](https://github.com/microsoft/LoRA/releases/download/GPT-2/gpt2_lg_lora_e2e.pt) (2.3 MB)
+* [GPT-2 Large DART](https://github.com/microsoft/LoRA/releases/download/GPT-2/gpt2_lg_lora_dart.pt) (2.3 MB)
+* [GPT-2 Large WebNLG](https://github.com/microsoft/LoRA/releases/download/GPT-2/gpt2_lg_lora_webnlg.pt) (2.3 MB)
 
 Please follow the instructions in `examples/NLG/` to reproduce our result.
+
 ## Repository Overview
 
 <i>(The initial release of this repo has been archived in the branch "snapshot-9-15-2021")</i>
 
 There are several directories in this repo:
+
 * [loralib/](loralib) contains the source code for the package `loralib`, which needs to be installed to run the examples we provide;
 * [examples/NLG/](examples/NLG) contains an example implementation of LoRA in GPT-2 using our package, which can be used to reproduce the result in our paper;
 * [examples/NLU/](examples/NLU) contains an example implementation of LoRA in RoBERTa and DeBERTa using our package, which produces competitive results on the GLUE benchmark;
@@ -71,6 +74,7 @@ There are several directories in this repo:
 ## Quickstart
 
  1. Installing `loralib` is simply
+
  ```bash
  pip install loralib
  # Alternatively
@@ -78,6 +82,7 @@ There are several directories in this repo:
  ```
 
  2. You can choose to adapt some layers by replacing them with counterparts implemented in `loralib`. We only support `nn.Linear`, `nn.Embedding`, and `nn.Conv2d` for now. We also support a `MergedLinear` for cases where a single `nn.Linear` represents more than one layers, such as in some implementations of the attention `qkv` projection (see Additional Notes for more).
+
  ```python
  # ===== Before =====
  # layer = nn.Linear(in_features, out_features)
@@ -89,6 +94,7 @@ There are several directories in this repo:
  ```
 
  3. Before the training loop begins, mark only LoRA parameters as trainable.
+
  ```python
  import loralib as lora
  model = BigModel()
@@ -98,14 +104,18 @@ There are several directories in this repo:
  for batch in dataloader:
     ...
  ```
+
  4. When saving a checkpoint, generate a `state_dict` that only contains LoRA parameters.
+
  ```python
  # ===== Before =====
  # torch.save(model.state_dict(), checkpoint_path)
  # ===== After =====
  torch.save(lora.lora_state_dict(model), checkpoint_path)
  ```
+
  5. When loading a checkpoint using `load_state_dict`, be sure to set `strict=False`.
+
  ```python
  # Load the pretrained checkpoint first
  model.load_state_dict(torch.load('ckpt_pretrained.pt'), strict=False)
@@ -113,13 +123,14 @@ There are several directories in this repo:
  model.load_state_dict(torch.load('ckpt_lora.pt'), strict=False)
  ```
 
-#### Now training can proceed as usual.
+#### Now training can proceed as usual
 
 ## Additional Notes
 
 1. While we focus on a simple yet effect setup, namely adapting only the `q` and `v` projection in a Transformer, in our examples, LoRA can be apply to any subsets of pre-trained weights. We encourage you to explore different configurations, such as adapting the embedding layer by replacing `nn.Embedding` with `lora.Embedding` and/or adapting the MLP layers. It's very likely that the optimal configuration varies for different model architectures and tasks.
 
 2. Some Transformer implementation uses a single `nn.Linear` for the projection matrices for query, key, and value. If one wishes to constrain the rank of the updates to the individual matrices, one has to either break it up into three separate matrices or use `lora.MergedLinear`. Make sure to modify the checkpoint accordingly if you choose to break up the layer.
+
 ```python
 # ===== Before =====
 # qkv_proj = nn.Linear(d_model, 3*d_model)
@@ -131,7 +142,9 @@ v_proj = lora.Linear(d_model, d_model, r=8)
 # Alternatively, use lora.MergedLinear (recommended)
 qkv_proj = lora.MergedLinear(d_model, 3*d_model, r=8, enable_lora=[True, False, True])
 ```
+
 3. Training bias vectors in tandem with LoRA might be a cost-efficient way to squeeze out extra task performance (if you tune the learning rate carefully). While we did not study its effect thoroughly in our paper, we make it easy to try in `lora`. You can mark some biases as trainable by passing "all" or "lora_only" to `bias=` when calling `mark_only_lora_as_trainable`. Remember to pass the corresponding `bias=` argument to `lora_state_dict` when saving a checkpoint.
+
 ```python
 # ===== Before =====
 # lora.mark_only_lora_as_trainable(model) # Not training any bias vectors
@@ -143,27 +156,34 @@ lora.mark_only_lora_as_trainable(model, bias='all')
 # When saving a checkpoint, use the same bias= ('all' or 'lora_only')
 torch.save(lora.lora_state_dict(model, bias='all'), checkpoint_path)
 ```
+
 4. Calling `model.eval()` will trigger the merging of LoRA parameters with the corresponding pretrained ones, which eliminates additional latency for subsequent forward passes. Calling `model.train()` again will undo the merge. This can be disabled by passing `merge_weights=False` to LoRA layers.
 
 ## Contact
+
 Please contact us or post an issue if you have any questions.
 
 For questions related to the package `loralib`:
-* Edward Hu (edward@edwardjhu.com)
-* Phillip Wallis (phwallis@microsoft.com)
-* Weizhu Chen (wzchen@microsoft.com)
+
+* Edward Hu (<edward@edwardjhu.com>)
+* Phillip Wallis (<phwallis@microsoft.com>)
+* Weizhu Chen (<wzchen@microsoft.com>)
 
 The GPT-2 example:
-* Phillip Wallis (phwallis@microsoft.com)
-* Yelong Shen (yeshe@microsoft.com)
+
+* Phillip Wallis (<phwallis@microsoft.com>)
+* Yelong Shen (<yeshe@microsoft.com>)
 
 The RoBERTa/DeBERTa example:
-* Lu Wang (luw@microsoft.com)
+
+* Lu Wang (<luw@microsoft.com>)
 
 ## Acknowledgements
+
 We thank in alphabetical order Jianfeng Gao, Jade Huang, Jiayuan Huang, Lisa Xiang Li, Xiaodong Liu, Yabin Liu, Benjamin Van Durme, Luis Vargas, Haoran Wei, Peter Welinder, and Greg Yang for providing valuable feedback.
 
 ## Citation
+
 ```BibTeX
 @inproceedings{
 hu2022lora,
@@ -179,7 +199,7 @@ url={https://openreview.net/forum?id=nZeVKeeFYf9}
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
-the rights to use your contribution. For details, visit https://cla.opensource.microsoft.com.
+the rights to use your contribution. For details, visit <https://cla.opensource.microsoft.com>.
 
 When you submit a pull request, a CLA bot will automatically determine whether you need to provide
 a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions

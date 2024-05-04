@@ -101,7 +101,8 @@ class TFAutoModelTest(unittest.TestCase):
             self.assertIsInstance(config, GPT2Config)
 
             model = TFAutoModelForCausalLM.from_pretrained(model_name)
-            model, loading_info = TFAutoModelForCausalLM.from_pretrained(model_name, output_loading_info=True)
+            model, loading_info = TFAutoModelForCausalLM.from_pretrained(
+                model_name, output_loading_info=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, TFGPT2LMHeadModel)
 
@@ -124,7 +125,8 @@ class TFAutoModelTest(unittest.TestCase):
             self.assertIsInstance(config, BertConfig)
 
             model = TFAutoModelForMaskedLM.from_pretrained(model_name)
-            model, loading_info = TFAutoModelForMaskedLM.from_pretrained(model_name, output_loading_info=True)
+            model, loading_info = TFAutoModelForMaskedLM.from_pretrained(
+                model_name, output_loading_info=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, TFBertForMaskedLM)
 
@@ -136,7 +138,8 @@ class TFAutoModelTest(unittest.TestCase):
             self.assertIsInstance(config, T5Config)
 
             model = TFAutoModelForSeq2SeqLM.from_pretrained(model_name)
-            model, loading_info = TFAutoModelForSeq2SeqLM.from_pretrained(model_name, output_loading_info=True)
+            model, loading_info = TFAutoModelForSeq2SeqLM.from_pretrained(
+                model_name, output_loading_info=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, TFT5ForConditionalGeneration)
 
@@ -148,7 +151,8 @@ class TFAutoModelTest(unittest.TestCase):
             self.assertIsNotNone(config)
             self.assertIsInstance(config, BertConfig)
 
-            model = TFAutoModelForSequenceClassification.from_pretrained(model_name)
+            model = TFAutoModelForSequenceClassification.from_pretrained(
+                model_name)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, TFBertForSequenceClassification)
 
@@ -196,7 +200,9 @@ class TFAutoModelTest(unittest.TestCase):
             for index, (child_config, child_model) in enumerate(mapping[1:]):
                 for parent_config, parent_model in mapping[: index + 1]:
                     with self.subTest(
-                        msg="Testing if {} is child of {}".format(child_config.__name__, parent_config.__name__)
+                        msg="Testing if {} is child of {}".format(
+                            child_config.__name__, parent_config.__name__)
                     ):
-                        self.assertFalse(issubclass(child_config, parent_config))
+                        self.assertFalse(issubclass(
+                            child_config, parent_config))
                         self.assertFalse(issubclass(child_model, parent_model))

@@ -139,13 +139,16 @@ class M2M100Tokenizer(PreTrainedTokenizer):
 
         self.encoder_size = len(self.encoder)
 
-        self.lang_code_to_token = {lang_code: f"__{lang_code}__" for lang_code in FAIRSEQ_LANGUAGE_CODES}
+        self.lang_code_to_token = {
+            lang_code: f"__{lang_code}__" for lang_code in FAIRSEQ_LANGUAGE_CODES}
 
         self.lang_token_to_id = {
             self.get_lang_token(lang_code): self.encoder_size + i for i, lang_code in enumerate(FAIRSEQ_LANGUAGE_CODES)
         }
-        self.lang_code_to_id = {lang_code: self.encoder_size + i for i, lang_code in enumerate(FAIRSEQ_LANGUAGE_CODES)}
-        self.id_to_lang_token = {v: k for k, v in self.lang_token_to_id.items()}
+        self.lang_code_to_id = {lang_code: self.encoder_size +
+                                i for i, lang_code in enumerate(FAIRSEQ_LANGUAGE_CODES)}
+        self.id_to_lang_token = {v: k for k,
+                                 v in self.lang_token_to_id.items()}
         self._additional_special_tokens = list(self.lang_token_to_id.keys())
 
         self._src_lang = src_lang if src_lang is not None else "en"
@@ -264,10 +267,12 @@ class M2M100Tokenizer(PreTrainedTokenizer):
         save_dir = Path(save_directory)
         assert save_dir.is_dir(), f"{save_directory} should be a directory"
         vocab_save_path = save_dir / (
-            (filename_prefix + "-" if filename_prefix else "") + self.vocab_files_names["vocab_file"]
+            (filename_prefix + "-" if filename_prefix else "") +
+            self.vocab_files_names["vocab_file"]
         )
         spm_save_path = save_dir / (
-            (filename_prefix + "-" if filename_prefix else "") + self.vocab_files_names["spm_file"]
+            (filename_prefix + "-" if filename_prefix else "") +
+            self.vocab_files_names["spm_file"]
         )
 
         save_json(self.encoder, vocab_save_path)

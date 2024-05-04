@@ -150,7 +150,8 @@ class XLMProphetNetTokenizer(PreTrainedTokenizer):
         # spm      | '<unk>' | '<s>'   | '</s>' | ','     | '.' | '▁' | 's' | '▁de' | '-'   | '▁a'
 
         # put special tokens and [unused] tokens into the vocab
-        self.fairseq_tokens_to_ids = {"[PAD]": 0, "[CLS]": 1, "[SEP]": 2, "[UNK]": 3, "[MASK]": 4}
+        self.fairseq_tokens_to_ids = {
+            "[PAD]": 0, "[CLS]": 1, "[SEP]": 2, "[UNK]": 3, "[MASK]": 4}
 
         for i in range(10):
             tok = "[unused{}]".format(i)
@@ -158,7 +159,8 @@ class XLMProphetNetTokenizer(PreTrainedTokenizer):
 
         # The first "real" token "," has position 15 in the embedding vocab and position 3 in the spm vocab
         self.fairseq_offset = 12
-        self.fairseq_ids_to_tokens = {v: k for k, v in self.fairseq_tokens_to_ids.items()}
+        self.fairseq_ids_to_tokens = {v: k for k,
+                                      v in self.fairseq_tokens_to_ids.items()}
         for k in self.fairseq_tokens_to_ids.keys():
             self.unique_no_split_tokens.append(k)
 
@@ -240,7 +242,8 @@ class XLMProphetNetTokenizer(PreTrainedTokenizer):
         return len(self.sp_model) + self.fairseq_offset
 
     def get_vocab(self):
-        vocab = {self.convert_ids_to_tokens(i): i for i in range(self.vocab_size)}
+        vocab = {self.convert_ids_to_tokens(
+            i): i for i in range(self.vocab_size)}
         vocab.update(self.added_tokens_encoder)
         return vocab
 
@@ -269,10 +272,12 @@ class XLMProphetNetTokenizer(PreTrainedTokenizer):
 
     def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
         if not os.path.isdir(save_directory):
-            logger.error("Vocabulary path ({}) should be a directory".format(save_directory))
+            logger.error(
+                "Vocabulary path ({}) should be a directory".format(save_directory))
             return
         out_vocab_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["vocab_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["vocab_file"]
         )
 
         if os.path.abspath(self.vocab_file) != os.path.abspath(out_vocab_file):

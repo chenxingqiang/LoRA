@@ -93,12 +93,14 @@ def convert_tf_checkpoint_to_pytorch(
 
     # Save tokenizer files
     dir_name = r"C:\Users\niels.rogge\Documents\Python projecten\tensorflow\Tensorflow models\SQA\Base\tapas_sqa_inter_masklm_base_reset"
-    tokenizer = TapasTokenizer(vocab_file=dir_name + r"\vocab.txt", model_max_length=512)
+    tokenizer = TapasTokenizer(
+        vocab_file=dir_name + r"\vocab.txt", model_max_length=512)
 
     print("Save tokenizer files to {}".format(pytorch_dump_path))
     tokenizer.save_pretrained(pytorch_dump_path[:-17])
 
-    print("Used relative position embeddings:", model.config.reset_position_index_per_cell)
+    print("Used relative position embeddings:",
+          model.config.reset_position_index_per_cell)
 
 
 if __name__ == "__main__":

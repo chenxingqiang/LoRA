@@ -214,7 +214,8 @@ class SingleSentenceClassificationProcessor(DataProcessor):
             else:
                 text = text_or_text_and_label
             added_labels.add(label)
-            examples.append(InputExample(guid=guid, text_a=text, text_b=None, label=label))
+            examples.append(InputExample(
+                guid=guid, text_a=text, text_b=None, label=label))
 
         # Update examples
         if overwrite_examples:
@@ -279,19 +280,23 @@ class SingleSentenceClassificationProcessor(DataProcessor):
         features = []
         for (ex_index, (input_ids, example)) in enumerate(zip(all_input_ids, self.examples)):
             if ex_index % 10000 == 0:
-                logger.info("Writing example %d/%d" % (ex_index, len(self.examples)))
+                logger.info("Writing example %d/%d" %
+                            (ex_index, len(self.examples)))
             # The mask has 1 for real tokens and 0 for padding tokens. Only real
             # tokens are attended to.
-            attention_mask = [1 if mask_padding_with_zero else 0] * len(input_ids)
+            attention_mask = [
+                1 if mask_padding_with_zero else 0] * len(input_ids)
 
             # Zero-pad up to the sequence length.
             padding_length = batch_length - len(input_ids)
             if pad_on_left:
                 input_ids = ([pad_token] * padding_length) + input_ids
-                attention_mask = ([0 if mask_padding_with_zero else 1] * padding_length) + attention_mask
+                attention_mask = (
+                    [0 if mask_padding_with_zero else 1] * padding_length) + attention_mask
             else:
                 input_ids = input_ids + ([pad_token] * padding_length)
-                attention_mask = attention_mask + ([0 if mask_padding_with_zero else 1] * padding_length)
+                attention_mask = attention_mask + \
+                    ([0 if mask_padding_with_zero else 1] * padding_length)
 
             assert len(input_ids) == batch_length, "Error with input length {} vs {}".format(
                 len(input_ids), batch_length
@@ -310,17 +315,21 @@ class SingleSentenceClassificationProcessor(DataProcessor):
             if ex_index < 5 and self.verbose:
                 logger.info("*** Example ***")
                 logger.info("guid: %s" % (example.guid))
-                logger.info("input_ids: %s" % " ".join([str(x) for x in input_ids]))
-                logger.info("attention_mask: %s" % " ".join([str(x) for x in attention_mask]))
+                logger.info("input_ids: %s" %
+                            " ".join([str(x) for x in input_ids]))
+                logger.info("attention_mask: %s" %
+                            " ".join([str(x) for x in attention_mask]))
                 logger.info("label: %s (id = %d)" % (example.label, label))
 
-            features.append(InputFeatures(input_ids=input_ids, attention_mask=attention_mask, label=label))
+            features.append(InputFeatures(input_ids=input_ids,
+                                          attention_mask=attention_mask, label=label))
 
         if return_tensors is None:
             return features
         elif return_tensors == "tf":
             if not is_tf_available():
-                raise RuntimeError("return_tensors set to 'tf' but TensorFlow 2.0 can't be imported")
+                raise RuntimeError(
+                    "return_tensors set to 'tf' but TensorFlow 2.0 can't be imported")
             import tensorflow as tf
 
             def gen():
@@ -330,23 +339,30 @@ class SingleSentenceClassificationProcessor(DataProcessor):
             dataset = tf.data.Dataset.from_generator(
                 gen,
                 ({"input_ids": tf.int32, "attention_mask": tf.int32}, tf.int64),
-                ({"input_ids": tf.TensorShape([None]), "attention_mask": tf.TensorShape([None])}, tf.TensorShape([])),
+                ({"input_ids": tf.TensorShape([None]), "attention_mask": tf.TensorShape(
+                    [None])}, tf.TensorShape([])),
             )
             return dataset
         elif return_tensors == "pt":
             if not is_torch_available():
-                raise RuntimeError("return_tensors set to 'pt' but PyTorch can't be imported")
+                raise RuntimeError(
+                    "return_tensors set to 'pt' but PyTorch can't be imported")
             import torch
             from torch.utils.data import TensorDataset
 
-            all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
-            all_attention_mask = torch.tensor([f.attention_mask for f in features], dtype=torch.long)
+            all_input_ids = torch.tensor(
+                [f.input_ids for f in features], dtype=torch.long)
+            all_attention_mask = torch.tensor(
+                [f.attention_mask for f in features], dtype=torch.long)
             if self.mode == "classification":
-                all_labels = torch.tensor([f.label for f in features], dtype=torch.long)
+                all_labels = torch.tensor(
+                    [f.label for f in features], dtype=torch.long)
             elif self.mode == "regression":
-                all_labels = torch.tensor([f.label for f in features], dtype=torch.float)
+                all_labels = torch.tensor(
+                    [f.label for f in features], dtype=torch.float)
 
-            dataset = TensorDataset(all_input_ids, all_attention_mask, all_labels)
+            dataset = TensorDataset(
+                all_input_ids, all_attention_mask, all_labels)
             return dataset
         else:
             raise ValueError("return_tensors should be one of 'tf' or 'pt'")

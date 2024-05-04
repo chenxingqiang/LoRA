@@ -135,14 +135,14 @@ class {{cookiecutter.camelcase_modelname}}Config(PretrainedConfig):
         >>> configuration = model.config
     """
     model_type = "{{cookiecutter.lowercase_modelname}}"
-    {% if cookiecutter.is_encoder_decoder_model == "False" -%}
+    { % if cookiecutter.is_encoder_decoder_model == "False" - %}
     {% else -%}
     keys_to_ignore_at_inference = ["past_key_values"]
-    {% endif -%}
+    { % endif - %}
 
     def __init__(
         self,
-        {% if cookiecutter.is_encoder_decoder_model == "False" -%}
+        { % if cookiecutter.is_encoder_decoder_model == "False" - %}
         vocab_size=30522,
         hidden_size=768,
         num_hidden_layers=12,
@@ -180,7 +180,7 @@ class {{cookiecutter.camelcase_modelname}}Config(PretrainedConfig):
         classifier_dropout=0.0,
         scale_embedding=False,
         gradient_checkpointing=False,
-        {% endif -%}
+        { % endif - %}
         pad_token_id=1,
         bos_token_id=0,
         eos_token_id=2,
@@ -190,17 +190,17 @@ class {{cookiecutter.camelcase_modelname}}Config(PretrainedConfig):
             pad_token_id=pad_token_id,
             bos_token_id=bos_token_id,
             eos_token_id=eos_token_id,
-            {% if cookiecutter.is_encoder_decoder_model == "False" -%}
+            { % if cookiecutter.is_encoder_decoder_model == "False" - %}
             {% else -%}
             is_encoder_decoder=is_encoder_decoder,
             decoder_start_token_id=decoder_start_token_id,
-            {% endif -%}
-            **kwargs
+            { % endif - %}
+            ** kwargs
         )
 
         self.vocab_size = vocab_size
         self.max_position_embeddings = max_position_embeddings
-        {% if cookiecutter.is_encoder_decoder_model == "False" -%}
+        { % if cookiecutter.is_encoder_decoder_model == "False" - %}
         self.hidden_size = hidden_size
         self.num_hidden_layers = num_hidden_layers
         self.num_attention_heads = num_attention_heads
@@ -231,12 +231,14 @@ class {{cookiecutter.camelcase_modelname}}Config(PretrainedConfig):
         self.use_cache = use_cache
         self.num_hidden_layers = encoder_layers
         self.gradient_checkpointing = gradient_checkpointing
-        self.scale_embedding = scale_embedding  # scale factor will be sqrt(d_model) if True
+        # scale factor will be sqrt(d_model) if True
+        self.scale_embedding = scale_embedding
 
-        {% endif -%}
+        { % endif - %}
 
-    {% if cookiecutter.is_encoder_decoder_model == "False" %}
+    { % if cookiecutter.is_encoder_decoder_model == "False" % }
     {%- else %}
+
     @property
     def num_attention_heads(self) -> int:
         return self.encoder_attention_heads

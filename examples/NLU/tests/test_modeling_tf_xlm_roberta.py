@@ -35,7 +35,8 @@ class TFFlaubertModelIntegrationTest(unittest.TestCase):
         model = TFXLMRobertaModel.from_pretrained("jplu/tf-xlm-roberta-base")
 
         features = {
-            "input_ids": tf.convert_to_tensor([[0, 2646, 10269, 83, 99942, 2]], dtype=tf.int32),  # "My dog is cute"
+            # "My dog is cute"
+            "input_ids": tf.convert_to_tensor([[0, 2646, 10269, 83, 99942, 2]], dtype=tf.int32),
             "attention_mask": tf.convert_to_tensor([[1, 1, 1, 1, 1, 1]], dtype=tf.int32),
         }
 
@@ -54,4 +55,5 @@ class TFFlaubertModelIntegrationTest(unittest.TestCase):
             dtype=tf.float32,
         )
 
-        self.assertTrue(np.allclose(output[:, :3, :3].numpy(), expected_slice.numpy(), atol=1e-4))
+        self.assertTrue(np.allclose(
+            output[:, :3, :3].numpy(), expected_slice.numpy(), atol=1e-4))

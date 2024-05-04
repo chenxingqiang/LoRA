@@ -139,7 +139,8 @@ class SageMakerTrainer(Trainer):
         if self.is_model_parallel_enabled:
             model.train()
             inputs = self._prepare_inputs(inputs)
-            loss_mb = forward_backward(model, inputs, self.args.gradient_accumulation_steps)
+            loss_mb = forward_backward(
+                model, inputs, self.args.gradient_accumulation_steps)
             return loss_mb.reduce_mean().detach().to(self.args.device)
         else:
             return super().training_step(model, inputs)
@@ -188,14 +189,16 @@ class SageMakerTrainer(Trainer):
             if isinstance(model, PreTrainedModel):
                 model.save_pretrained(output_dir, state_dict=state_dict)
             else:
-                logger.info("Trainer.model is not a `PreTrainedModel`, only saving its state dict.")
+                logger.info(
+                    "Trainer.model is not a `PreTrainedModel`, only saving its state dict.")
                 torch.save(state_dict, os.path.join(output_dir, WEIGHTS_NAME))
 
             if self.tokenizer is not None:
                 self.tokenizer.save_pretrained(output_dir)
 
             # Good practice: save your training arguments together with the trained model
-            torch.save(self.args, os.path.join(output_dir, "training_args.bin"))
+            torch.save(self.args, os.path.join(
+                output_dir, "training_args.bin"))
 
     def _save_checkpoint(self, model, trial, metrics=None):
         if self.is_model_parallel_enabled:
@@ -213,9 +216,11 @@ class SageMakerTrainer(Trainer):
             opt_state_dict = self.optimizer.state_dict()
             # Save it and the scheduler on the main process
             if self.is_world_process_zero():
-                torch.save(opt_state_dict, os.path.join(output_dir, "optimizer.pt"))
+                torch.save(opt_state_dict, os.path.join(
+                    output_dir, "optimizer.pt"))
                 with warnings.catch_warnings(record=True) as caught_warnings:
-                    torch.save(self.lr_scheduler.state_dict(), os.path.join(output_dir, "scheduler.pt"))
+                    torch.save(self.lr_scheduler.state_dict(),
+                               os.path.join(output_dir, "scheduler.pt"))
                 reissue_pt_warnings(caught_warnings)
 
             # Determine the new best metric / best model checkpoint
@@ -236,7 +241,8 @@ class SageMakerTrainer(Trainer):
 
             # Save the Trainer state
             if self.is_world_process_zero():
-                self.state.save_to_json(os.path.join(output_dir, "trainer_state.json"))
+                self.state.save_to_json(os.path.join(
+                    output_dir, "trainer_state.json"))
 
             # Maybe delete some older checkpoints.
             if self.is_world_process_zero():
@@ -254,10 +260,12 @@ class SageMakerTrainer(Trainer):
                 os.path.join(checkpoint, "scheduler.pt")
             ):
                 self.optimizer.load_state_dict(
-                    torch.load(os.path.join(checkpoint, "optimizer.pt"), map_location="cpu")
+                    torch.load(os.path.join(
+                        checkpoint, "optimizer.pt"), map_location="cpu")
                 )
                 with warnings.catch_warnings(record=True) as caught_warnings:
-                    self.lr_scheduler.load_state_dict(torch.load(os.path.join(checkpoint, "scheduler.pt")))
+                    self.lr_scheduler.load_state_dict(torch.load(
+                        os.path.join(checkpoint, "scheduler.pt")))
                 reissue_pt_warnings(caught_warnings)
         else:
             super()._load_optimizer_and_scheduler(checkpoint)
@@ -270,12 +278,14 @@ class SageMakerTrainer(Trainer):
         ignore_keys: Optional[List[str]] = None,
     ) -> Tuple[Optional[float], Optional[torch.Tensor], Optional[torch.Tensor]]:
         if self.is_model_parallel_enabled:
-            has_labels = all(inputs.get(k) is not None for k in self.label_names)
+            has_labels = all(inputs.get(
+                k) is not None for k in self.label_names)
             inputs = self._prepare_inputs(inputs)
 
             if ignore_keys is None:
                 if hasattr(self.model, "config"):
-                    ignore_keys = getattr(self.model.config, "keys_to_ignore_at_inference", [])
+                    ignore_keys = getattr(
+                        self.model.config, "keys_to_ignore_at_inference", [])
                 else:
                     ignore_keys = []
 
@@ -284,7 +294,8 @@ class SageMakerTrainer(Trainer):
                 if has_labels:
                     if isinstance(raw_outputs, dict):
                         loss_mb = raw_outputs["loss"]
-                        logits_mb = tuple(v for k, v in raw_outputs.items() if k not in ignore_keys + ["loss"])
+                        logits_mb = tuple(v for k, v in raw_outputs.items(
+                        ) if k not in ignore_keys + ["loss"])
                     else:
                         loss_mb = raw_outputs[0]
                         logits_mb = raw_outputs[1:]
@@ -294,7 +305,8 @@ class SageMakerTrainer(Trainer):
                 else:
                     loss = None
                     if isinstance(raw_outputs, dict):
-                        logits_mb = tuple(v for k, v in raw_outputs.items() if k not in ignore_keys)
+                        logits_mb = tuple(
+                            v for k, v in raw_outputs.items() if k not in ignore_keys)
                     else:
                         logits_mb = raw_outputs
                     logits = nested_smp_concat(logits_mb)
@@ -306,7 +318,8 @@ class SageMakerTrainer(Trainer):
                 logits = logits[0]
 
             if has_labels:
-                labels = nested_detach(tuple(inputs.get(name) for name in self.label_names))
+                labels = nested_detach(tuple(inputs.get(name)
+                                             for name in self.label_names))
                 if len(labels) == 1:
                     labels = labels[0]
             else:

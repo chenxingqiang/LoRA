@@ -775,7 +775,8 @@ class AutoModel:
         raise ValueError(
             "Unrecognized configuration class {} for this kind of AutoModel: {}.\n"
             "Model type should be one of {}.".format(
-                config.__class__, cls.__name__, ", ".join(c.__name__ for c in MODEL_MAPPING.keys())
+                config.__class__, cls.__name__, ", ".join(
+                    c.__name__ for c in MODEL_MAPPING.keys())
             )
         )
 
@@ -817,7 +818,8 @@ class AutoModel:
         raise ValueError(
             "Unrecognized configuration class {} for this kind of AutoModel: {}.\n"
             "Model type should be one of {}.".format(
-                config.__class__, cls.__name__, ", ".join(c.__name__ for c in MODEL_MAPPING.keys())
+                config.__class__, cls.__name__, ", ".join(
+                    c.__name__ for c in MODEL_MAPPING.keys())
             )
         )
 
@@ -869,7 +871,8 @@ class AutoModelForPreTraining:
         raise ValueError(
             "Unrecognized configuration class {} for this kind of AutoModel: {}.\n"
             "Model type should be one of {}.".format(
-                config.__class__, cls.__name__, ", ".join(c.__name__ for c in MODEL_FOR_PRETRAINING_MAPPING.keys())
+                config.__class__, cls.__name__, ", ".join(
+                    c.__name__ for c in MODEL_FOR_PRETRAINING_MAPPING.keys())
             )
         )
 
@@ -911,7 +914,8 @@ class AutoModelForPreTraining:
         raise ValueError(
             "Unrecognized configuration class {} for this kind of AutoModel: {}.\n"
             "Model type should be one of {}.".format(
-                config.__class__, cls.__name__, ", ".join(c.__name__ for c in MODEL_FOR_PRETRAINING_MAPPING.keys())
+                config.__class__, cls.__name__, ", ".join(
+                    c.__name__ for c in MODEL_FOR_PRETRAINING_MAPPING.keys())
             )
         )
 
@@ -974,7 +978,8 @@ class AutoModelWithLMHead:
         raise ValueError(
             "Unrecognized configuration class {} for this kind of AutoModel: {}.\n"
             "Model type should be one of {}.".format(
-                config.__class__, cls.__name__, ", ".join(c.__name__ for c in MODEL_WITH_LM_HEAD_MAPPING.keys())
+                config.__class__, cls.__name__, ", ".join(
+                    c.__name__ for c in MODEL_WITH_LM_HEAD_MAPPING.keys())
             )
         )
 
@@ -1022,7 +1027,8 @@ class AutoModelWithLMHead:
         raise ValueError(
             "Unrecognized configuration class {} for this kind of AutoModel: {}.\n"
             "Model type should be one of {}.".format(
-                config.__class__, cls.__name__, ", ".join(c.__name__ for c in MODEL_WITH_LM_HEAD_MAPPING.keys())
+                config.__class__, cls.__name__, ", ".join(
+                    c.__name__ for c in MODEL_WITH_LM_HEAD_MAPPING.keys())
             )
         )
 
@@ -1073,7 +1079,8 @@ class AutoModelForCausalLM:
         raise ValueError(
             "Unrecognized configuration class {} for this kind of AutoModel: {}.\n"
             "Model type should be one of {}.".format(
-                config.__class__, cls.__name__, ", ".join(c.__name__ for c in MODEL_FOR_CAUSAL_LM_MAPPING.keys())
+                config.__class__, cls.__name__, ", ".join(
+                    c.__name__ for c in MODEL_FOR_CAUSAL_LM_MAPPING.keys())
             )
         )
 
@@ -1115,7 +1122,8 @@ class AutoModelForCausalLM:
         raise ValueError(
             "Unrecognized configuration class {} for this kind of AutoModel: {}.\n"
             "Model type should be one of {}.".format(
-                config.__class__, cls.__name__, ", ".join(c.__name__ for c in MODEL_FOR_CAUSAL_LM_MAPPING.keys())
+                config.__class__, cls.__name__, ", ".join(
+                    c.__name__ for c in MODEL_FOR_CAUSAL_LM_MAPPING.keys())
             )
         )
 
@@ -1166,7 +1174,8 @@ class AutoModelForMaskedLM:
         raise ValueError(
             "Unrecognized configuration class {} for this kind of AutoModel: {}.\n"
             "Model type should be one of {}.".format(
-                config.__class__, cls.__name__, ", ".join(c.__name__ for c in MODEL_FOR_MASKED_LM_MAPPING.keys())
+                config.__class__, cls.__name__, ", ".join(
+                    c.__name__ for c in MODEL_FOR_MASKED_LM_MAPPING.keys())
             )
         )
 
@@ -1208,7 +1217,8 @@ class AutoModelForMaskedLM:
         raise ValueError(
             "Unrecognized configuration class {} for this kind of AutoModel: {}.\n"
             "Model type should be one of {}.".format(
-                config.__class__, cls.__name__, ", ".join(c.__name__ for c in MODEL_FOR_MASKED_LM_MAPPING.keys())
+                config.__class__, cls.__name__, ", ".join(
+                    c.__name__ for c in MODEL_FOR_MASKED_LM_MAPPING.keys())
             )
         )
 
@@ -1262,7 +1272,8 @@ class AutoModelForSeq2SeqLM:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING.keys()),
             )
         )
 
@@ -1306,7 +1317,8 @@ class AutoModelForSeq2SeqLM:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_SEQ_TO_SEQ_CAUSAL_LM_MAPPING.keys()),
             )
         )
 
@@ -1360,7 +1372,8 @@ class AutoModelForSequenceClassification:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING.keys()),
             )
         )
 
@@ -1404,7 +1417,8 @@ class AutoModelForSequenceClassification:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_SEQUENCE_CLASSIFICATION_MAPPING.keys()),
             )
         )
 
@@ -1457,7 +1471,8 @@ class AutoModelForQuestionAnswering:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_QUESTION_ANSWERING_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_QUESTION_ANSWERING_MAPPING.keys()),
             )
         )
 
@@ -1502,7 +1517,8 @@ class AutoModelForQuestionAnswering:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_QUESTION_ANSWERING_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_QUESTION_ANSWERING_MAPPING.keys()),
             )
         )
 
@@ -1557,7 +1573,8 @@ class AutoModelForTableQuestionAnswering:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_TABLE_QUESTION_ANSWERING_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_TABLE_QUESTION_ANSWERING_MAPPING.keys()),
             )
         )
 
@@ -1602,7 +1619,8 @@ class AutoModelForTableQuestionAnswering:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_TABLE_QUESTION_ANSWERING_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_TABLE_QUESTION_ANSWERING_MAPPING.keys()),
             )
         )
 
@@ -1655,7 +1673,8 @@ class AutoModelForTokenClassification:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_TOKEN_CLASSIFICATION_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_TOKEN_CLASSIFICATION_MAPPING.keys()),
             )
         )
 
@@ -1700,7 +1719,8 @@ class AutoModelForTokenClassification:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_TOKEN_CLASSIFICATION_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_TOKEN_CLASSIFICATION_MAPPING.keys()),
             )
         )
 
@@ -1755,7 +1775,8 @@ class AutoModelForMultipleChoice:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_MULTIPLE_CHOICE_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_MULTIPLE_CHOICE_MAPPING.keys()),
             )
         )
 
@@ -1800,7 +1821,8 @@ class AutoModelForMultipleChoice:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_MULTIPLE_CHOICE_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_MULTIPLE_CHOICE_MAPPING.keys()),
             )
         )
 
@@ -1855,7 +1877,8 @@ class AutoModelForNextSentencePrediction:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING.keys()),
             )
         )
 
@@ -1900,6 +1923,7 @@ class AutoModelForNextSentencePrediction:
             "Model type should be one of {}.".format(
                 config.__class__,
                 cls.__name__,
-                ", ".join(c.__name__ for c in MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING.keys()),
+                ", ".join(
+                    c.__name__ for c in MODEL_FOR_NEXT_SENTENCE_PREDICTION_MAPPING.keys()),
             )
         )

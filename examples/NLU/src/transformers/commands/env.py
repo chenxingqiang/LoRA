@@ -50,7 +50,8 @@ class EnvironmentCommand(BaseTransformersCLICommand):
                 tf_cuda_available = tf.test.is_gpu_available()
             except AttributeError:
                 # returns list of devices, convert to bool
-                tf_cuda_available = bool(tf.config.list_physical_devices("GPU"))
+                tf_cuda_available = bool(
+                    tf.config.list_physical_devices("GPU"))
 
         info = {
             "`transformers` version": version,

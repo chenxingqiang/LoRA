@@ -169,7 +169,8 @@ class BartConfig(PretrainedConfig):
         self.use_cache = use_cache
         self.num_hidden_layers = encoder_layers
         self.gradient_checkpointing = gradient_checkpointing
-        self.scale_embedding = scale_embedding  # scale factor will be sqrt(d_model) if True
+        # scale factor will be sqrt(d_model) if True
+        self.scale_embedding = scale_embedding
 
         # ensure backward compatibilty for BART CNN models
         if self.forced_bos_token_id is None and kwargs.get("force_bos_token_to_be_generated", False):

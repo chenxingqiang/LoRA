@@ -41,7 +41,8 @@ class BarthezTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 
     @require_torch
     def test_prepare_batch(self):
-        src_text = ["A long paragraph for summarization.", "Another paragraph for summarization."]
+        src_text = ["A long paragraph for summarization.",
+                    "Another paragraph for summarization."]
         expected_src_tokens = [0, 57, 3018, 70307, 91, 2]
 
         batch = self.tokenizer(

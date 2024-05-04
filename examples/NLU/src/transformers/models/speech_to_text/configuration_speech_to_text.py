@@ -174,7 +174,8 @@ class Speech2TextConfig(PretrainedConfig):
         self.use_cache = use_cache
         self.num_hidden_layers = encoder_layers
         self.gradient_checkpointing = gradient_checkpointing
-        self.scale_embedding = scale_embedding  # scale factor will be sqrt(d_model) if True
+        # scale factor will be sqrt(d_model) if True
+        self.scale_embedding = scale_embedding
         self.max_source_positions = max_source_positions
         self.max_target_positions = max_target_positions
         self.num_conv_layers = num_conv_layers

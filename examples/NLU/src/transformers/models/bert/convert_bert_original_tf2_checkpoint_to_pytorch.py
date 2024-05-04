@@ -72,7 +72,8 @@ def load_tf2_weights_in_bert(model, tf_checkpoint_path, config):
 
     # Sanity check
     if len(set(layer_depth)) != 1:
-        raise ValueError(f"Found layer names with different depths (layer depth {list(set(layer_depth))})")
+        raise ValueError(
+            f"Found layer names with different depths (layer depth {list(set(layer_depth))})")
     layer_depth = list(set(layer_depth))[0]
     if layer_depth != 1:
         raise ValueError(
@@ -126,7 +127,8 @@ def load_tf2_weights_in_bert(model, tf_checkpoint_path, config):
                     trace.append("token_type_embeddings")
                     pointer = getattr(pointer, "token_type_embeddings")
                 else:
-                    raise ValueError("Unknown embedding layer with name {full_name}")
+                    raise ValueError(
+                        "Unknown embedding layer with name {full_name}")
                 trace.append("weight")
                 pointer = getattr(pointer, "weight")
             elif m_name == "_attention_layer":
@@ -200,7 +202,8 @@ def load_tf2_weights_in_bert(model, tf_checkpoint_path, config):
             raise ValueError(
                 f"Shape mismatch in layer {full_name}: Model expects shape {pointer.shape} but layer contains shape: {array.shape}"
             )
-        logger.info(f"Successfully set variable {full_name} to PyTorch layer {trace}")
+        logger.info(
+            f"Successfully set variable {full_name} to PyTorch layer {trace}")
     return model
 
 
@@ -237,4 +240,5 @@ if __name__ == "__main__":
         help="Path to the output PyTorch model (must include filename).",
     )
     args = parser.parse_args()
-    convert_tf2_checkpoint_to_pytorch(args.tf_checkpoint_path, args.bert_config_file, args.pytorch_dump_path)
+    convert_tf2_checkpoint_to_pytorch(
+        args.tf_checkpoint_path, args.bert_config_file, args.pytorch_dump_path)

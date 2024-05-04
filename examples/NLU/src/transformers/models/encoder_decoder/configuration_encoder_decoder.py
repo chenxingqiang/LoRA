@@ -83,8 +83,10 @@ class EncoderDecoderConfig(PretrainedConfig):
 
         from ..auto.configuration_auto import AutoConfig
 
-        self.encoder = AutoConfig.for_model(encoder_model_type, **encoder_config)
-        self.decoder = AutoConfig.for_model(decoder_model_type, **decoder_config)
+        self.encoder = AutoConfig.for_model(
+            encoder_model_type, **encoder_config)
+        self.decoder = AutoConfig.for_model(
+            decoder_model_type, **decoder_config)
         self.is_encoder_decoder = True
 
     @classmethod
@@ -98,7 +100,8 @@ class EncoderDecoderConfig(PretrainedConfig):
         Returns:
             :class:`EncoderDecoderConfig`: An instance of a configuration object
         """
-        logger.info("Set `config.is_decoder=True` and `config.add_cross_attention=True` for decoder_config")
+        logger.info(
+            "Set `config.is_decoder=True` and `config.add_cross_attention=True` for decoder_config")
         decoder_config.is_decoder = True
         decoder_config.add_cross_attention = True
 

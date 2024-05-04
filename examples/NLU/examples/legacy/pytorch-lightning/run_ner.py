@@ -30,7 +30,8 @@ class NERTransformer(BaseTransformer):
             hparams = Namespace(**hparams)
         module = import_module("tasks")
         try:
-            token_classification_task_clazz = getattr(module, hparams.task_type)
+            token_classification_task_clazz = getattr(
+                module, hparams.task_type)
             self.token_classification_task: TokenClassificationTask = token_classification_task_clazz()
         except AttributeError:
             raise ValueError(
@@ -46,10 +47,12 @@ class NERTransformer(BaseTransformer):
 
     def training_step(self, batch, batch_num):
         "Compute loss and log."
-        inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": batch[3]}
+        inputs = {"input_ids": batch[0],
+                  "attention_mask": batch[1], "labels": batch[3]}
         if self.config.model_type != "distilbert":
             inputs["token_type_ids"] = (
-                batch[2] if self.config.model_type in ["bert", "xlnet"] else None
+                batch[2] if self.config.model_type in [
+                    "bert", "xlnet"] else None
             )  # XLM and RoBERTa don"t use token_type_ids
 
         outputs = self(**inputs)
@@ -63,11 +66,14 @@ class NERTransformer(BaseTransformer):
         for mode in ["train", "dev", "test"]:
             cached_features_file = self._feature_file(mode)
             if os.path.exists(cached_features_file) and not args.overwrite_cache:
-                logger.info("Loading features from cached file %s", cached_features_file)
+                logger.info("Loading features from cached file %s",
+                            cached_features_file)
                 features = torch.load(cached_features_file)
             else:
-                logger.info("Creating features from dataset file at %s", args.data_dir)
-                examples = self.token_classification_task.read_examples_from_file(args.data_dir, mode)
+                logger.info(
+                    "Creating features from dataset file at %s", args.data_dir)
+                examples = self.token_classification_task.read_examples_from_file(
+                    args.data_dir, mode)
                 features = self.token_classification_task.convert_examples_to_features(
                     examples,
                     self.labels,
@@ -75,7 +81,8 @@ class NERTransformer(BaseTransformer):
                     self.tokenizer,
                     cls_token_at_end=bool(self.config.model_type in ["xlnet"]),
                     cls_token=self.tokenizer.cls_token,
-                    cls_token_segment_id=2 if self.config.model_type in ["xlnet"] else 0,
+                    cls_token_segment_id=2 if self.config.model_type in [
+                        "xlnet"] else 0,
                     sep_token=self.tokenizer.sep_token,
                     sep_token_extra=False,
                     pad_on_left=bool(self.config.model_type in ["xlnet"]),
@@ -83,32 +90,41 @@ class NERTransformer(BaseTransformer):
                     pad_token_segment_id=self.tokenizer.pad_token_type_id,
                     pad_token_label_id=self.pad_token_label_id,
                 )
-                logger.info("Saving features into cached file %s", cached_features_file)
+                logger.info("Saving features into cached file %s",
+                            cached_features_file)
                 torch.save(features, cached_features_file)
 
     def get_dataloader(self, mode: int, batch_size: int, shuffle: bool = False) -> DataLoader:
         "Load datasets. Called after prepare data."
         cached_features_file = self._feature_file(mode)
-        logger.info("Loading features from cached file %s", cached_features_file)
+        logger.info("Loading features from cached file %s",
+                    cached_features_file)
         features = torch.load(cached_features_file)
-        all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
-        all_attention_mask = torch.tensor([f.attention_mask for f in features], dtype=torch.long)
+        all_input_ids = torch.tensor(
+            [f.input_ids for f in features], dtype=torch.long)
+        all_attention_mask = torch.tensor(
+            [f.attention_mask for f in features], dtype=torch.long)
         if features[0].token_type_ids is not None:
-            all_token_type_ids = torch.tensor([f.token_type_ids for f in features], dtype=torch.long)
+            all_token_type_ids = torch.tensor(
+                [f.token_type_ids for f in features], dtype=torch.long)
         else:
-            all_token_type_ids = torch.tensor([0 for f in features], dtype=torch.long)
+            all_token_type_ids = torch.tensor(
+                [0 for f in features], dtype=torch.long)
             # HACK(we will not use this anymore soon)
-        all_label_ids = torch.tensor([f.label_ids for f in features], dtype=torch.long)
+        all_label_ids = torch.tensor(
+            [f.label_ids for f in features], dtype=torch.long)
         return DataLoader(
             TensorDataset(all_input_ids, all_attention_mask, all_token_type_ids, all_label_ids), batch_size=batch_size
         )
 
     def validation_step(self, batch, batch_nb):
         """Compute validation""" ""
-        inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": batch[3]}
+        inputs = {"input_ids": batch[0],
+                  "attention_mask": batch[1], "labels": batch[3]}
         if self.config.model_type != "distilbert":
             inputs["token_type_ids"] = (
-                batch[2] if self.config.model_type in ["bert", "xlnet"] else None
+                batch[2] if self.config.model_type in [
+                    "bert", "xlnet"] else None
             )  # XLM and RoBERTa don"t use token_type_ids
         outputs = self(**inputs)
         tmp_eval_loss, logits = outputs[:2]
@@ -210,6 +226,7 @@ if __name__ == "__main__":
         # pl use this default format to create a checkpoint:
         # https://github.com/PyTorchLightning/pytorch-lightning/blob/master\
         # /pytorch_lightning/callbacks/model_checkpoint.py#L322
-        checkpoints = list(sorted(glob.glob(os.path.join(args.output_dir, "checkpoint-epoch=*.ckpt"), recursive=True)))
+        checkpoints = list(sorted(glob.glob(os.path.join(
+            args.output_dir, "checkpoint-epoch=*.ckpt"), recursive=True)))
         model = model.load_from_checkpoint(checkpoints[-1])
         trainer.test(model)

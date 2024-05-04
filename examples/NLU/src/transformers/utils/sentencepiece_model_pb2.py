@@ -16,15 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from google.protobuf import symbol_database as _symbol_database
+from google.protobuf import reflection as _reflection
+from google.protobuf import message as _message
+from google.protobuf import descriptor_pb2
+from google.protobuf import descriptor as _descriptor
 import sys
 
 
-_b = sys.version_info[0] < 3 and (lambda x: x) or (lambda x: x.encode("latin1"))
-from google.protobuf import descriptor as _descriptor
-from google.protobuf import descriptor_pb2
-from google.protobuf import message as _message
-from google.protobuf import reflection as _reflection
-from google.protobuf import symbol_database as _symbol_database
+_b = sys.version_info[0] < 3 and (
+    lambda x: x) or (lambda x: x.encode("latin1"))
 
 
 # @@protoc_insertion_point(imports)
@@ -49,10 +50,14 @@ _TRAINERSPEC_MODELTYPE = _descriptor.EnumDescriptor(
     filename=None,
     file=DESCRIPTOR,
     values=[
-        _descriptor.EnumValueDescriptor(name="UNIGRAM", index=0, number=1, options=None, type=None),
-        _descriptor.EnumValueDescriptor(name="BPE", index=1, number=2, options=None, type=None),
-        _descriptor.EnumValueDescriptor(name="WORD", index=2, number=3, options=None, type=None),
-        _descriptor.EnumValueDescriptor(name="CHAR", index=3, number=4, options=None, type=None),
+        _descriptor.EnumValueDescriptor(
+            name="UNIGRAM", index=0, number=1, options=None, type=None),
+        _descriptor.EnumValueDescriptor(
+            name="BPE", index=1, number=2, options=None, type=None),
+        _descriptor.EnumValueDescriptor(
+            name="WORD", index=2, number=3, options=None, type=None),
+        _descriptor.EnumValueDescriptor(
+            name="CHAR", index=3, number=4, options=None, type=None),
     ],
     containing_type=None,
     options=None,
@@ -67,11 +72,16 @@ _MODELPROTO_SENTENCEPIECE_TYPE = _descriptor.EnumDescriptor(
     filename=None,
     file=DESCRIPTOR,
     values=[
-        _descriptor.EnumValueDescriptor(name="NORMAL", index=0, number=1, options=None, type=None),
-        _descriptor.EnumValueDescriptor(name="UNKNOWN", index=1, number=2, options=None, type=None),
-        _descriptor.EnumValueDescriptor(name="CONTROL", index=2, number=3, options=None, type=None),
-        _descriptor.EnumValueDescriptor(name="USER_DEFINED", index=3, number=4, options=None, type=None),
-        _descriptor.EnumValueDescriptor(name="UNUSED", index=4, number=5, options=None, type=None),
+        _descriptor.EnumValueDescriptor(
+            name="NORMAL", index=0, number=1, options=None, type=None),
+        _descriptor.EnumValueDescriptor(
+            name="UNKNOWN", index=1, number=2, options=None, type=None),
+        _descriptor.EnumValueDescriptor(
+            name="CONTROL", index=2, number=3, options=None, type=None),
+        _descriptor.EnumValueDescriptor(
+            name="USER_DEFINED", index=3, number=4, options=None, type=None),
+        _descriptor.EnumValueDescriptor(
+            name="UNUSED", index=4, number=5, options=None, type=None),
     ],
     containing_type=None,
     options=None,
@@ -273,7 +283,8 @@ _TRAINERSPEC = _descriptor.Descriptor(
             containing_type=None,
             is_extension=False,
             extension_scope=None,
-            options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b("\030\001")),
+            options=_descriptor._ParseOptions(
+                descriptor_pb2.FieldOptions(), _b("\030\001")),
         ),
         _descriptor.FieldDescriptor(
             name="training_sentence_size",
@@ -290,7 +301,8 @@ _TRAINERSPEC = _descriptor.Descriptor(
             containing_type=None,
             is_extension=False,
             extension_scope=None,
-            options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b("\030\001")),
+            options=_descriptor._ParseOptions(
+                descriptor_pb2.FieldOptions(), _b("\030\001")),
         ),
         _descriptor.FieldDescriptor(
             name="seed_sentencepiece_size",
@@ -1171,7 +1183,8 @@ _sym_db.RegisterMessage(ModelProto.SentencePiece)
 
 
 DESCRIPTOR.has_options = True
-DESCRIPTOR._options = _descriptor._ParseOptions(descriptor_pb2.FileOptions(), _b("H\003"))
+DESCRIPTOR._options = _descriptor._ParseOptions(
+    descriptor_pb2.FileOptions(), _b("H\003"))
 _TRAINERSPEC.fields_by_name["mining_sentence_size"].has_options = True
 _TRAINERSPEC.fields_by_name["mining_sentence_size"]._options = _descriptor._ParseOptions(
     descriptor_pb2.FieldOptions(), _b("\030\001")

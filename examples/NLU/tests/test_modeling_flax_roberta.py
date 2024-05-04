@@ -70,15 +70,18 @@ class FlaxRobertaModelTester(unittest.TestCase):
         self.initializer_range = initializer_range
 
     def prepare_config_and_inputs(self):
-        input_ids = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+        input_ids = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size)
 
         attention_mask = None
         if self.use_attention_mask:
-            attention_mask = random_attention_mask([self.batch_size, self.seq_length])
+            attention_mask = random_attention_mask(
+                [self.batch_size, self.seq_length])
 
         token_type_ids = None
         if self.use_token_type_ids:
-            token_type_ids = ids_tensor([self.batch_size, self.seq_length], self.type_vocab_size)
+            token_type_ids = ids_tensor(
+                [self.batch_size, self.seq_length], self.type_vocab_size)
 
         config = RobertaConfig(
             vocab_size=self.vocab_size,
@@ -100,7 +103,8 @@ class FlaxRobertaModelTester(unittest.TestCase):
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
         config, input_ids, token_type_ids, attention_mask = config_and_inputs
-        inputs_dict = {"input_ids": input_ids, "token_type_ids": token_type_ids, "attention_mask": attention_mask}
+        inputs_dict = {"input_ids": input_ids,
+                       "token_type_ids": token_type_ids, "attention_mask": attention_mask}
         return config, inputs_dict
 
 

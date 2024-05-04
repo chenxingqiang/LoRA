@@ -20,4 +20,3 @@ python run_mmimdb.py \
     --num_train_epochs 100 \
     --patience 5
 ```
-

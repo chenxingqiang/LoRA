@@ -97,20 +97,24 @@ if USE_TF in ENV_VARS_TRUE_AND_AUTO_VALUES and USE_TORCH not in ENV_VARS_TRUE_VA
                         _tf_version = importlib_metadata.version("tf-nightly")
                     except importlib_metadata.PackageNotFoundError:
                         try:
-                            _tf_version = importlib_metadata.version("tf-nightly-cpu")
+                            _tf_version = importlib_metadata.version(
+                                "tf-nightly-cpu")
                         except importlib_metadata.PackageNotFoundError:
                             try:
-                                _tf_version = importlib_metadata.version("tf-nightly-gpu")
+                                _tf_version = importlib_metadata.version(
+                                    "tf-nightly-gpu")
                             except importlib_metadata.PackageNotFoundError:
                                 # Support for intel-tensorflow version
                                 try:
-                                    _tf_version = importlib_metadata.version("intel-tensorflow")
+                                    _tf_version = importlib_metadata.version(
+                                        "intel-tensorflow")
                                 except importlib_metadata.PackageNotFoundError:
                                     _tf_version = None
                                     _tf_available = False
     if _tf_available:
         if version.parse(_tf_version) < version.parse("2"):
-            logger.info(f"TensorFlow found but with version {_tf_version}. Transformers requires version 2 minimum.")
+            logger.info(
+                f"TensorFlow found but with version {_tf_version}. Transformers requires version 2 minimum.")
             _tf_available = False
         else:
             logger.info(f"TensorFlow version {_tf_version} available.")
@@ -120,12 +124,14 @@ else:
 
 
 if USE_JAX in ENV_VARS_TRUE_AND_AUTO_VALUES:
-    _flax_available = importlib.util.find_spec("jax") is not None and importlib.util.find_spec("flax") is not None
+    _flax_available = importlib.util.find_spec(
+        "jax") is not None and importlib.util.find_spec("flax") is not None
     if _flax_available:
         try:
             _jax_version = importlib_metadata.version("jax")
             _flax_version = importlib_metadata.version("flax")
-            logger.info(f"JAX version {_jax_version}, Flax version {_flax_version} available.")
+            logger.info(
+                f"JAX version {_jax_version}, Flax version {_flax_version} available.")
         except importlib_metadata.PackageNotFoundError:
             _flax_available = False
 else:
@@ -157,7 +163,8 @@ except importlib_metadata.PackageNotFoundError:
 
 
 _onnx_available = (
-    importlib.util.find_spec("keras2onnx") is not None and importlib.util.find_spec("onnxruntime") is not None
+    importlib.util.find_spec("keras2onnx") is not None and importlib.util.find_spec(
+        "onnxruntime") is not None
 )
 try:
     _onxx_version = importlib_metadata.version("onnx")
@@ -169,7 +176,8 @@ except importlib_metadata.PackageNotFoundError:
 _scatter_available = importlib.util.find_spec("torch_scatter") is not None
 try:
     _scatter_version = importlib_metadata.version("torch_scatter")
-    logger.debug(f"Successfully imported torch-scatter version {_scatter_version}")
+    logger.debug(
+        f"Successfully imported torch-scatter version {_scatter_version}")
 except importlib_metadata.PackageNotFoundError:
     _scatter_available = False
 
@@ -177,23 +185,27 @@ except importlib_metadata.PackageNotFoundError:
 _soundfile_available = importlib.util.find_spec("soundfile") is not None
 try:
     _soundfile_version = importlib_metadata.version("soundfile")
-    logger.debug(f"Successfully imported soundfile version {_soundfile_version}")
+    logger.debug(
+        f"Successfully imported soundfile version {_soundfile_version}")
 except importlib_metadata.PackageNotFoundError:
     _soundfile_available = False
 
 _torchaudio_available = importlib.util.find_spec("torchaudio")
 try:
     _torchaudio_version = importlib_metadata.version("torchaudio")
-    logger.debug(f"Successfully imported soundfile version {_torchaudio_version}")
+    logger.debug(
+        f"Successfully imported soundfile version {_torchaudio_version}")
 except importlib_metadata.PackageNotFoundError:
     _torchaudio_available = False
 
 
-torch_cache_home = os.getenv("TORCH_HOME", os.path.join(os.getenv("XDG_CACHE_HOME", "~/.cache"), "torch"))
+torch_cache_home = os.getenv("TORCH_HOME", os.path.join(
+    os.getenv("XDG_CACHE_HOME", "~/.cache"), "torch"))
 old_default_cache_path = os.path.join(torch_cache_home, "transformers")
 # New default cache, shared with the Datasets library
 hf_cache_home = os.path.expanduser(
-    os.getenv("HF_HOME", os.path.join(os.getenv("XDG_CACHE_HOME", "~/.cache"), "huggingface"))
+    os.getenv("HF_HOME", os.path.join(
+        os.getenv("XDG_CACHE_HOME", "~/.cache"), "huggingface"))
 )
 default_cache_path = os.path.join(hf_cache_home, "transformers")
 
@@ -214,9 +226,12 @@ if (
     )
     shutil.move(old_default_cache_path, default_cache_path)
 
-PYTORCH_PRETRAINED_BERT_CACHE = os.getenv("PYTORCH_PRETRAINED_BERT_CACHE", default_cache_path)
-PYTORCH_TRANSFORMERS_CACHE = os.getenv("PYTORCH_TRANSFORMERS_CACHE", PYTORCH_PRETRAINED_BERT_CACHE)
-TRANSFORMERS_CACHE = os.getenv("TRANSFORMERS_CACHE", PYTORCH_TRANSFORMERS_CACHE)
+PYTORCH_PRETRAINED_BERT_CACHE = os.getenv(
+    "PYTORCH_PRETRAINED_BERT_CACHE", default_cache_path)
+PYTORCH_TRANSFORMERS_CACHE = os.getenv(
+    "PYTORCH_TRANSFORMERS_CACHE", PYTORCH_PRETRAINED_BERT_CACHE)
+TRANSFORMERS_CACHE = os.getenv(
+    "TRANSFORMERS_CACHE", PYTORCH_TRANSFORMERS_CACHE)
 DISABLE_TELEMETRY = os.getenv("DISABLE_TELEMETRY", False)
 
 WEIGHTS_NAME = "pytorch_model.bin"
@@ -246,7 +261,8 @@ PRESET_MIRROR_DICT = {
 }
 
 
-_is_offline_mode = True if os.environ.get("TRANSFORMERS_OFFLINE", "0").upper() in ENV_VARS_TRUE_VALUES else False
+_is_offline_mode = True if os.environ.get(
+    "TRANSFORMERS_OFFLINE", "0").upper() in ENV_VARS_TRUE_VALUES else False
 
 
 def is_offline_mode():
@@ -563,7 +579,8 @@ def requires_scatter(obj):
 
 def add_start_docstrings(*docstr):
     def docstring_decorator(fn):
-        fn.__doc__ = "".join(docstr) + (fn.__doc__ if fn.__doc__ is not None else "")
+        fn.__doc__ = "".join(docstr) + \
+            (fn.__doc__ if fn.__doc__ is not None else "")
         return fn
 
     return docstring_decorator
@@ -571,8 +588,10 @@ def add_start_docstrings(*docstr):
 
 def add_start_docstrings_to_model_forward(*docstr):
     def docstring_decorator(fn):
-        class_name = ":class:`~transformers.{}`".format(fn.__qualname__.split(".")[0])
-        intro = "   The {} forward method, overrides the :func:`__call__` special method.".format(class_name)
+        class_name = ":class:`~transformers.{}`".format(
+            fn.__qualname__.split(".")[0])
+        intro = "   The {} forward method, overrides the :func:`__call__` special method.".format(
+            class_name)
         note = r"""
 
     .. note::
@@ -580,7 +599,8 @@ def add_start_docstrings_to_model_forward(*docstr):
         :class:`Module` instance afterwards instead of this since the former takes care of running the pre and post
         processing steps while the latter silently ignores them.
         """
-        fn.__doc__ = intro + note + "".join(docstr) + (fn.__doc__ if fn.__doc__ is not None else "")
+        fn.__doc__ = intro + note + \
+            "".join(docstr) + (fn.__doc__ if fn.__doc__ is not None else "")
         return fn
 
     return docstring_decorator
@@ -656,13 +676,15 @@ def _prepare_output_docstrings(output_type, config_class):
     while i < len(lines) and re.search(r"^\s*(Args|Parameters):\s*$", lines[i]) is None:
         i += 1
     if i < len(lines):
-        docstrings = "\n".join(lines[(i + 1) :])
+        docstrings = "\n".join(lines[(i + 1):])
         docstrings = _convert_output_args_doc(docstrings)
 
     # Add the return introduction
     full_output_type = f"{output_type.__module__}.{output_type.__name__}"
-    intro = TF_RETURN_INTRODUCTION if output_type.__name__.startswith("TF") else PT_RETURN_INTRODUCTION
-    intro = intro.format(full_output_type=full_output_type, config_class=config_class)
+    intro = TF_RETURN_INTRODUCTION if output_type.__name__.startswith(
+        "TF") else PT_RETURN_INTRODUCTION
+    intro = intro.format(full_output_type=full_output_type,
+                         config_class=config_class)
     return intro + docstrings
 
 
@@ -916,7 +938,8 @@ def add_code_sample_docstrings(
     def docstring_decorator(fn):
         model_class = fn.__qualname__.split(".")[0]
         is_tf_class = model_class[:2] == "TF"
-        doc_kwargs = dict(model_class=model_class, tokenizer_class=tokenizer_class, checkpoint=checkpoint)
+        doc_kwargs = dict(model_class=model_class,
+                          tokenizer_class=tokenizer_class, checkpoint=checkpoint)
 
         if "SequenceClassification" in model_class:
             code_sample = TF_SEQUENCE_CLASSIFICATION_SAMPLE if is_tf_class else PT_SEQUENCE_CLASSIFICATION_SAMPLE
@@ -934,11 +957,14 @@ def add_code_sample_docstrings(
         elif "Model" in model_class or "Encoder" in model_class:
             code_sample = TF_BASE_MODEL_SAMPLE if is_tf_class else PT_BASE_MODEL_SAMPLE
         else:
-            raise ValueError(f"Docstring can't be built for model {model_class}")
+            raise ValueError(
+                f"Docstring can't be built for model {model_class}")
 
-        output_doc = _prepare_output_docstrings(output_type, config_class) if output_type is not None else ""
+        output_doc = _prepare_output_docstrings(
+            output_type, config_class) if output_type is not None else ""
         built_doc = code_sample.format(**doc_kwargs)
-        fn.__doc__ = (fn.__doc__ or "") + "".join(docstr) + output_doc + built_doc
+        fn.__doc__ = (fn.__doc__ or "") + "".join(docstr) + \
+            output_doc + built_doc
         return fn
 
     return docstring_decorator
@@ -1149,7 +1175,8 @@ def cached_path(
         raise EnvironmentError("file {} not found".format(url_or_filename))
     else:
         # Something unknown
-        raise ValueError("unable to parse {} as a URL or as a local path".format(url_or_filename))
+        raise ValueError(
+            "unable to parse {} as a URL or as a local path".format(url_or_filename))
 
     if extract_compressed_file:
         if not is_zipfile(output_path) and not tarfile.is_tarfile(output_path):
@@ -1159,7 +1186,8 @@ def cached_path(
         # We avoid '.' in dir name and add "-extracted" at the end: "./model.zip" => "./model-zip-extracted/"
         output_dir, output_file = os.path.split(output_path)
         output_extract_dir_name = output_file.replace(".", "-") + "-extracted"
-        output_path_extracted = os.path.join(output_dir, output_extract_dir_name)
+        output_path_extracted = os.path.join(
+            output_dir, output_extract_dir_name)
 
         if os.path.isdir(output_path_extracted) and os.listdir(output_path_extracted) and not force_extract:
             return output_path_extracted
@@ -1178,7 +1206,8 @@ def cached_path(
                 tar_file.extractall(output_path_extracted)
                 tar_file.close()
             else:
-                raise EnvironmentError("Archive format of {} could not be identified".format(output_path))
+                raise EnvironmentError(
+                    "Archive format of {} could not be identified".format(output_path))
 
         return output_path_extracted
 
@@ -1187,7 +1216,8 @@ def cached_path(
 
 def define_sagemaker_information():
     try:
-        instance_data = requests.get(os.environ["ECS_CONTAINER_METADATA_URI"]).json()
+        instance_data = requests.get(
+            os.environ["ECS_CONTAINER_METADATA_URI"]).json()
         dlc_container_used = instance_data["Image"]
         dlc_tag = instance_data["Image"].split(":")[1]
     except Exception:
@@ -1196,7 +1226,8 @@ def define_sagemaker_information():
 
     sagemaker_params = json.loads(os.getenv("SM_FRAMEWORK_PARAMS", "{}"))
     runs_distributed_training = True if "sagemaker_distributed_dataparallel_enabled" in sagemaker_params else False
-    account_id = os.getenv("TRAINING_JOB_ARN").split(":")[4] if "TRAINING_JOB_ARN" in os.environ else None
+    account_id = os.getenv("TRAINING_JOB_ARN").split(
+        ":")[4] if "TRAINING_JOB_ARN" in os.environ else None
 
     sagemaker_object = {
         "sm_framework": os.getenv("SM_FRAMEWORK_MODULE", None),
@@ -1215,13 +1246,15 @@ def http_user_agent(user_agent: Union[Dict, str, None] = None) -> str:
     """
     Formats a user-agent string with basic info about a request.
     """
-    ua = "transformers/{}; python/{}".format(__version__, sys.version.split()[0])
+    ua = "transformers/{}; python/{}".format(
+        __version__, sys.version.split()[0])
     if is_torch_available():
         ua += f"; torch/{_torch_version}"
     if is_tf_available():
         ua += f"; tensorflow/{_tf_version}"
     if is_training_run_on_sagemaker():
-        ua += "; " + "; ".join(f"{k}/{v}" for k, v in define_sagemaker_information().items())
+        ua += "; " + "; ".join(f"{k}/{v}" for k,
+                               v in define_sagemaker_information().items())
     if isinstance(user_agent, dict):
         ua += "; " + "; ".join(f"{k}/{v}" for k, v in user_agent.items())
     elif isinstance(user_agent, str):
@@ -1239,7 +1272,8 @@ def http_get(url: str, temp_file: BinaryIO, proxies=None, resume_size=0, headers
     r = requests.get(url, stream=True, proxies=proxies, headers=headers)
     r.raise_for_status()
     content_length = r.headers.get("Content-Length")
-    total = resume_size + int(content_length) if content_length is not None else None
+    total = resume_size + \
+        int(content_length) if content_length is not None else None
     progress = tqdm(
         unit="B",
         unit_scale=True,
@@ -1289,14 +1323,16 @@ def get_from_cache(
     elif use_auth_token:
         token = HfFolder.get_token()
         if token is None:
-            raise EnvironmentError("You specified use_auth_token=True, but a huggingface token was not found.")
+            raise EnvironmentError(
+                "You specified use_auth_token=True, but a huggingface token was not found.")
         headers["authorization"] = "Bearer {}".format(token)
 
     url_to_download = url
     etag = None
     if not local_files_only:
         try:
-            r = requests.head(url, headers=headers, allow_redirects=False, proxies=proxies, timeout=etag_timeout)
+            r = requests.head(url, headers=headers, allow_redirects=False,
+                              proxies=proxies, timeout=etag_timeout)
             r.raise_for_status()
             etag = r.headers.get("X-Linked-Etag") or r.headers.get("ETag")
             # We favor a custom header indicating the etag of the linked resource, and
@@ -1377,15 +1413,18 @@ def get_from_cache(
             else:
                 resume_size = 0
         else:
-            temp_file_manager = partial(tempfile.NamedTemporaryFile, mode="wb", dir=cache_dir, delete=False)
+            temp_file_manager = partial(
+                tempfile.NamedTemporaryFile, mode="wb", dir=cache_dir, delete=False)
             resume_size = 0
 
         # Download to temporary file, then copy to cache dir once finished.
         # Otherwise you get corrupt cache entries if the download gets interrupted.
         with temp_file_manager() as temp_file:
-            logger.info("%s not found in cache or force_download set to True, downloading to %s", url, temp_file.name)
+            logger.info(
+                "%s not found in cache or force_download set to True, downloading to %s", url, temp_file.name)
 
-            http_get(url_to_download, temp_file, proxies=proxies, resume_size=resume_size, headers=headers)
+            http_get(url_to_download, temp_file, proxies=proxies,
+                     resume_size=resume_size, headers=headers)
 
         logger.info("storing %s in cache at %s", url, cache_path)
         os.replace(temp_file.name, cache_path)
@@ -1528,7 +1567,8 @@ class ModelOutput(OrderedDict):
         ), f"{self.__class__.__name__} should not have more than one required field."
 
         first_field = getattr(self, class_fields[0].name)
-        other_fields_are_none = all(getattr(self, field.name) is None for field in class_fields[1:])
+        other_fields_are_none = all(
+            getattr(self, field.name) is None for field in class_fields[1:])
 
         if other_fields_are_none and not is_tensor(first_field):
             try:
@@ -1559,16 +1599,20 @@ class ModelOutput(OrderedDict):
                     self[field.name] = v
 
     def __delitem__(self, *args, **kwargs):
-        raise Exception(f"You cannot use ``__delitem__`` on a {self.__class__.__name__} instance.")
+        raise Exception(
+            f"You cannot use ``__delitem__`` on a {self.__class__.__name__} instance.")
 
     def setdefault(self, *args, **kwargs):
-        raise Exception(f"You cannot use ``setdefault`` on a {self.__class__.__name__} instance.")
+        raise Exception(
+            f"You cannot use ``setdefault`` on a {self.__class__.__name__} instance.")
 
     def pop(self, *args, **kwargs):
-        raise Exception(f"You cannot use ``pop`` on a {self.__class__.__name__} instance.")
+        raise Exception(
+            f"You cannot use ``pop`` on a {self.__class__.__name__} instance.")
 
     def update(self, *args, **kwargs):
-        raise Exception(f"You cannot use ``update`` on a {self.__class__.__name__} instance.")
+        raise Exception(
+            f"You cannot use ``update`` on a {self.__class__.__name__} instance.")
 
     def __getitem__(self, k):
         if isinstance(k, str):
@@ -1647,7 +1691,8 @@ class _BaseLazyModule(ModuleType):
             for value in values:
                 self._class_to_module[value] = key
         # Needed for autocompletion in an IDE
-        self.__all__ = list(import_structure.keys()) + sum(import_structure.values(), [])
+        self.__all__ = list(import_structure.keys()) + \
+            sum(import_structure.values(), [])
 
     # Needed for autocompletion in an IDE
     def __dir__(self):
@@ -1660,7 +1705,8 @@ class _BaseLazyModule(ModuleType):
             module = self._get_module(self._class_to_module[name])
             value = getattr(module, name)
         else:
-            raise AttributeError(f"module {self.__name__} has no attribute {name}")
+            raise AttributeError(
+                f"module {self.__name__} has no attribute {name}")
 
         setattr(self, name, value)
         return value

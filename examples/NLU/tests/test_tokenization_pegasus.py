@@ -50,11 +50,14 @@ class PegasusTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         return ("This is a test", "This is a test")
 
     def test_mask_tokens_rust_pegasus(self):
-        rust_tokenizer = self.rust_tokenizer_class.from_pretrained(self.tmpdirname)
+        rust_tokenizer = self.rust_tokenizer_class.from_pretrained(
+            self.tmpdirname)
         py_tokenizer = self.tokenizer_class.from_pretrained(self.tmpdirname)
         raw_input_str = "Let's see which <unk> is the better <unk_token_11> one <mask_1> It seems like this <mask_2> was important </s> <pad> <pad> <pad>"
-        rust_ids = rust_tokenizer([raw_input_str], return_tensors=None, add_special_tokens=False).input_ids[0]
-        py_ids = py_tokenizer([raw_input_str], return_tensors=None, add_special_tokens=False).input_ids[0]
+        rust_ids = rust_tokenizer(
+            [raw_input_str], return_tensors=None, add_special_tokens=False).input_ids[0]
+        py_ids = py_tokenizer(
+            [raw_input_str], return_tensors=None, add_special_tokens=False).input_ids[0]
         # TODO: (Thom, Patrick) - this fails because the rust tokenizer does not know about the <mask_1>, <mask_2>, and those <unk_token_x> yet
         self.assertListEqual(py_ids, rust_ids)
 
@@ -80,13 +83,16 @@ class PegasusTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         desired_result = [413, 615, 114, 2291, 1971, 113, 1679, 10710, 107, 1]
         ids = tokenizer([raw_input_str], return_tensors=None).input_ids[0]
         self.assertListEqual(desired_result, ids)
-        assert tokenizer.convert_ids_to_tokens([0, 1, 2, 3]) == ["<pad>", "</s>", "<mask_1>", "<mask_2>"]
+        assert tokenizer.convert_ids_to_tokens([0, 1, 2, 3]) == [
+            "<pad>", "</s>", "<mask_1>", "<mask_2>"]
 
     @require_torch
     def test_large_seq2seq_truncation(self):
-        src_texts = ["This is going to be way too long." * 150, "short example"]
+        src_texts = ["This is going to be way too long." *
+                     150, "short example"]
         tgt_texts = ["not super long but more than 5 tokens", "tiny"]
-        batch = self._large_tokenizer(src_texts, padding=True, truncation=True, return_tensors="pt")
+        batch = self._large_tokenizer(
+            src_texts, padding=True, truncation=True, return_tensors="pt")
         with self._large_tokenizer.as_target_tokenizer():
             targets = self._large_tokenizer(
                 tgt_texts, max_length=5, padding=True, truncation=True, return_tensors="pt"

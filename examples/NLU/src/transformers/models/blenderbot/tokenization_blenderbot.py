@@ -89,8 +89,9 @@ class BlenderbotTokenizer(RobertaTokenizer):
         full_string = "  ".join(inputs)
         input_ids = self.encode(full_string)
         if len(input_ids) > self.model_max_length:
-            input_ids = input_ids[-self.model_max_length :]
-            logger.warning(f"Trimmed input from conversation as it was longer than {self.model_max_length} tokens.")
+            input_ids = input_ids[-self.model_max_length:]
+            logger.warning(
+                f"Trimmed input from conversation as it was longer than {self.model_max_length} tokens.")
         return input_ids
 
 

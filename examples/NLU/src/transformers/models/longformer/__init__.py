@@ -27,7 +27,8 @@ _import_structure = {
 }
 
 if is_tokenizers_available():
-    _import_structure["tokenization_longformer_fast"] = ["LongformerTokenizerFast"]
+    _import_structure["tokenization_longformer_fast"] = [
+        "LongformerTokenizerFast"]
 
 if is_torch_available():
     _import_structure["modeling_longformer"] = [

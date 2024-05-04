@@ -49,16 +49,18 @@ def find_code_in_transformers(object_name):
     # Now let's find the class / func in the code!
     indent = ""
     line_index = 0
-    for name in parts[i + 1 :]:
+    for name in parts[i + 1:]:
         while (
-            line_index < len(lines) and re.search(fr"^{indent}(class|def)\s+{name}(\(|\:)", lines[line_index]) is None
+            line_index < len(lines) and re.search(
+                fr"^{indent}(class|def)\s+{name}(\(|\:)", lines[line_index]) is None
         ):
             line_index += 1
         indent += "    "
         line_index += 1
 
     if line_index >= len(lines):
-        raise ValueError(f" {object_name} does not match any function or class in {module}.")
+        raise ValueError(
+            f" {object_name} does not match any function or class in {module}.")
 
     # We found the beginning of the class / func, now let's find the end (when the indent diminishes).
     start_index = line_index
@@ -72,7 +74,8 @@ def find_code_in_transformers(object_name):
     return "".join(code_lines)
 
 
-_re_copy_warning = re.compile(r"^(\s*)#\s*Copied from\s+transformers\.(\S+\.\S+)\s*($|\S.*$)")
+_re_copy_warning = re.compile(
+    r"^(\s*)#\s*Copied from\s+transformers\.(\S+\.\S+)\s*($|\S.*$)")
 _re_replace_pattern = re.compile(r"^\s*(\S+)->(\S+)(\s+.*|$)")
 
 
@@ -90,7 +93,7 @@ def blackify(code):
         os.system(f"black -q --line-length 119 --target-version py35 {fname}")
         with open(fname, "r", encoding="utf-8", newline="\n") as f:
             result = f.read()
-            return result[len("class Bla:\n") :] if has_indent else result
+            return result[len("class Bla:\n"):] if has_indent else result
 
 
 def get_indent(code):
@@ -156,14 +159,17 @@ def is_copy_consistent(filename, overwrite=False):
                 obj1, obj2, option = pattern.groups()
                 theoretical_code = re.sub(obj1, obj2, theoretical_code)
                 if option.strip() == "all-casing":
-                    theoretical_code = re.sub(obj1.lower(), obj2.lower(), theoretical_code)
-                    theoretical_code = re.sub(obj1.upper(), obj2.upper(), theoretical_code)
+                    theoretical_code = re.sub(
+                        obj1.lower(), obj2.lower(), theoretical_code)
+                    theoretical_code = re.sub(
+                        obj1.upper(), obj2.upper(), theoretical_code)
 
         # Test for a diff and act accordingly.
         if observed_code != theoretical_code:
             diffs.append([object_name, start_index])
             if overwrite:
-                lines = lines[:start_index] + [theoretical_code] + lines[line_index:]
+                lines = lines[:start_index] + \
+                    [theoretical_code] + lines[line_index:]
                 line_index = start_index + 1
 
     if overwrite and len(diffs) > 0:
@@ -175,7 +181,8 @@ def is_copy_consistent(filename, overwrite=False):
 
 
 def check_copies(overwrite: bool = False):
-    all_files = glob.glob(os.path.join(TRANSFORMERS_PATH, "**/*.py"), recursive=True)
+    all_files = glob.glob(os.path.join(
+        TRANSFORMERS_PATH, "**/*.py"), recursive=True)
     diffs = []
     for filename in all_files:
         new_diffs = is_copy_consistent(filename, overwrite)
@@ -246,13 +253,16 @@ def convert_to_rst(model_list, max_per_line=None):
             return f"`{title} <{link}>`__"
         # Convert links to relative links otherwise
         else:
-            link = link[len("https://huggingface.co/transformers/") : -len(".html")]
+            link = link[len("https://huggingface.co/transformers/")
+                            : -len(".html")]
             return f":doc:`{title} <{link}>`"
 
-    model_list = re.sub(r"\*\*\[([^\]]*)\]\(([^\)]*)\)\*\*", _rep_link, model_list)
+    model_list = re.sub(
+        r"\*\*\[([^\]]*)\]\(([^\)]*)\)\*\*", _rep_link, model_list)
 
     # Convert [description](link) to `description <link>`__
-    model_list = re.sub(r"\[([^\]]*)\]\(([^\)]*)\)", r"`\1 <\2>`__", model_list)
+    model_list = re.sub(r"\[([^\]]*)\]\(([^\)]*)\)",
+                        r"`\1 <\2>`__", model_list)
 
     # Enumerate the lines properly
     lines = model_list.split("\n")
@@ -308,7 +318,8 @@ def check_model_list_copy(overwrite=False, max_per_line=119):
     if converted_list != rst_list:
         if overwrite:
             with open(os.path.join(PATH_TO_DOCS, "index.rst"), "w", encoding="utf-8", newline="\n") as f:
-                f.writelines(lines[:start_index] + [converted_list] + lines[end_index:])
+                f.writelines(lines[:start_index] +
+                             [converted_list] + lines[end_index:])
         else:
             raise ValueError(
                 "The model list in the README changed and the list in `index.rst` has not been updated. Run "
@@ -318,7 +329,8 @@ def check_model_list_copy(overwrite=False, max_per_line=119):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--fix_and_overwrite", action="store_true", help="Whether to fix inconsistencies.")
+    parser.add_argument("--fix_and_overwrite", action="store_true",
+                        help="Whether to fix inconsistencies.")
     args = parser.parse_args()
 
     check_copies(args.fix_and_overwrite)

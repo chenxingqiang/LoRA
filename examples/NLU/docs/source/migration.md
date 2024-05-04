@@ -21,11 +21,12 @@ limitations under the License.
 A couple of changes were introduced when the switch from version 3 to version 4 was done. Below is a summary of the
 expected changes:
 
-#### 1. AutoTokenizers and pipelines now use fast (rust) tokenizers by default.
+#### 1. AutoTokenizers and pipelines now use fast (rust) tokenizers by default
 
-The python and rust tokenizers have roughly the same API, but the rust tokenizers have a more complete feature set. 
+The python and rust tokenizers have roughly the same API, but the rust tokenizers have a more complete feature set.
 
 This introduces two breaking changes:
+
 - The handling of overflowing tokens between the python and rust tokenizers is different.
 - The rust tokenizers do not accept integers in the encoding methods.
 
@@ -35,12 +36,15 @@ This introduces two breaking changes:
 - The auto-tokenizers now return rust tokenizers. In order to obtain the python tokenizers instead, the user may use the `use_fast` flag by setting it to `False`:
 
 In version `v3.x`:
+
 ```py
 from transformers import AutoTokenizer
 
 tokenizer = AutoTokenizer.from_pretrained("bert-base-cased")
 ```
+
 to obtain the same in version `v4.x`:
+
 ```py
 from transformers import AutoTokenizer
 
@@ -52,6 +56,7 @@ tokenizer = AutoTokenizer.from_pretrained("bert-base-cased", use_fast=False)
 The requirement on the SentencePiece dependency has been lifted from the `setup.py`. This is done so that we may have a channel on anaconda cloud without relying on `conda-forge`. This means that the tokenizers that depend on the SentencePiece library will not be available with a standard `transformers` installation.
 
 This includes the **slow** versions of:
+
 - `XLNetTokenizer`
 - `AlbertTokenizer`
 - `CamembertTokenizer`
@@ -66,17 +71,23 @@ This includes the **slow** versions of:
 In order to obtain the same behavior as version `v3.x`, you should install `sentencepiece` additionally:
 
 In version `v3.x`:
+
 ```bash
 pip install transformers
 ```
+
 to obtain the same in version `v4.x`:
+
 ```bash
 pip install transformers[sentencepiece]
 ```
+
 or
+
 ```bash
 pip install transformers sentencepiece
 ```
+
 #### 3. The architecture of the repo has been updated so that each model resides in its folder
 
 The past and foreseeable addition of new models means that the number of files in the directory `src/transformers` keeps growing and becomes harder to navigate and understand. We made the choice to put each model and the files accompanying it in their own sub-directories.
@@ -85,13 +96,16 @@ This is a breaking change as importing intermediary layers using a model's modul
 
 ##### How to obtain the same behavior as v3.x in v4.x
 
-In order to obtain the same behavior as version `v3.x`, you should update the path used to access the layers. 
+In order to obtain the same behavior as version `v3.x`, you should update the path used to access the layers.
 
 In version `v3.x`:
+
 ```bash
 from transformers.modeling_bert import BertLayer
 ```
+
 to obtain the same in version `v4.x`:
+
 ```bash
 from transformers.models.bert.modeling_bert import BertLayer
 ```
@@ -107,16 +121,21 @@ This is a breaking change as the limitation of that tuple is that it cannot be u
 In order to obtain the same behavior as version `v3.x`, you should specify the `return_dict` argument to `False`, either in the model configuration or during the forward pass.
 
 In version `v3.x`:
+
 ```bash
 model = BertModel.from_pretrained("bert-base-cased")
 outputs = model(**inputs)
 ```
+
 to obtain the same in version `v4.x`:
+
 ```bash
 model = BertModel.from_pretrained("bert-base-cased")
 outputs = model(**inputs, return_dict=False)
 ```
+
 or
+
 ```bash
 model = BertModel.from_pretrained("bert-base-cased", return_dict=False)
 outputs = model(**inputs)
@@ -129,6 +148,7 @@ Attributes that were deprecated have been removed if they had been deprecated fo
 Here is a list of these attributes/methods/arguments and what their replacements should be:
 
 In several models, the labels become consistent with the other models:
+
 - `masked_lm_labels` becomes `labels` in `AlbertForMaskedLM` and `AlbertForPreTraining`.
 - `masked_lm_labels` becomes `labels` in `BertForMaskedLM` and `BertForPreTraining`.
 - `masked_lm_labels` becomes `labels` in `DistilBertForMaskedLM`.
@@ -142,17 +162,20 @@ In several models, the labels become consistent with the other models:
 - `lm_labels` becomes `labels` in `T5ForConditionalGeneration`.
 
 In several models, the caching mechanism becomes consistent with the other models:
+
 - `decoder_cached_states` becomes `past_key_values` in all BART-like, FSMT and T5 models.
 - `decoder_past_key_values` becomes `past_key_values` in all BART-like, FSMT and T5 models.
 - `past` becomes `past_key_values` in all CTRL models.
 - `past` becomes `past_key_values` in all GPT-2 models.
 
 Regarding the tokenizer classes:
+
 - The tokenizer attribute `max_len` becomes `model_max_length`.
 - The tokenizer attribute `return_lengths` becomes `return_length`.
 - The tokenizer encoding argument `is_pretokenized` becomes `is_split_into_words`.
 
 Regarding the `Trainer` class:
+
 - The `Trainer` argument `tb_writer` is removed in favor of the callback `TensorBoardCallback(tb_writer=...)`.
 - The `Trainer` argument `prediction_loss_only` is removed in favor of the class argument `args.prediction_loss_only`.
 - The `Trainer` attribute `data_collator` should be a callable.
@@ -163,6 +186,7 @@ Regarding the `Trainer` class:
 - The `Trainer` method `is_world_master` is deprecated in favor of `is_world_process_zero`.
 
 Regarding the `TFTrainer` class:
+
 - The `TFTrainer` argument `prediction_loss_only` is removed in favor of the class argument `args.prediction_loss_only`.
 - The `Trainer` method `_log` is deprecated in favor of `log`.
 - The `TFTrainer` method `_prediction_loop` is deprecated in favor of `prediction_loop`.
@@ -170,16 +194,17 @@ Regarding the `TFTrainer` class:
 - The `TFTrainer` method `_run_model` is deprecated in favor of `run_model`.
 
 Regarding the `TrainerArgument` class:
+
 - The `TrainerArgument` argument `evaluate_during_training` is deprecated in favor of `evaluation_strategy`.
 
 Regarding the Transfo-XL model:
+
 - The Transfo-XL configuration attribute `tie_weight` becomes `tie_words_embeddings`.
 - The Transfo-XL modeling method `reset_length` becomes `reset_memory_length`.
 
 Regarding pipelines:
+
 - The `FillMaskPipeline` argument `topk` becomes `top_k`.
-
-
 
 ## Migrating from pytorch-transformers to 🤗 Transformers
 

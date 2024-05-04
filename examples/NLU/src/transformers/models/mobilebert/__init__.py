@@ -27,7 +27,8 @@ _import_structure = {
 }
 
 if is_tokenizers_available():
-    _import_structure["tokenization_mobilebert_fast"] = ["MobileBertTokenizerFast"]
+    _import_structure["tokenization_mobilebert_fast"] = [
+        "MobileBertTokenizerFast"]
 
 if is_torch_available():
     _import_structure["modeling_mobilebert"] = [

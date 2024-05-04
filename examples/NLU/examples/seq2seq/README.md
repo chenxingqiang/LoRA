@@ -32,12 +32,13 @@ For the old `finetune_trainer.py` and related utils, see [`examples/legacy/seq2s
 
 `run_summarization.py` and `run_translation.py` are lightweight examples of how to download and preprocess a dataset from the [🤗 Datasets](https://github.com/huggingface/datasets) library or use your own files (jsonlines or csv), then fine-tune one of the architectures above on it.
 
-For custom datasets in `jsonlines` format please see: https://huggingface.co/docs/datasets/loading_datasets.html#json-files
+For custom datasets in `jsonlines` format please see: <https://huggingface.co/docs/datasets/loading_datasets.html#json-files>
 and you also will find examples of these below.
 
 ### Summarization
 
 Here is an example on a summarization task:
+
 ```bash
 python examples/seq2seq/run_summarization.py \
     --model_name_or_path t5-small \
@@ -115,7 +116,6 @@ and you wanted to select only `text` and `summary`, then you'd pass these additi
 
 The second supported format is jsonlines. Here is an example of a jsonlines custom data file.
 
-
 ```json
 {"text": "I'm sitting here in a boring room. It's just another rainy Sunday afternoon. I'm wasting my time I got nothing to do. I'm hanging around I'm waiting for you. But nothing ever happens. And I wonder", "summary": "I'm sitting in a room where I'm waiting for something to happen"}
 {"text": "I see trees so green, red roses too. I see them bloom for me and you. And I think to myself what a wonderful world. I see skies so blue and clouds so white. The bright blessed day, the dark sacred night. And I think to myself what a wonderful world.", "summary": "I'm a gardener and I'm a big fan of flowers."}
@@ -130,8 +130,6 @@ And as with the CSV files, you can specify which values to select from the file,
     --text_column text \
     --summary_column summary \
 ```
-
-
 
 ### Translation
 
@@ -177,8 +175,8 @@ python examples/seq2seq/run_translation.py \
 
 Note, that depending on the used model additional language-specific command-line arguments are sometimes required. Specifically:
 
-* MBart models require different `--{source,target}_lang` values, e.g. in place of `en` it expects `en_XX`, for `ro` it expects `ro_RO`. The full MBart specification for language codes can be looked up [here](https://huggingface.co/facebook/mbart-large-cc25)
-* T5 models can use a `--source_prefix` argument to override the otherwise automated prefix of the form `translate {source_lang} to {target_lang}` for `run_translation.py` and `summarize: ` for `run_summarization.py`
+- MBart models require different `--{source,target}_lang` values, e.g. in place of `en` it expects `en_XX`, for `ro` it expects `ro_RO`. The full MBart specification for language codes can be looked up [here](https://huggingface.co/facebook/mbart-large-cc25)
+- T5 models can use a `--source_prefix` argument to override the otherwise automated prefix of the form `translate {source_lang} to {target_lang}` for `run_translation.py` and `summarize:` for `run_summarization.py`
 
 Also, if you switch to a different language pair, make sure to adjust the source and target values in all command line arguments.
 
@@ -211,6 +209,7 @@ The task of translation supports only custom JSONLINES files, with each line bei
 { "translation": { "en": "Others have dismissed him as a joke.", "ro": "Alții l-au numit o glumă." } }
 { "translation": { "en": "And some are holding out for an implosion.", "ro": "Iar alții așteaptă implozia." } }
 ```
+
 Here the languages are Romanian (`ro`) and English (`en`).
 
 If you want to use a pre-processed dataset that leads to high bleu scores, but for the `en-de` language pair, you can use `--dataset_name wmt14-en-de-pre-processed`, as following:

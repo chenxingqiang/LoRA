@@ -127,7 +127,8 @@ class MarianTokenizer(PreTrainedTokenizer):
             model_max_length=model_max_length,
             **kwargs,
         )
-        assert Path(source_spm).exists(), f"cannot find spm source {source_spm}"
+        assert Path(source_spm).exists(
+        ), f"cannot find spm source {source_spm}"
         self.encoder = load_json(vocab)
         if self.unk_token not in self.encoder:
             raise KeyError("<unk> token must be in vocab")
@@ -136,7 +137,8 @@ class MarianTokenizer(PreTrainedTokenizer):
 
         self.source_lang = source_lang
         self.target_lang = target_lang
-        self.supported_language_codes: list = [k for k in self.encoder if k.startswith(">>") and k.endswith("<<")]
+        self.supported_language_codes: list = [
+            k for k in self.encoder if k.startswith(">>") and k.endswith("<<")]
         self.spm_files = [source_spm, target_spm]
 
         # load SentencePiece model for pre-processing
@@ -152,7 +154,8 @@ class MarianTokenizer(PreTrainedTokenizer):
         try:
             from sacremoses import MosesPunctNormalizer
 
-            self.punc_normalizer = MosesPunctNormalizer(self.source_lang).normalize
+            self.punc_normalizer = MosesPunctNormalizer(
+                self.source_lang).normalize
         except (ImportError, FileNotFoundError):
             warnings.warn("Recommended: pip install sacremoses.")
             self.punc_normalizer = lambda x: x
@@ -259,11 +262,13 @@ class MarianTokenizer(PreTrainedTokenizer):
         assert save_dir.is_dir(), f"{save_directory} should be a directory"
         save_json(
             self.encoder,
-            save_dir / ((filename_prefix + "-" if filename_prefix else "") + self.vocab_files_names["vocab"]),
+            save_dir / ((filename_prefix + "-" if filename_prefix else "") +
+                        self.vocab_files_names["vocab"]),
         )
 
         for orig, f in zip(["source.spm", "target.spm"], self.spm_files):
-            dest_path = save_dir / ((filename_prefix + "-" if filename_prefix else "") + Path(f).name)
+            dest_path = save_dir / \
+                ((filename_prefix + "-" if filename_prefix else "") + Path(f).name)
             if not dest_path.exists():
                 copyfile(f, save_dir / orig)
 
@@ -278,12 +283,14 @@ class MarianTokenizer(PreTrainedTokenizer):
 
     def __getstate__(self) -> Dict:
         state = self.__dict__.copy()
-        state.update({k: None for k in ["spm_source", "spm_target", "current_spm", "punc_normalizer"]})
+        state.update({k: None for k in [
+                     "spm_source", "spm_target", "current_spm", "punc_normalizer"]})
         return state
 
     def __setstate__(self, d: Dict) -> None:
         self.__dict__ = d
-        self.spm_source, self.spm_target = (load_spm(f) for f in self.spm_files)
+        self.spm_source, self.spm_target = (
+            load_spm(f) for f in self.spm_files)
         self.current_spm = self.spm_source
         self._setup_normalizer()
 
@@ -292,8 +299,10 @@ class MarianTokenizer(PreTrainedTokenizer):
         return 1
 
     def _special_token_mask(self, seq):
-        all_special_ids = set(self.all_special_ids)  # call it once instead of inside list comp
-        all_special_ids.remove(self.unk_token_id)  # <unk> is only sometimes special
+        # call it once instead of inside list comp
+        all_special_ids = set(self.all_special_ids)
+        # <unk> is only sometimes special
+        all_special_ids.remove(self.unk_token_id)
         return [1 if x in all_special_ids else 0 for x in seq]
 
     def get_special_tokens_mask(

@@ -60,7 +60,8 @@ class GroupedBatchSampler(BatchSampler):
     def __init__(self, sampler, group_ids, batch_size):
         if not isinstance(sampler, Sampler):
             raise ValueError(
-                "sampler should be an instance of " "torch.utils.data.Sampler, but got sampler={}".format(sampler)
+                "sampler should be an instance of " "torch.utils.data.Sampler, but got sampler={}".format(
+                    sampler)
             )
         self.sampler = sampler
         self.group_ids = group_ids
@@ -94,7 +95,7 @@ class GroupedBatchSampler(BatchSampler):
                 batch_idx.extend(idxs)
                 if len(batch_idx) >= self.batch_size:
                     yield batch_idx[: self.batch_size]
-                    batch_idx = batch_idx[self.batch_size :]
+                    batch_idx = batch_idx[self.batch_size:]
                     num_remaining -= 1
             if len(batch_idx) > 0:
                 yield batch_idx

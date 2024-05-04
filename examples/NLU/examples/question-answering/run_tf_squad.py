@@ -52,7 +52,8 @@ class ModelArguments:
     """
 
     model_name_or_path: str = field(
-        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
+        metadata={
+            "help": "Path to pretrained model or model identifier from huggingface.co/models"}
     )
     config_name: Optional[str] = field(
         default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
@@ -60,12 +61,14 @@ class ModelArguments:
     tokenizer_name: Optional[str] = field(
         default=None, metadata={"help": "Pretrained tokenizer name or path if not the same as model_name"}
     )
-    use_fast: bool = field(default=False, metadata={"help": "Set this flag to use fast tokenization."})
+    use_fast: bool = field(default=False, metadata={
+                           "help": "Set this flag to use fast tokenization."})
     # If you want to tweak more attributes on your tokenizer, you should do it in a distinct script,
     # or just modify its tokenizer_config.json.
     cache_dir: Optional[str] = field(
         default=None,
-        metadata={"help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
+        metadata={
+            "help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
     )
 
 
@@ -78,7 +81,8 @@ class DataTrainingArguments:
     data_dir: Optional[str] = field(
         default=None, metadata={"help": "The input data dir. Should contain the .json files for the SQuAD task."}
     )
-    use_tfds: Optional[bool] = field(default=True, metadata={"help": "If TFDS should be used or not."})
+    use_tfds: Optional[bool] = field(
+        default=True, metadata={"help": "If TFDS should be used or not."})
     max_seq_length: int = field(
         default=128,
         metadata={
@@ -88,7 +92,8 @@ class DataTrainingArguments:
     )
     doc_stride: int = field(
         default=128,
-        metadata={"help": "When splitting up a long document into chunks, how much stride to take between chunks."},
+        metadata={
+            "help": "When splitting up a long document into chunks, how much stride to take between chunks."},
     )
     max_query_length: int = field(
         default=64,
@@ -128,7 +133,8 @@ def main():
     # See all possible arguments in src/transformers/training_args.py
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TFTrainingArguments))
+    parser = HfArgumentParser(
+        (ModelArguments, DataTrainingArguments, TFTrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
     if (
@@ -183,12 +189,14 @@ def main():
     # Get datasets
     if data_args.use_tfds:
         if data_args.version_2_with_negative:
-            logger.warn("tensorflow_datasets does not handle version 2 of SQuAD. Switch to version 1 automatically")
+            logger.warn(
+                "tensorflow_datasets does not handle version 2 of SQuAD. Switch to version 1 automatically")
 
         try:
             import tensorflow_datasets as tfds
         except ImportError:
-            raise ImportError("If not data_dir is specified, tensorflow_datasets needs to be installed.")
+            raise ImportError(
+                "If not data_dir is specified, tensorflow_datasets needs to be installed.")
 
         tfds_examples = tfds.load("squad", data_dir=data_args.data_dir)
         train_examples = (
@@ -203,8 +211,10 @@ def main():
         )
     else:
         processor = SquadV2Processor() if data_args.version_2_with_negative else SquadV1Processor()
-        train_examples = processor.get_train_examples(data_args.data_dir) if training_args.do_train else None
-        eval_examples = processor.get_dev_examples(data_args.data_dir) if training_args.do_eval else None
+        train_examples = processor.get_train_examples(
+            data_args.data_dir) if training_args.do_train else None
+        eval_examples = processor.get_dev_examples(
+            data_args.data_dir) if training_args.do_eval else None
 
     train_dataset = (
         squad_convert_examples_to_features(
@@ -220,7 +230,8 @@ def main():
         else None
     )
 
-    train_dataset = train_dataset.apply(tf.data.experimental.assert_cardinality(len(train_examples)))
+    train_dataset = train_dataset.apply(
+        tf.data.experimental.assert_cardinality(len(train_examples)))
 
     eval_dataset = (
         squad_convert_examples_to_features(
@@ -236,7 +247,8 @@ def main():
         else None
     )
 
-    eval_dataset = eval_dataset.apply(tf.data.experimental.assert_cardinality(len(eval_examples)))
+    eval_dataset = eval_dataset.apply(
+        tf.data.experimental.assert_cardinality(len(eval_examples)))
 
     # Initialize our Trainer
     trainer = TFTrainer(

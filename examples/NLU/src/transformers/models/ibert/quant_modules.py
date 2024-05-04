@@ -66,7 +66,8 @@ class QuantEmbedding(nn.Module):
         self.scale_grad_by_freq = scale_grad_by_freq
         self.sparse = sparse
 
-        self.weight = nn.Parameter(torch.zeros([num_embeddings, embedding_dim]))
+        self.weight = nn.Parameter(
+            torch.zeros([num_embeddings, embedding_dim]))
         self.register_buffer("weight_scaling_factor", torch.zeros(1))
         self.register_buffer("weight_integer", torch.zeros_like(self.weight))
 
@@ -96,7 +97,8 @@ class QuantEmbedding(nn.Module):
         w_min = w_transform.min().expand(1)
         w_max = w_transform.max().expand(1)
 
-        self.weight_scaling_factor = symmetric_linear_quantization_params(self.weight_bit, w_min, w_max, False)
+        self.weight_scaling_factor = symmetric_linear_quantization_params(
+            self.weight_bit, w_min, w_max, False)
         self.weight_integer = self.weight_function(
             self.weight, self.weight_bit, self.percentile_mode, self.weight_scaling_factor
         )
@@ -147,14 +149,16 @@ class QuantAct(nn.Module):
             self.x_min -= 1e-5
             self.x_max += 1e-5
         else:
-            raise NotImplementedError("per-channel mode is not currently supported for activation.")
+            raise NotImplementedError(
+                "per-channel mode is not currently supported for activation.")
 
     def __repr__(self):
         return (
             "{0}(activation_bit={1}, "
             "quant_mode: {2}, Act_min: {3:.2f}, "
             "Act_max: {4:.2f})".format(
-                self.__class__.__name__, self.activation_bit, self.quant_mode, self.x_min.item(), self.x_max.item()
+                self.__class__.__name__, self.activation_bit, self.quant_mode, self.x_min.item(
+                ), self.x_max.item()
             )
         )
 
@@ -191,8 +195,10 @@ class QuantAct(nn.Module):
                 self.x_min = torch.min(self.x_min, x_min)
                 self.x_max = torch.max(self.x_max, x_max)
             else:
-                self.x_min = self.x_min * self.act_range_momentum + x_min * (1 - self.act_range_momentum)
-                self.x_max = self.x_max * self.act_range_momentum + x_max * (1 - self.act_range_momentum)
+                self.x_min = self.x_min * self.act_range_momentum + \
+                    x_min * (1 - self.act_range_momentum)
+                self.x_max = self.x_max * self.act_range_momentum + \
+                    x_max * (1 - self.act_range_momentum)
 
         if not self.quant_mode:
             return x_act, None
@@ -206,7 +212,8 @@ class QuantAct(nn.Module):
 
         if pre_act_scaling_factor is None:
             # this is for the input quantization
-            quant_act_int = self.act_function(x, self.activation_bit, self.percentile, self.act_scaling_factor)
+            quant_act_int = self.act_function(
+                x, self.activation_bit, self.percentile, self.act_scaling_factor)
         else:
             quant_act_int = FixedPointMul.apply(
                 x,
@@ -246,7 +253,8 @@ class QuantLinear(nn.Module):
 
         self.weight = nn.Parameter(torch.zeros([out_features, in_features]))
         self.register_buffer("weight_integer", torch.zeros_like(self.weight))
-        self.register_buffer("fc_scaling_factor", torch.zeros(self.out_features))
+        self.register_buffer("fc_scaling_factor",
+                             torch.zeros(self.out_features))
         if bias:
             self.bias = nn.Parameter(torch.zeros(out_features))
             self.register_buffer("bias_integer", torch.zeros_like(self.bias))
@@ -283,7 +291,8 @@ class QuantLinear(nn.Module):
             w_min = w_transform.min().expand(1)
             w_max = w_transform.max().expand(1)
 
-        self.fc_scaling_factor = symmetric_linear_quantization_params(self.weight_bit, w_min, w_max, self.per_channel)
+        self.fc_scaling_factor = symmetric_linear_quantization_params(
+            self.weight_bit, w_min, w_max, self.per_channel)
         self.weight_integer = self.weight_function(
             self.weight, self.weight_bit, self.percentile_mode, self.fc_scaling_factor
         )
@@ -291,13 +300,15 @@ class QuantLinear(nn.Module):
         bias_scaling_factor = self.fc_scaling_factor * prev_act_scaling_factor
 
         if self.bias is not None:
-            self.bias_integer = self.weight_function(self.bias, self.bias_bit, False, bias_scaling_factor)
+            self.bias_integer = self.weight_function(
+                self.bias, self.bias_bit, False, bias_scaling_factor)
 
         prev_act_scaling_factor = prev_act_scaling_factor.view(1, -1)
         x_int = x / prev_act_scaling_factor
 
         return (
-            F.linear(x_int, weight=self.weight_integer, bias=self.bias_integer) * bias_scaling_factor,
+            F.linear(x_int, weight=self.weight_integer,
+                     bias=self.bias_integer) * bias_scaling_factor,
             bias_scaling_factor,
         )
 
@@ -349,7 +360,8 @@ class IntGELU(nn.Module):
             return self.activation_fn(x), None
 
         x_int = x / scaling_factor
-        sigmoid_int, sigmoid_scaling_factor = self.int_erf(x_int, scaling_factor / self.k)
+        sigmoid_int, sigmoid_scaling_factor = self.int_erf(
+            x_int, scaling_factor / self.k)
 
         shift_int = 1.0 // sigmoid_scaling_factor
 
@@ -406,7 +418,8 @@ class IntSoftmax(nn.Module):
         q = floor_ste.apply(x_int / x0_int)
         r = x_int - x0_int * q
         exp_int, exp_scaling_factor = self.int_polynomial(r, scaling_factor)
-        exp_int = torch.clamp(floor_ste.apply(exp_int * 2 ** (self.const - q)), min=0)
+        exp_int = torch.clamp(floor_ste.apply(
+            exp_int * 2 ** (self.const - q)), min=0)
         scaling_factor = exp_scaling_factor / 2 ** self.const
         return exp_int, scaling_factor
 
@@ -426,7 +439,8 @@ class IntSoftmax(nn.Module):
 
         exp_int_sum = exp_int.sum(dim=-1, keepdim=True)
         factor = floor_ste.apply(2 ** self.max_bit / exp_int_sum)
-        exp_int = floor_ste.apply(exp_int * factor / 2 ** (self.max_bit - self.output_bit))
+        exp_int = floor_ste.apply(
+            exp_int * factor / 2 ** (self.max_bit - self.output_bit))
         scaling_factor = 1 / 2 ** self.output_bit
         return exp_int * scaling_factor, scaling_factor
 
@@ -468,10 +482,12 @@ class IntLayerNorm(nn.Module):
         with torch.no_grad():
             y_sq_int = y_int ** 2
             var_int = torch.sum(y_sq_int, axis=2, keepdim=True)
-            shift = (torch.log2(torch.sqrt(var_int / 2 ** self.max_bit)).ceil()).max()
+            shift = (torch.log2(torch.sqrt(
+                var_int / 2 ** self.max_bit)).ceil()).max()
             shift_old = self.shift
             self.shift = torch.max(self.shift, shift)
-            logger.info("Dynamic shift adjustment: {} -> {}".format(int(shift_old), int(self.shift)))
+            logger.info(
+                "Dynamic shift adjustment: {} -> {}".format(int(shift_old), int(self.shift)))
 
     def overflow_fallback(self, y_int):
         """
@@ -626,7 +642,8 @@ def symmetric_linear_quantization_params(num_bits, saturation_min, saturation_ma
         n = 2 ** (num_bits - 1) - 1
 
         if per_channel:
-            scale, _ = torch.max(torch.stack([saturation_min.abs(), saturation_max.abs()], dim=1), dim=1)
+            scale, _ = torch.max(torch.stack(
+                [saturation_min.abs(), saturation_max.abs()], dim=1), dim=1)
             scale = torch.clamp(scale, min=1e-8) / n
 
         else:
@@ -731,7 +748,8 @@ def batch_frexp(inputs, max_bit=31):
     tmp_m = []
     for m in output_m:
         int_m_shifted = int(
-            decimal.Decimal(m * (2 ** max_bit)).quantize(decimal.Decimal("1"), rounding=decimal.ROUND_HALF_UP)
+            decimal.Decimal(
+                m * (2 ** max_bit)).quantize(decimal.Decimal("1"), rounding=decimal.ROUND_HALF_UP)
         )
         tmp_m.append(int_m_shifted)
     output_m = np.array(tmp_m)
@@ -779,9 +797,9 @@ class FixedPointMul(Function):
     ):
 
         if len(pre_act_scaling_factor.shape) == 3:
-            reshape = lambda x: x  # noqa: E731
+            def reshape(x): return x  # noqa: E731
         else:
-            reshape = lambda x: x.view(1, 1, -1)  # noqa: E731
+            def reshape(x): return x.view(1, 1, -1)  # noqa: E731
         ctx.identity = identity
 
         n = 2 ** (bit_num - 1) - 1

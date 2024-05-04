@@ -40,7 +40,8 @@ DOC_SPECIAL_WORD = [
 
 # Regexes
 # Matches any declaration of textual block, like `.. note::`. (ignore case to avoid writing all versions in the list)
-_re_textual_blocks = re.compile(r"^\s*\.\.\s+(" + "|".join(TEXTUAL_BLOCKS) + r")\s*::\s*$", re.IGNORECASE)
+_re_textual_blocks = re.compile(
+    r"^\s*\.\.\s+(" + "|".join(TEXTUAL_BLOCKS) + r")\s*::\s*$", re.IGNORECASE)
 # Matches list introduction in rst.
 _re_list = re.compile(r"^(\s*-\s+|\s*\*\s+|\s*\d+\.\s+)")
 # Matches the indent in a line.
@@ -58,11 +59,13 @@ _re_doc_ignore = re.compile(r"(\.\.|#)\s*docstyle-ignore")
 # Matches the example introduction in docstrings.
 _re_example = re.compile(r"::\s*$")
 # Matches the parameters introduction in docstrings.
-_re_arg_def = re.compile(r"^\s*(Args?|Parameters?|Params|Arguments?|Environment|Attributes?)\s*:\s*$")
+_re_arg_def = re.compile(
+    r"^\s*(Args?|Parameters?|Params|Arguments?|Environment|Attributes?)\s*:\s*$")
 # Matches the return introduction in docstrings.
 _re_return = re.compile(r"^\s*(Returns?|Raises?|Note)\s*:\s*$")
 # Matches any doc special word.
-_re_any_doc_special_word = re.compile(r"^\s*(" + "|".join(DOC_SPECIAL_WORD) + r")::?\s*$")
+_re_any_doc_special_word = re.compile(
+    r"^\s*(" + "|".join(DOC_SPECIAL_WORD) + r")::?\s*$")
 
 
 class SpecialBlock(Enum):
@@ -158,27 +161,29 @@ class CodeStyler:
             remainder = ""
             prefix = _re_list.search(paragraph[0]).groups()[0]
             prefix_indent = get_indent(paragraph[0])
-            current_item = [paragraph[0][len(prefix) :]]
+            current_item = [paragraph[0][len(prefix):]]
             for i, line in enumerate(paragraph[1:]):
                 new_item_search = _re_list.search(line)
                 indent = get_indent(line)
                 if len(indent) < len(prefix_indent) or (len(indent) == len(prefix_indent) and new_item_search is None):
                     # There might not be an empty line after the list, formatting the remainder recursively.
                     remainder = "\n" + self.style_paragraph(
-                        paragraph[i + 1 :], max_len, no_style=no_style, min_indent=min_indent
+                        paragraph[i + 1:], max_len, no_style=no_style, min_indent=min_indent
                     )
                     break
                 elif new_item_search is not None:
                     text = " ".join([l.strip() for l in current_item])
-                    result += split_text_in_lines(text, max_len, prefix, min_indent=min_indent) + "\n"
+                    result += split_text_in_lines(text, max_len,
+                                                  prefix, min_indent=min_indent) + "\n"
                     prefix = new_item_search.groups()[0]
                     prefix_indent = indent
-                    current_item = [line[len(prefix) :]]
+                    current_item = [line[len(prefix):]]
                 else:
                     current_item.append(line)
             # Treat the last item
             text = " ".join([l.strip() for l in current_item])
-            result += split_text_in_lines(text, max_len, prefix, min_indent=min_indent)
+            result += split_text_in_lines(text,
+                                          max_len, prefix, min_indent=min_indent)
             # Add the potential remainder
             return result + remainder
 
@@ -208,7 +213,8 @@ class CodeStyler:
                     if len(current_item) > 0:
                         item_indent = get_indent(current_item[0])
                         text = " ".join([l.strip() for l in current_item])
-                        result += split_text_in_lines(text, max_len, item_indent, min_indent=min_indent) + "\n"
+                        result += split_text_in_lines(text, max_len,
+                                                      item_indent, min_indent=min_indent) + "\n"
                     result += line + "\n"
                     current_item = []
                 else:
@@ -216,7 +222,8 @@ class CodeStyler:
             if len(current_item) > 0:
                 item_indent = get_indent(current_item[0])
                 text = " ".join([l.strip() for l in current_item])
-                result += split_text_in_lines(text, max_len, item_indent, min_indent=min_indent) + "\n"
+                result += split_text_in_lines(text, max_len,
+                                              item_indent, min_indent=min_indent) + "\n"
             return result[:-1]
 
         indent = get_indent(paragraph[0])
@@ -313,7 +320,8 @@ class CodeStyler:
                 if not indent.startswith(self.current_indent):
                     self.in_block = SpecialBlock.NOT_SPECIAL
             _ = self.is_special_block(paragraph[0])
-            new_lines.append(self.style_paragraph(paragraph, max_len, no_style=no_style, min_indent=min_indent) + "\n")
+            new_lines.append(self.style_paragraph(
+                paragraph, max_len, no_style=no_style, min_indent=min_indent) + "\n")
         return "\n".join(new_lines)
 
 
@@ -450,7 +458,8 @@ def style_docstring(docstring, max_len=119):
     # Add missing new lines before lists
     docstring = _add_new_lines_before_list(docstring)
     # Style
-    styled_doc = doc_styler.style(docstring, max_len=max_len, min_indent=indent)
+    styled_doc = doc_styler.style(
+        docstring, max_len=max_len, min_indent=indent)
 
     # Add new lines if necessary
     if not styled_doc.startswith("\n"):
@@ -466,7 +475,8 @@ def style_file_docstrings(code_file, max_len=119, check_only=False):
         code = f.read()
     splits = code.split('"""')
     splits = [
-        (s if i % 2 == 0 or _re_doc_ignore.search(splits[i - 1]) is not None else style_docstring(s, max_len=max_len))
+        (s if i % 2 == 0 or _re_doc_ignore.search(
+            splits[i - 1]) is not None else style_docstring(s, max_len=max_len))
         for i, s in enumerate(splits)
     ]
     clean_code = '"""'.join(splits)
@@ -490,8 +500,10 @@ def style_doc_files(*files, max_len=119, check_only=False):
         # Treat folders
         if os.path.isdir(file):
             files = [os.path.join(file, f) for f in os.listdir(file)]
-            files = [f for f in files if os.path.isdir(f) or f.endswith(".rst") or f.endswith(".py")]
-            changed += style_doc_files(*files, max_len=max_len, check_only=check_only)
+            files = [f for f in files if os.path.isdir(
+                f) or f.endswith(".rst") or f.endswith(".py")]
+            changed += style_doc_files(*files,
+                                       max_len=max_len, check_only=check_only)
         # Treat rst
         elif file.endswith(".rst"):
             if style_rst_file(file, max_len=max_len, check_only=check_only):
@@ -501,7 +513,8 @@ def style_doc_files(*files, max_len=119, check_only=False):
             if style_file_docstrings(file, max_len=max_len, check_only=check_only):
                 changed.append(file)
         else:
-            warnings.warn(f"Ignoring {file} because it's not a py or an rst file or a folder.")
+            warnings.warn(
+                f"Ignoring {file} because it's not a py or an rst file or a folder.")
     return changed
 
 
@@ -515,9 +528,12 @@ def main(*files, max_len=119, check_only=False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("files", nargs="+", help="The file(s) or folder(s) to restyle.")
-    parser.add_argument("--max_len", type=int, help="The maximum length of lines.")
-    parser.add_argument("--check_only", action="store_true", help="Whether to only check and not fix styling issues.")
+    parser.add_argument("files", nargs="+",
+                        help="The file(s) or folder(s) to restyle.")
+    parser.add_argument("--max_len", type=int,
+                        help="The maximum length of lines.")
+    parser.add_argument("--check_only", action="store_true",
+                        help="Whether to only check and not fix styling issues.")
     args = parser.parse_args()
 
     main(*args.files, max_len=args.max_len, check_only=args.check_only)

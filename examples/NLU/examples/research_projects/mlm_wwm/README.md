@@ -16,20 +16,18 @@ limitations under the License.
 
 ## Whole Word Mask Language Model
 
-
 These scripts leverage the 🤗 Datasets library and the Trainer API. You can easily customize them to your needs if you
 need extra processing on your datasets.
 
 The following examples, will run on a datasets hosted on our [hub](https://huggingface.co/datasets) or with your own
 text files for training and validation. We give examples of both below.
 
-
-
 The BERT authors released a new version of BERT using Whole Word Masking in May 2019. Instead of masking randomly
 selected tokens (which may be part of words), they mask randomly selected words (masking all the tokens corresponding
 to that word). This technique has been refined for Chinese in [this paper](https://arxiv.org/abs/1906.08101).
 
 To fine-tune a model using whole word masking, use the following script:
+
 ```bash
 python run_mlm_wwm.py \
     --model_name_or_path roberta-base \
@@ -58,7 +56,6 @@ we need LTP.
 
 You could run the following:
 
-
 ```bash
 export TRAIN_FILE=/path/to/dataset/wiki.train.raw
 export LTP_RESOURCE=/path/to/ltp/tokenizer
@@ -72,8 +69,7 @@ python run_chinese_ref.py \
     --save_path=path_to_reference_file
 ```
 
-Then you can run the script like this: 
-
+Then you can run the script like this:
 
 ```bash
 python run_mlm_wwm.py \

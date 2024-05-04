@@ -70,7 +70,8 @@ class TextClassificationPipeline(Pipeline):
             scores = np.exp(outputs) / np.exp(outputs).sum(-1, keepdims=True)
         if self.return_all_scores:
             return [
-                [{"label": self.model.config.id2label[i], "score": score.item()} for i, score in enumerate(item)]
+                [{"label": self.model.config.id2label[i], "score": score.item()}
+                 for i, score in enumerate(item)]
                 for item in scores
             ]
         else:

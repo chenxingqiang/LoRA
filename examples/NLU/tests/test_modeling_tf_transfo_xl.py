@@ -65,12 +65,15 @@ class TFTransfoXLModelTester:
         self.init_range = 0.01
 
     def prepare_config_and_inputs(self):
-        input_ids_1 = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
-        input_ids_2 = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+        input_ids_1 = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size)
+        input_ids_2 = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size)
 
         lm_labels = None
         if self.use_labels:
-            lm_labels = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+            lm_labels = ids_tensor(
+                [self.batch_size, self.seq_length], self.vocab_size)
 
         config = TransfoXLConfig(
             vocab_size=self.vocab_size,
@@ -105,15 +108,19 @@ class TFTransfoXLModelTester:
 
         hidden_states_2, mems_2 = model(inputs).to_tuple()
 
-        self.parent.assertEqual(hidden_states_1.shape, (self.batch_size, self.seq_length, self.hidden_size))
-        self.parent.assertEqual(hidden_states_2.shape, (self.batch_size, self.seq_length, self.hidden_size))
+        self.parent.assertEqual(
+            hidden_states_1.shape, (self.batch_size, self.seq_length, self.hidden_size))
+        self.parent.assertEqual(
+            hidden_states_2.shape, (self.batch_size, self.seq_length, self.hidden_size))
         self.parent.assertListEqual(
             [mem.shape for mem in mems_1],
-            [(self.mem_len, self.batch_size, self.hidden_size)] * self.num_hidden_layers,
+            [(self.mem_len, self.batch_size, self.hidden_size)] *
+            self.num_hidden_layers,
         )
         self.parent.assertListEqual(
             [mem.shape for mem in mems_2],
-            [(self.mem_len, self.batch_size, self.hidden_size)] * self.num_hidden_layers,
+            [(self.mem_len, self.batch_size, self.hidden_size)] *
+            self.num_hidden_layers,
         )
 
     def create_and_check_transfo_xl_lm_head(self, config, input_ids_1, input_ids_2, lm_labels):
@@ -126,26 +133,32 @@ class TFTransfoXLModelTester:
 
         lm_logits_2, mems_2 = model([input_ids_2, mems_1]).to_tuple()
 
-        inputs = {"input_ids": input_ids_1, "mems": mems_1, "labels": lm_labels}
+        inputs = {"input_ids": input_ids_1,
+                  "mems": mems_1, "labels": lm_labels}
 
         _, mems_2 = model(inputs).to_tuple()
 
-        self.parent.assertEqual(lm_logits_1.shape, (self.batch_size, self.seq_length, self.vocab_size))
+        self.parent.assertEqual(
+            lm_logits_1.shape, (self.batch_size, self.seq_length, self.vocab_size))
         self.parent.assertListEqual(
             [mem.shape for mem in mems_1],
-            [(self.mem_len, self.batch_size, self.hidden_size)] * self.num_hidden_layers,
+            [(self.mem_len, self.batch_size, self.hidden_size)] *
+            self.num_hidden_layers,
         )
 
-        self.parent.assertEqual(lm_logits_2.shape, (self.batch_size, self.seq_length, self.vocab_size))
+        self.parent.assertEqual(
+            lm_logits_2.shape, (self.batch_size, self.seq_length, self.vocab_size))
         self.parent.assertListEqual(
             [mem.shape for mem in mems_2],
-            [(self.mem_len, self.batch_size, self.hidden_size)] * self.num_hidden_layers,
+            [(self.mem_len, self.batch_size, self.hidden_size)] *
+            self.num_hidden_layers,
         )
 
     def create_and_check_transfo_xl_for_sequence_classification(self, config, input_ids_1, input_ids_2, lm_labels):
         model = TFTransfoXLForSequenceClassification(config)
         result = model(input_ids_1)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.num_labels))
+        self.parent.assertEqual(result.logits.shape,
+                                (self.batch_size, self.num_labels))
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -158,7 +171,8 @@ class TFTransfoXLModelTester:
 class TFTransfoXLModelTest(TFModelTesterMixin, unittest.TestCase):
 
     all_model_classes = (
-        (TFTransfoXLModel, TFTransfoXLLMHeadModel, TFTransfoXLForSequenceClassification) if is_tf_available() else ()
+        (TFTransfoXLModel, TFTransfoXLLMHeadModel,
+         TFTransfoXLForSequenceClassification) if is_tf_available() else ()
     )
     all_generative_model_classes = () if is_tf_available() else ()
     # TODO: add this test when TFTransfoXLLMHead has a linear output layer implemented
@@ -168,7 +182,8 @@ class TFTransfoXLModelTest(TFModelTesterMixin, unittest.TestCase):
 
     def setUp(self):
         self.model_tester = TFTransfoXLModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=TransfoXLConfig, d_embed=37)
+        self.config_tester = ConfigTester(
+            self, config_class=TransfoXLConfig, d_embed=37)
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -181,19 +196,23 @@ class TFTransfoXLModelTest(TFModelTesterMixin, unittest.TestCase):
     def test_transfo_xl_lm_head(self):
         self.model_tester.set_seed()
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_transfo_xl_lm_head(*config_and_inputs)
+        self.model_tester.create_and_check_transfo_xl_lm_head(
+            *config_and_inputs)
 
     def test_transfo_xl_sequence_classification_model(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_transfo_xl_for_sequence_classification(*config_and_inputs)
+        self.model_tester.create_and_check_transfo_xl_for_sequence_classification(
+            *config_and_inputs)
 
     def test_model_common_attributes(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
-        list_other_models_with_output_ebd = [TFTransfoXLForSequenceClassification]
+        list_other_models_with_output_ebd = [
+            TFTransfoXLForSequenceClassification]
 
         for model_class in self.all_model_classes:
             model = model_class(config)
-            assert isinstance(model.get_input_embeddings(), tf.keras.layers.Layer)
+            assert isinstance(model.get_input_embeddings(),
+                              tf.keras.layers.Layer)
             if model_class in list_other_models_with_output_ebd:
                 x = model.get_output_embeddings()
                 assert isinstance(x, tf.keras.layers.Layer)
@@ -574,4 +593,5 @@ class TFTransfoXLModelLanguageGenerationTest(unittest.TestCase):
         # Tsarevich Alexei Nikolaevich, narrates the remainder of the story.<eos>
 
         output_ids = model.generate(input_ids, max_length=200, do_sample=False)
-        self.assertListEqual(output_ids[0].numpy().tolist(), expected_output_ids)
+        self.assertListEqual(
+            output_ids[0].numpy().tolist(), expected_output_ids)

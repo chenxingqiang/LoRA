@@ -92,7 +92,8 @@ def get_linear_schedule_with_warmup(optimizer, num_warmup_steps, num_training_st
         if current_step < num_warmup_steps:
             return float(current_step) / float(max(1, num_warmup_steps))
         return max(
-            0.0, float(num_training_steps - current_step) / float(max(1, num_training_steps - num_warmup_steps))
+            0.0, float(num_training_steps - current_step) /
+            float(max(1, num_training_steps - num_warmup_steps))
         )
 
     return LambdaLR(optimizer, lr_lambda, last_epoch)
@@ -126,7 +127,8 @@ def get_cosine_schedule_with_warmup(
     def lr_lambda(current_step):
         if current_step < num_warmup_steps:
             return float(current_step) / float(max(1, num_warmup_steps))
-        progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))
+        progress = float(current_step - num_warmup_steps) / \
+            float(max(1, num_training_steps - num_warmup_steps))
         return max(0.0, 0.5 * (1.0 + math.cos(math.pi * float(num_cycles) * 2.0 * progress)))
 
     return LambdaLR(optimizer, lr_lambda, last_epoch)
@@ -159,7 +161,8 @@ def get_cosine_with_hard_restarts_schedule_with_warmup(
     def lr_lambda(current_step):
         if current_step < num_warmup_steps:
             return float(current_step) / float(max(1, num_warmup_steps))
-        progress = float(current_step - num_warmup_steps) / float(max(1, num_training_steps - num_warmup_steps))
+        progress = float(current_step - num_warmup_steps) / \
+            float(max(1, num_training_steps - num_warmup_steps))
         if progress >= 1.0:
             return 0.0
         return max(0.0, 0.5 * (1.0 + math.cos(math.pi * ((float(num_cycles) * progress) % 1.0))))
@@ -254,14 +257,16 @@ def get_scheduler(
 
     # All other schedulers require `num_warmup_steps`
     if num_warmup_steps is None:
-        raise ValueError(f"{name} requires `num_warmup_steps`, please provide that argument.")
+        raise ValueError(
+            f"{name} requires `num_warmup_steps`, please provide that argument.")
 
     if name == SchedulerType.CONSTANT_WITH_WARMUP:
         return schedule_func(optimizer, num_warmup_steps=num_warmup_steps)
 
     # All other schedulers require `num_training_steps`
     if num_training_steps is None:
-        raise ValueError(f"{name} requires `num_training_steps`, please provide that argument.")
+        raise ValueError(
+            f"{name} requires `num_training_steps`, please provide that argument.")
 
     return schedule_func(optimizer, num_warmup_steps=num_warmup_steps, num_training_steps=num_training_steps)
 
@@ -296,14 +301,19 @@ class AdamW(Optimizer):
         correct_bias: bool = True,
     ):
         if lr < 0.0:
-            raise ValueError("Invalid learning rate: {} - should be >= 0.0".format(lr))
+            raise ValueError(
+                "Invalid learning rate: {} - should be >= 0.0".format(lr))
         if not 0.0 <= betas[0] < 1.0:
-            raise ValueError("Invalid beta parameter: {} - should be in [0.0, 1.0[".format(betas[0]))
+            raise ValueError(
+                "Invalid beta parameter: {} - should be in [0.0, 1.0[".format(betas[0]))
         if not 0.0 <= betas[1] < 1.0:
-            raise ValueError("Invalid beta parameter: {} - should be in [0.0, 1.0[".format(betas[1]))
+            raise ValueError(
+                "Invalid beta parameter: {} - should be in [0.0, 1.0[".format(betas[1]))
         if not 0.0 <= eps:
-            raise ValueError("Invalid epsilon value: {} - should be >= 0.0".format(eps))
-        defaults = dict(lr=lr, betas=betas, eps=eps, weight_decay=weight_decay, correct_bias=correct_bias)
+            raise ValueError(
+                "Invalid epsilon value: {} - should be >= 0.0".format(eps))
+        defaults = dict(lr=lr, betas=betas, eps=eps,
+                        weight_decay=weight_decay, correct_bias=correct_bias)
         super().__init__(params, defaults)
 
     def step(self, closure: Callable = None):
@@ -323,7 +333,8 @@ class AdamW(Optimizer):
                     continue
                 grad = p.grad.data
                 if grad.is_sparse:
-                    raise RuntimeError("Adam does not support sparse gradients, please consider SparseAdam instead")
+                    raise RuntimeError(
+                        "Adam does not support sparse gradients, please consider SparseAdam instead")
 
                 state = self.state[p]
 
@@ -350,7 +361,8 @@ class AdamW(Optimizer):
                 if group["correct_bias"]:  # No bias correction for Bert
                     bias_correction1 = 1.0 - beta1 ** state["step"]
                     bias_correction2 = 1.0 - beta2 ** state["step"]
-                    step_size = step_size * math.sqrt(bias_correction2) / bias_correction1
+                    step_size = step_size * \
+                        math.sqrt(bias_correction2) / bias_correction1
 
                 p.data.addcdiv_(exp_avg, denom, value=-step_size)
 
@@ -363,7 +375,8 @@ class AdamW(Optimizer):
                 # of the weights to the loss with plain (non-momentum) SGD.
                 # Add weight decay at the end (fixed version)
                 if group["weight_decay"] > 0.0:
-                    p.data.add_(p.data, alpha=-group["lr"] * group["weight_decay"])
+                    p.data.add_(p.data, alpha=-
+                                group["lr"] * group["weight_decay"])
 
         return loss
 
@@ -447,7 +460,8 @@ class Adafactor(Optimizer):
         warmup_init=False,
     ):
         if lr is not None and relative_step:
-            raise ValueError("Cannot combine manual lr and relative_step options")
+            raise ValueError(
+                "Cannot combine manual lr and relative_step options")
         if warmup_init and not relative_step:
             raise ValueError("warmup_init requires relative_step=True")
 
@@ -468,7 +482,8 @@ class Adafactor(Optimizer):
     def _get_lr(param_group, param_state):
         rel_step_sz = param_group["lr"]
         if param_group["relative_step"]:
-            min_step = 1e-6 * param_state["step"] if param_group["warmup_init"] else 1e-2
+            min_step = 1e-6 * \
+                param_state["step"] if param_group["warmup_init"] else 1e-2
             rel_step_sz = min(min_step, 1.0 / math.sqrt(param_state["step"]))
         param_scale = 1.0
         if param_group["scale_parameter"]:
@@ -487,7 +502,8 @@ class Adafactor(Optimizer):
 
     @staticmethod
     def _approx_sq_grad(exp_avg_sq_row, exp_avg_sq_col):
-        r_factor = (exp_avg_sq_row / exp_avg_sq_row.mean(dim=-1, keepdim=True)).rsqrt_()
+        r_factor = (exp_avg_sq_row /
+                    exp_avg_sq_row.mean(dim=-1, keepdim=True)).rsqrt_()
         c_factor = exp_avg_sq_col.rsqrt()
         return torch.mm(r_factor.unsqueeze(-1), c_factor.unsqueeze(0))
 
@@ -511,12 +527,14 @@ class Adafactor(Optimizer):
                 if grad.dtype in {torch.float16, torch.bfloat16}:
                     grad = grad.float()
                 if grad.is_sparse:
-                    raise RuntimeError("Adafactor does not support sparse gradients.")
+                    raise RuntimeError(
+                        "Adafactor does not support sparse gradients.")
 
                 state = self.state[p]
                 grad_shape = grad.shape
 
-                factored, use_first_moment = self._get_options(group, grad_shape)
+                factored, use_first_moment = self._get_options(
+                    group, grad_shape)
                 # State Initialization
                 if len(state) == 0:
                     state["step"] = 0
@@ -525,8 +543,10 @@ class Adafactor(Optimizer):
                         # Exponential moving average of gradient values
                         state["exp_avg"] = torch.zeros_like(grad)
                     if factored:
-                        state["exp_avg_sq_row"] = torch.zeros(grad_shape[:-1]).to(grad)
-                        state["exp_avg_sq_col"] = torch.zeros(grad_shape[:-2] + grad_shape[-1:]).to(grad)
+                        state["exp_avg_sq_row"] = torch.zeros(
+                            grad_shape[:-1]).to(grad)
+                        state["exp_avg_sq_col"] = torch.zeros(
+                            grad_shape[:-2] + grad_shape[-1:]).to(grad)
                     else:
                         state["exp_avg_sq"] = torch.zeros_like(grad)
 
@@ -535,8 +555,10 @@ class Adafactor(Optimizer):
                     if use_first_moment:
                         state["exp_avg"] = state["exp_avg"].to(grad)
                     if factored:
-                        state["exp_avg_sq_row"] = state["exp_avg_sq_row"].to(grad)
-                        state["exp_avg_sq_col"] = state["exp_avg_sq_col"].to(grad)
+                        state["exp_avg_sq_row"] = state["exp_avg_sq_row"].to(
+                            grad)
+                        state["exp_avg_sq_col"] = state["exp_avg_sq_col"].to(
+                            grad)
                     else:
                         state["exp_avg_sq"] = state["exp_avg_sq"].to(grad)
 
@@ -554,11 +576,14 @@ class Adafactor(Optimizer):
                     exp_avg_sq_row = state["exp_avg_sq_row"]
                     exp_avg_sq_col = state["exp_avg_sq_col"]
 
-                    exp_avg_sq_row.mul_(beta2t).add_(1.0 - beta2t, update.mean(dim=-1))
-                    exp_avg_sq_col.mul_(beta2t).add_(1.0 - beta2t, update.mean(dim=-2))
+                    exp_avg_sq_row.mul_(beta2t).add_(
+                        1.0 - beta2t, update.mean(dim=-1))
+                    exp_avg_sq_col.mul_(beta2t).add_(
+                        1.0 - beta2t, update.mean(dim=-2))
 
                     # Approximation of exponential moving average of square of gradient
-                    update = self._approx_sq_grad(exp_avg_sq_row, exp_avg_sq_col)
+                    update = self._approx_sq_grad(
+                        exp_avg_sq_row, exp_avg_sq_col)
                     update.mul_(grad)
                 else:
                     exp_avg_sq = state["exp_avg_sq"]
@@ -566,12 +591,14 @@ class Adafactor(Optimizer):
                     exp_avg_sq.mul_(beta2t).add_(1.0 - beta2t, update)
                     update = exp_avg_sq.rsqrt().mul_(grad)
 
-                update.div_((self._rms(update) / group["clip_threshold"]).clamp_(min=1.0))
+                update.div_(
+                    (self._rms(update) / group["clip_threshold"]).clamp_(min=1.0))
                 update.mul_(lr)
 
                 if use_first_moment:
                     exp_avg = state["exp_avg"]
-                    exp_avg.mul_(group["beta1"]).add_(1 - group["beta1"], update)
+                    exp_avg.mul_(group["beta1"]).add_(
+                        1 - group["beta1"], update)
                     update = exp_avg
 
                 if group["weight_decay"] != 0:

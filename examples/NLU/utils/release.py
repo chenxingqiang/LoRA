@@ -59,7 +59,8 @@ def update_version_in_examples(version):
             directories.remove("legacy")
         for fname in fnames:
             if fname.endswith(".py"):
-                update_version_in_file(os.path.join(folder, fname), version, pattern="examples")
+                update_version_in_file(os.path.join(
+                    folder, fname), version, pattern="examples")
 
 
 def global_version_update(version, patch=False):
@@ -111,7 +112,8 @@ def pre_release_work(patch=False):
     # First let's get the default version: base version if we are in dev, bump minor otherwise.
     default_version = get_version()
     if patch and default_version.is_devrelease:
-        raise ValueError("Can't create a patch version from the dev branch, checkout a released version!")
+        raise ValueError(
+            "Can't create a patch version from the dev branch, checkout a released version!")
     if default_version.is_devrelease:
         default_version = default_version.base_version
     elif patch:
@@ -148,7 +150,8 @@ def update_custom_js(version, patch=False):
 
     # We go until the end
     while not lines[index].startswith("}"):
-        search = re.search(r'^(\s+)"": "([^"]+) \(stable\)",\s*\n$', lines[index])
+        search = re.search(
+            r'^(\s+)"": "([^"]+) \(stable\)",\s*\n$', lines[index])
         if search is not None:
             indent, old_versions = search.groups()
             if patch:
@@ -195,7 +198,8 @@ def post_release_work():
 
     # Check with the user we got that right.
     version = input(f"Which version are we developing now? [{dev_version}]")
-    commit = input(f"Commit hash to associate to v{current_version}? [{version_commit}]")
+    commit = input(
+        f"Commit hash to associate to v{current_version}? [{version_commit}]")
     if len(version) == 0:
         version = dev_version
     if len(commit) == 0:
@@ -231,7 +235,8 @@ def post_patch_work():
         version = input("Which patch version was just released?")
         commit = input("Commit hash to associated to it?")
     else:
-        version = input(f"Which patch version was just released? [{default_version}]")
+        version = input(
+            f"Which patch version was just released? [{default_version}]")
         commit = input(f"Commit hash to associated to it? [{version_commit}]")
         if len(version) == 0:
             version = default_version
@@ -245,8 +250,10 @@ def post_patch_work():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--post_release", action="store_true", help="Whether this is pre or post release.")
-    parser.add_argument("--patch", action="store_true", help="Whether or not this is a patch release.")
+    parser.add_argument("--post_release", action="store_true",
+                        help="Whether this is pre or post release.")
+    parser.add_argument("--patch", action="store_true",
+                        help="Whether or not this is a patch release.")
     args = parser.parse_args()
     if not args.post_release:
         pre_release_work(patch=args.patch)

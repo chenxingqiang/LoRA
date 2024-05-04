@@ -14,9 +14,14 @@
 # limitations under the License.
 """Tokenization classes for {{cookiecutter.modelname}}."""
 
-{%- if cookiecutter.tokenizer_type == "Based on BERT" %}
-from ...utils import logging
+from ...tokenization_utils_fast import PreTrainedTokenizerFast
+from ...tokenization_utils import AddedToken, PreTrainedTokenizer
+from tokenizers import ByteLevelBPETokenizer
+from typing import List, Optional
+from ..bart.tokenization_bart import BartTokenizer
 from ..bert.tokenization_bert import BertTokenizer
+from ...utils import logging
+{%- if cookiecutter.tokenizer_type == "Based on BERT" %}
 
 
 logger = logging.get_logger(__name__)
@@ -55,14 +60,14 @@ class {{cookiecutter.camelcase_modelname}}Tokenizer(BertTokenizer):
     max_model_input_sizes = PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES
     pretrained_init_configuration = PRETRAINED_INIT_CONFIGURATION
 
-{%- elif cookiecutter.tokenizer_type == "Based on BART" %}
-from ...utils import logging
-from ..bart.tokenization_bart import BartTokenizer
+
+{%- elif cookiecutter.tokenizer_type == "Based on BART" % }
 
 
 logger = logging.get_logger(__name__)
 
-VOCAB_FILES_NAMES = {"vocab_file": "vocab.json", "merges_file": "merges.txt", "tokenizer_file": "tokenizer.json"}
+VOCAB_FILES_NAMES = {"vocab_file": "vocab.json",
+                     "merges_file": "merges.txt", "tokenizer_file": "tokenizer.json"}
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
@@ -96,14 +101,8 @@ class {{cookiecutter.camelcase_modelname}}Tokenizer(BartTokenizer):
     pretrained_vocab_files_map = PRETRAINED_VOCAB_FILES_MAP
     max_model_input_sizes = PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES
 
-{%- elif cookiecutter.tokenizer_type == "Standalone" %}
-from typing import List, Optional
 
-from tokenizers import ByteLevelBPETokenizer
-
-from ...tokenization_utils import AddedToken, PreTrainedTokenizer
-from ...tokenization_utils_fast import PreTrainedTokenizerFast
-from ...utils import logging
+{%- elif cookiecutter.tokenizer_type == "Standalone" % }
 
 
 logger = logging.get_logger(__name__)
@@ -119,6 +118,7 @@ PRETRAINED_VOCAB_FILES_MAP = {
 PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
     "{{cookiecutter.checkpoint_identifier}}": 1024,
 }
+
 
 class {{cookiecutter.camelcase_modelname}}Tokenizer(PreTrainedTokenizer):
     """
@@ -142,9 +142,12 @@ class {{cookiecutter.camelcase_modelname}}Tokenizer(PreTrainedTokenizer):
             eos_token="<|endoftext|>",
             **kwargs
     ):
-        bos_token = AddedToken(bos_token, lstrip=False, rstrip=False) if isinstance(bos_token, str) else bos_token
-        eos_token = AddedToken(eos_token, lstrip=False, rstrip=False) if isinstance(eos_token, str) else eos_token
-        unk_token = AddedToken(unk_token, lstrip=False, rstrip=False) if isinstance(unk_token, str) else unk_token
+        bos_token = AddedToken(bos_token, lstrip=False, rstrip=False) if isinstance(
+            bos_token, str) else bos_token
+        eos_token = AddedToken(eos_token, lstrip=False, rstrip=False) if isinstance(
+            eos_token, str) else eos_token
+        unk_token = AddedToken(unk_token, lstrip=False, rstrip=False) if isinstance(
+            unk_token, str) else unk_token
         super().__init__(bos_token=bos_token, eos_token=eos_token, unk_token=unk_token, **kwargs)
 
         "Initialisation"
@@ -260,10 +263,12 @@ class {{cookiecutter.camelcase_modelname}}Tokenizer(PreTrainedTokenizer):
         return len(cls + token_ids_0 + sep + sep + token_ids_1 + sep) * [0]
 
     def prepare_for_tokenization(self, text, is_split_into_words=False, **kwargs):
-        add_prefix_space = kwargs.pop("add_prefix_space", self.add_prefix_space)
+        add_prefix_space = kwargs.pop(
+            "add_prefix_space", self.add_prefix_space)
         if (is_split_into_words or add_prefix_space) and (len(text) > 0 and not text[0].isspace()):
             text = " " + text
         return (text, kwargs)
+
 
 class {{cookiecutter.camelcase_modelname}}TokenizerFast(PreTrainedTokenizerFast):
     """
@@ -311,7 +316,6 @@ class {{cookiecutter.camelcase_modelname}}TokenizerFast(PreTrainedTokenizerFast)
 
         return output + [self.eos_token_id] + token_ids_1 + [self.eos_token_id]
 
-
     def create_token_type_ids_from_sequences(
             self, token_ids_0: List[int], token_ids_1: Optional[List[int]] = None
     ) -> List[int]:
@@ -335,4 +339,4 @@ class {{cookiecutter.camelcase_modelname}}TokenizerFast(PreTrainedTokenizerFast)
             return len(cls + token_ids_0 + sep) * [0]
         return len(cls + token_ids_0 + sep + sep + token_ids_1 + sep) * [0]
 
-{% endif %}
+{ % endif % }

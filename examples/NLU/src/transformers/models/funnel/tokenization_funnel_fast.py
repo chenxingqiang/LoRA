@@ -23,7 +23,8 @@ from .tokenization_funnel import FunnelTokenizer
 
 logger = logging.get_logger(__name__)
 
-VOCAB_FILES_NAMES = {"vocab_file": "vocab.txt", "tokenizer_file": "tokenizer.json"}
+VOCAB_FILES_NAMES = {"vocab_file": "vocab.txt",
+                     "tokenizer_file": "tokenizer.json"}
 
 _model_names = [
     "small",
@@ -64,8 +65,10 @@ PRETRAINED_VOCAB_FILES_MAP = {
         "funnel-transformer/xlarge-base": "https://huggingface.co/funnel-transformer/xlarge-base/resolve/main/tokenizer.json",
     },
 }
-PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {f"funnel-transformer/{name}": 512 for name in _model_names}
-PRETRAINED_INIT_CONFIGURATION = {f"funnel-transformer/{name}": {"do_lower_case": True} for name in _model_names}
+PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
+    f"funnel-transformer/{name}": 512 for name in _model_names}
+PRETRAINED_INIT_CONFIGURATION = {
+    f"funnel-transformer/{name}": {"do_lower_case": True} for name in _model_names}
 
 
 class FunnelTokenizerFast(BertTokenizerFast):

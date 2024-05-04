@@ -124,15 +124,7 @@
         "3": [],
         "4": [],
         "5": [],
-        "6": [
-            "AddN",
-            "All",
-            "Any",
-            "FloorDiv",
-            "FusedBatchNorm",
-            "FusedBatchNormV2",
-            "FusedBatchNormV3"
-        ],
+        "6": ["AddN", "All", "Any", "FloorDiv", "FusedBatchNorm", "FusedBatchNormV2", "FusedBatchNormV3"],
         "7": [
             "Acos",
             "Asin",
@@ -232,14 +224,7 @@
             "TensorScatterUpdate",
             "Unique"
         ],
-        "12": [
-            "Einsum",
-            "MatrixDiag",
-            "MatrixDiagV2",
-            "MatrixDiagV3",
-            "MatrixSetDiagV3",
-            "SquaredDistance"
-        ],
+        "12": ["Einsum", "MatrixDiag", "MatrixDiagV2", "MatrixDiagV3", "MatrixSetDiagV3", "SquaredDistance"],
         "13": []
     }
 }

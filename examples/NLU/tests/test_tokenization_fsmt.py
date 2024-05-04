@@ -69,10 +69,13 @@ class FSMTTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
             "tgt_vocab_size": 20,
         }
 
-        self.src_vocab_file = os.path.join(self.tmpdirname, VOCAB_FILES_NAMES["src_vocab_file"])
-        self.tgt_vocab_file = os.path.join(self.tmpdirname, VOCAB_FILES_NAMES["tgt_vocab_file"])
+        self.src_vocab_file = os.path.join(
+            self.tmpdirname, VOCAB_FILES_NAMES["src_vocab_file"])
+        self.tgt_vocab_file = os.path.join(
+            self.tmpdirname, VOCAB_FILES_NAMES["tgt_vocab_file"])
         config_file = os.path.join(self.tmpdirname, "tokenizer_config.json")
-        self.merges_file = os.path.join(self.tmpdirname, VOCAB_FILES_NAMES["merges_file"])
+        self.merges_file = os.path.join(
+            self.tmpdirname, VOCAB_FILES_NAMES["merges_file"])
         with open(self.src_vocab_file, "w") as fp:
             fp.write(json.dumps(vocab_tokens))
         with open(self.tgt_vocab_file, "w") as fp:
@@ -95,13 +98,15 @@ class FSMTTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         loaded via its tokenizer_config.json and it's not slow so it's run by normal CI
         """
         tokenizer = FSMTTokenizer.from_pretrained(FSMT_TINY2)
-        self.assertListEqual([tokenizer.src_lang, tokenizer.tgt_lang], ["en", "ru"])
+        self.assertListEqual(
+            [tokenizer.src_lang, tokenizer.tgt_lang], ["en", "ru"])
         self.assertEqual(tokenizer.src_vocab_size, 21)
         self.assertEqual(tokenizer.tgt_vocab_size, 21)
 
     def test_full_tokenizer(self):
         """ Adapted from Sennrich et al. 2015 and https://github.com/rsennrich/subword-nmt """
-        tokenizer = FSMTTokenizer(self.langs, self.src_vocab_file, self.tgt_vocab_file, self.merges_file)
+        tokenizer = FSMTTokenizer(
+            self.langs, self.src_vocab_file, self.tgt_vocab_file, self.merges_file)
 
         text = "lower"
         bpe_tokens = ["low", "er</w>"]
@@ -110,14 +115,16 @@ class FSMTTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 
         input_tokens = tokens + ["<unk>"]
         input_bpe_tokens = [14, 15, 20]
-        self.assertListEqual(tokenizer.convert_tokens_to_ids(input_tokens), input_bpe_tokens)
+        self.assertListEqual(tokenizer.convert_tokens_to_ids(
+            input_tokens), input_bpe_tokens)
 
     @slow
     def test_sequence_builders(self):
         tokenizer = self.tokenizer_ru_en
 
         text = tokenizer.encode("sequence builders", add_special_tokens=False)
-        text_2 = tokenizer.encode("multi-sequence build", add_special_tokens=False)
+        text_2 = tokenizer.encode(
+            "multi-sequence build", add_special_tokens=False)
 
         encoded_sentence = tokenizer.build_inputs_with_special_tokens(text)
         encoded_pair = tokenizer.build_inputs_with_special_tokens(text, text_2)
@@ -133,9 +140,11 @@ class FSMTTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         targets = [
             [
                 "Here's a little song I wrote. Don't worry, be happy.",
-                [2470, 39, 11, 2349, 7222, 70, 5979, 7, 8450, 1050, 13160, 5, 26, 6445, 7, 2],
+                [2470, 39, 11, 2349, 7222, 70, 5979, 7,
+                 8450, 1050, 13160, 5, 26, 6445, 7, 2],
             ],
-            ["This is it. No more. I'm done!", [132, 21, 37, 7, 1434, 86, 7, 70, 6476, 1305, 427, 2]],
+            ["This is it. No more. I'm done!", [
+                132, 21, 37, 7, 1434, 86, 7, 70, 6476, 1305, 427, 2]],
         ]
 
         # if data needs to be recreated or added, run:
@@ -148,14 +157,17 @@ class FSMTTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
             self.assertListEqual(encoded_ids, tgt_input_ids)
 
             # and decode backward, using the reversed languages model
-            decoded_text = tokenizer_dec.decode(encoded_ids, skip_special_tokens=True)
+            decoded_text = tokenizer_dec.decode(
+                encoded_ids, skip_special_tokens=True)
             self.assertEqual(decoded_text, src_text)
 
     @slow
     def test_tokenizer_lower(self):
-        tokenizer = FSMTTokenizer.from_pretrained("facebook/wmt19-ru-en", do_lower_case=True)
+        tokenizer = FSMTTokenizer.from_pretrained(
+            "facebook/wmt19-ru-en", do_lower_case=True)
         tokens = tokenizer.tokenize("USA is United States of America")
-        expected = ["us", "a</w>", "is</w>", "un", "i", "ted</w>", "st", "ates</w>", "of</w>", "am", "er", "ica</w>"]
+        expected = ["us", "a</w>", "is</w>", "un", "i", "ted</w>",
+                    "st", "ates</w>", "of</w>", "am", "er", "ica</w>"]
         self.assertListEqual(tokens, expected)
 
     @unittest.skip("FSMTConfig.__init__  requires non-optional args")

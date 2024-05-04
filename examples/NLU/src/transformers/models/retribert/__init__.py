@@ -27,7 +27,8 @@ _import_structure = {
 }
 
 if is_tokenizers_available():
-    _import_structure["tokenization_retribert_fast"] = ["RetriBertTokenizerFast"]
+    _import_structure["tokenization_retribert_fast"] = [
+        "RetriBertTokenizerFast"]
 
 if is_torch_available():
     _import_structure["modeling_retribert"] = [

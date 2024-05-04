@@ -24,7 +24,8 @@ from .tokenization_openai import OpenAIGPTTokenizer
 
 logger = logging.get_logger(__name__)
 
-VOCAB_FILES_NAMES = {"vocab_file": "vocab.json", "merges_file": "merges.txt", "tokenizer_file": "tokenizer.json"}
+VOCAB_FILES_NAMES = {"vocab_file": "vocab.json",
+                     "merges_file": "merges.txt", "tokenizer_file": "tokenizer.json"}
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {"openai-gpt": "https://huggingface.co/openai-gpt/resolve/main/vocab.json"},
@@ -65,12 +66,14 @@ class OpenAIGPTTokenizerFast(PreTrainedTokenizerFast):
     slow_tokenizer_class = OpenAIGPTTokenizer
 
     def __init__(self, vocab_file, merges_file, tokenizer_file=None, unk_token="<unk>", **kwargs):
-        super().__init__(vocab_file, merges_file, tokenizer_file=tokenizer_file, unk_token=unk_token, **kwargs)
+        super().__init__(vocab_file, merges_file,
+                         tokenizer_file=tokenizer_file, unk_token=unk_token, **kwargs)
 
     @property
     def do_lower_case(self):
         return True
 
     def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
-        files = self._tokenizer.model.save(save_directory, name=filename_prefix)
+        files = self._tokenizer.model.save(
+            save_directory, name=filename_prefix)
         return tuple(files)

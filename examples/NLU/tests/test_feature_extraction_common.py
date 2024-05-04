@@ -27,23 +27,29 @@ class FeatureExtractionSavingTestMixin:
             self.assertEqual(obj[key], value)
 
     def test_feat_extract_to_json_file(self):
-        feat_extract_first = self.feature_extraction_class(**self.feat_extract_dict)
+        feat_extract_first = self.feature_extraction_class(
+            **self.feat_extract_dict)
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             json_file_path = os.path.join(tmpdirname, "feat_extract.json")
             feat_extract_first.to_json_file(json_file_path)
-            feat_extract_second = self.feature_extraction_class.from_json_file(json_file_path)
+            feat_extract_second = self.feature_extraction_class.from_json_file(
+                json_file_path)
 
-        self.assertEqual(feat_extract_second.to_dict(), feat_extract_first.to_dict())
+        self.assertEqual(feat_extract_second.to_dict(),
+                         feat_extract_first.to_dict())
 
     def test_feat_extract_from_and_save_pretrained(self):
-        feat_extract_first = self.feature_extraction_class(**self.feat_extract_dict)
+        feat_extract_first = self.feature_extraction_class(
+            **self.feat_extract_dict)
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             feat_extract_first.save_pretrained(tmpdirname)
-            feat_extract_second = self.feature_extraction_class.from_pretrained(tmpdirname)
+            feat_extract_second = self.feature_extraction_class.from_pretrained(
+                tmpdirname)
 
-        self.assertEqual(feat_extract_second.to_dict(), feat_extract_first.to_dict())
+        self.assertEqual(feat_extract_second.to_dict(),
+                         feat_extract_first.to_dict())
 
     def test_init_without_params(self):
         feat_extract = self.feature_extraction_class()

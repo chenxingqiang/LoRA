@@ -36,7 +36,8 @@ def convert_tf_checkpoint_to_pytorch(tf_checkpoint_path, config_file, pytorch_du
     elif discriminator_or_generator == "generator":
         model = ElectraForMaskedLM(config)
     else:
-        raise ValueError("The discriminator_or_generator argument should be either 'discriminator' or 'generator'")
+        raise ValueError(
+            "The discriminator_or_generator argument should be either 'discriminator' or 'generator'")
 
     # Load weights from tf checkpoint
     load_tf_weights_in_electra(

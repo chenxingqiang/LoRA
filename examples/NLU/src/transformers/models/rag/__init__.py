@@ -28,10 +28,12 @@ _import_structure = {
 }
 
 if is_torch_available():
-    _import_structure["modeling_rag"] = ["RagModel", "RagSequenceForGeneration", "RagTokenForGeneration"]
+    _import_structure["modeling_rag"] = ["RagModel",
+                                         "RagSequenceForGeneration", "RagTokenForGeneration"]
 
 if is_tf_available():
-    _import_structure["modeling_tf_rag"] = ["TFRagModel", "TFRagSequenceForGeneration", "TFRagTokenForGeneration"]
+    _import_structure["modeling_tf_rag"] = ["TFRagModel",
+                                            "TFRagSequenceForGeneration", "TFRagTokenForGeneration"]
 
 
 if TYPE_CHECKING:

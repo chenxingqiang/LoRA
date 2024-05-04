@@ -34,7 +34,8 @@ else:
 
 logger = logging.get_logger(__name__)
 
-VOCAB_FILES_NAMES = {"vocab_file": "sentencepiece.bpe.model", "tokenizer_file": "tokenizer.json"}
+VOCAB_FILES_NAMES = {"vocab_file": "sentencepiece.bpe.model",
+                     "tokenizer_file": "tokenizer.json"}
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
@@ -123,7 +124,8 @@ class MBart50TokenizerFast(PreTrainedTokenizerFast):
         **kwargs
     ):
         # Mask token behave like a normal word, i.e. include the space before it
-        mask_token = AddedToken(mask_token, lstrip=True, rstrip=False) if isinstance(mask_token, str) else mask_token
+        mask_token = AddedToken(mask_token, lstrip=True, rstrip=False) if isinstance(
+            mask_token, str) else mask_token
 
         super().__init__(
             vocab_file,
@@ -141,7 +143,8 @@ class MBart50TokenizerFast(PreTrainedTokenizerFast):
 
         self.vocab_file = vocab_file
 
-        self.add_special_tokens({"additional_special_tokens": FAIRSEQ_LANGUAGE_CODES})
+        self.add_special_tokens(
+            {"additional_special_tokens": FAIRSEQ_LANGUAGE_CODES})
         self.lang_code_to_id = {
             lang_code: self.convert_tokens_to_ids(lang_code) for lang_code in FAIRSEQ_LANGUAGE_CODES
         }
@@ -255,7 +258,8 @@ class MBart50TokenizerFast(PreTrainedTokenizerFast):
         self._tokenizer.post_processor = processors.TemplateProcessing(
             single=prefix_tokens_str + ["$A"] + suffix_tokens_str,
             pair=prefix_tokens_str + ["$A", "$B"] + suffix_tokens_str,
-            special_tokens=list(zip(prefix_tokens_str + suffix_tokens_str, self.prefix_tokens + self.suffix_tokens)),
+            special_tokens=list(zip(
+                prefix_tokens_str + suffix_tokens_str, self.prefix_tokens + self.suffix_tokens)),
         )
 
     def set_tgt_lang_special_tokens(self, tgt_lang: str) -> None:
@@ -270,15 +274,18 @@ class MBart50TokenizerFast(PreTrainedTokenizerFast):
         self._tokenizer.post_processor = processors.TemplateProcessing(
             single=prefix_tokens_str + ["$A"] + suffix_tokens_str,
             pair=prefix_tokens_str + ["$A", "$B"] + suffix_tokens_str,
-            special_tokens=list(zip(prefix_tokens_str + suffix_tokens_str, self.prefix_tokens + self.suffix_tokens)),
+            special_tokens=list(zip(
+                prefix_tokens_str + suffix_tokens_str, self.prefix_tokens + self.suffix_tokens)),
         )
 
     def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
         if not os.path.isdir(save_directory):
-            logger.error("Vocabulary path ({}) should be a directory".format(save_directory))
+            logger.error(
+                "Vocabulary path ({}) should be a directory".format(save_directory))
             return
         out_vocab_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["vocab_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["vocab_file"]
         )
 
         if os.path.abspath(self.vocab_file) != os.path.abspath(out_vocab_file):

@@ -54,15 +54,18 @@ class TFT5ModelTester:
         self.scope = None
 
     def prepare_config_and_inputs(self):
-        input_ids = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+        input_ids = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size)
 
         input_mask = None
         if self.use_input_mask:
-            input_mask = ids_tensor([self.batch_size, self.seq_length], vocab_size=2)
+            input_mask = ids_tensor(
+                [self.batch_size, self.seq_length], vocab_size=2)
 
         token_labels = None
         if self.use_labels:
-            token_labels = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+            token_labels = ids_tensor(
+                [self.batch_size, self.seq_length], self.vocab_size)
 
         config = T5Config(
             vocab_size=self.vocab_size,
@@ -92,15 +95,19 @@ class TFT5ModelTester:
         }
         result = model(inputs)
 
-        result = model(input_ids, decoder_attention_mask=input_mask, decoder_input_ids=input_ids)
+        result = model(input_ids, decoder_attention_mask=input_mask,
+                       decoder_input_ids=input_ids)
         decoder_output = result.last_hidden_state
         decoder_past = result.past_key_values
         encoder_output = result.encoder_last_hidden_state
-        self.parent.assertListEqual(list(encoder_output.shape), [self.batch_size, self.seq_length, self.hidden_size])
-        self.parent.assertListEqual(list(decoder_output.shape), [self.batch_size, self.seq_length, self.hidden_size])
+        self.parent.assertListEqual(list(encoder_output.shape), [
+                                    self.batch_size, self.seq_length, self.hidden_size])
+        self.parent.assertListEqual(list(decoder_output.shape), [
+                                    self.batch_size, self.seq_length, self.hidden_size])
         self.parent.assertEqual(len(decoder_past), 2)
         # decoder_past[0] should correspond to encoder output
-        self.parent.assertTrue(tf.reduce_all(tf.math.equal(decoder_past[0][0], encoder_output)))
+        self.parent.assertTrue(tf.reduce_all(
+            tf.math.equal(decoder_past[0][0], encoder_output)))
         # There should be `num_layers` key value embeddings stored in decoder_past[1]
         self.parent.assertEqual(len(decoder_past[1]), config.num_layers)
         # There should be a self attn key, a self attn value, a cross attn key and a cross attn value stored in each decoder_past[1] tuple
@@ -116,7 +123,8 @@ class TFT5ModelTester:
 
         result = model(inputs_dict)
 
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
 
     def create_and_check_t5_decoder_model_past(self, config, input_ids, decoder_input_ids, attention_mask):
         model = TFT5Model(config=config).get_decoder()
@@ -140,15 +148,18 @@ class TFT5ModelTester:
         next_input_ids = tf.concat([input_ids, next_tokens], axis=-1)
 
         output_from_no_past = model(next_input_ids)[0]
-        output_from_past = model(next_tokens, past_key_values=outputs.past_key_values)[0]
+        output_from_past = model(
+            next_tokens, past_key_values=outputs.past_key_values)[0]
 
         # select random slice
         random_slice_idx = int(ids_tensor((1,), output_from_past.shape[-1]))
-        output_from_no_past_slice = output_from_no_past[:, -1, random_slice_idx]
+        output_from_no_past_slice = output_from_no_past[:, -
+                                                        1, random_slice_idx]
         output_from_past_slice = output_from_past[:, 0, random_slice_idx]
 
         # test that outputs are equal for slice
-        tf.debugging.assert_near(output_from_past_slice, output_from_no_past_slice, rtol=1e-3)
+        tf.debugging.assert_near(
+            output_from_past_slice, output_from_no_past_slice, rtol=1e-3)
 
     def create_and_check_t5_decoder_model_attention_mask_past(
         self, config, input_ids, decoder_input_ids, attention_mask
@@ -157,8 +168,10 @@ class TFT5ModelTester:
 
         # create attention mask
         half_seq_length = self.seq_length // 2
-        attn_mask_begin = tf.ones((self.batch_size, half_seq_length), dtype=tf.int32)
-        attn_mask_end = tf.zeros((self.batch_size, self.seq_length - half_seq_length), dtype=tf.int32)
+        attn_mask_begin = tf.ones(
+            (self.batch_size, half_seq_length), dtype=tf.int32)
+        attn_mask_end = tf.zeros(
+            (self.batch_size, self.seq_length - half_seq_length), dtype=tf.int32)
         attn_mask = tf.concat([attn_mask_begin, attn_mask_end], axis=1)
 
         # first forward pass
@@ -168,11 +181,15 @@ class TFT5ModelTester:
         next_tokens = ids_tensor((self.batch_size, 1), config.vocab_size)
 
         # change a random masked slice from input_ids
-        random_seq_idx_to_change = ids_tensor((1,), half_seq_length).numpy() + 1
-        random_other_next_tokens = ids_tensor((self.batch_size, self.seq_length), config.vocab_size)
-        vector_condition = tf.range(self.seq_length) == (self.seq_length - random_seq_idx_to_change)
+        random_seq_idx_to_change = ids_tensor(
+            (1,), half_seq_length).numpy() + 1
+        random_other_next_tokens = ids_tensor(
+            (self.batch_size, self.seq_length), config.vocab_size)
+        vector_condition = tf.range(self.seq_length) == (
+            self.seq_length - random_seq_idx_to_change)
         condition = tf.transpose(
-            tf.broadcast_to(tf.expand_dims(vector_condition, -1), (self.seq_length, self.batch_size))
+            tf.broadcast_to(tf.expand_dims(vector_condition, -1),
+                            (self.seq_length, self.batch_size))
         )
         input_ids = tf.where(condition, random_other_next_tokens, input_ids)
 
@@ -184,16 +201,21 @@ class TFT5ModelTester:
         )
 
         # get two different outputs
-        output_from_no_past = model(next_input_ids, attention_mask=attn_mask)[0]
-        output_from_past = model(next_tokens, past_key_values=outputs.past_key_values, attention_mask=attn_mask)[0]
+        output_from_no_past = model(
+            next_input_ids, attention_mask=attn_mask)[0]
+        output_from_past = model(
+            next_tokens, past_key_values=outputs.past_key_values, attention_mask=attn_mask)[0]
 
         # select random slice
-        random_slice_idx = ids_tensor((1,), output_from_past.shape[-1]).numpy().item()
-        output_from_no_past_slice = output_from_no_past[:, -1, random_slice_idx]
+        random_slice_idx = ids_tensor(
+            (1,), output_from_past.shape[-1]).numpy().item()
+        output_from_no_past_slice = output_from_no_past[:, -
+                                                        1, random_slice_idx]
         output_from_past_slice = output_from_past[:, 0, random_slice_idx]
 
         # test that outputs are equal for slice
-        tf.debugging.assert_near(output_from_past_slice, output_from_no_past_slice, rtol=1e-3)
+        tf.debugging.assert_near(
+            output_from_past_slice, output_from_no_past_slice, rtol=1e-3)
 
     def create_and_check_t5_decoder_model_past_large_inputs(
         self, config, input_ids, decoder_input_ids, attention_mask
@@ -205,7 +227,8 @@ class TFT5ModelTester:
         self.batch_size = 1
 
         # first forward pass
-        outputs = model(input_ids, attention_mask=attention_mask, use_cache=True)
+        outputs = model(
+            input_ids, attention_mask=attention_mask, use_cache=True)
 
         # create hypothetical next token and extent to next_input_ids
         next_tokens = ids_tensor((self.batch_size, 3), config.vocab_size)
@@ -213,22 +236,27 @@ class TFT5ModelTester:
 
         # append to next input_ids and
         next_input_ids = tf.concat([input_ids, next_tokens], axis=-1)
-        next_attention_mask = tf.concat([attention_mask, next_attn_mask], axis=-1)
+        next_attention_mask = tf.concat(
+            [attention_mask, next_attn_mask], axis=-1)
 
-        output_from_no_past = model(next_input_ids, attention_mask=next_attention_mask)[0]
+        output_from_no_past = model(
+            next_input_ids, attention_mask=next_attention_mask)[0]
         output_from_past = model(
             next_tokens, attention_mask=next_attention_mask, past_key_values=outputs.past_key_values
         )[0]
 
-        self.parent.assertEqual(next_tokens.shape[1], output_from_past.shape[1])
+        self.parent.assertEqual(
+            next_tokens.shape[1], output_from_past.shape[1])
 
         # select random slice
         random_slice_idx = int(ids_tensor((1,), output_from_past.shape[-1]))
-        output_from_no_past_slice = output_from_no_past[:, -3:, random_slice_idx]
+        output_from_no_past_slice = output_from_no_past[:, -
+                                                        3:, random_slice_idx]
         output_from_past_slice = output_from_past[:, :, random_slice_idx]
 
         # test that outputs are equal for slice
-        tf.debugging.assert_near(output_from_past_slice, output_from_no_past_slice, rtol=1e-3)
+        tf.debugging.assert_near(
+            output_from_past_slice, output_from_no_past_slice, rtol=1e-3)
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -245,13 +273,16 @@ class TFT5ModelTester:
 class TFT5ModelTest(TFModelTesterMixin, unittest.TestCase):
 
     is_encoder_decoder = True
-    all_model_classes = (TFT5Model, TFT5ForConditionalGeneration) if is_tf_available() else ()
-    all_generative_model_classes = (TFT5ForConditionalGeneration,) if is_tf_available() else ()
+    all_model_classes = (
+        TFT5Model, TFT5ForConditionalGeneration) if is_tf_available() else ()
+    all_generative_model_classes = (
+        TFT5ForConditionalGeneration,) if is_tf_available() else ()
     test_onnx = False
 
     def setUp(self):
         self.model_tester = TFT5ModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=T5Config, d_model=37)
+        self.config_tester = ConfigTester(
+            self, config_class=T5Config, d_model=37)
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -265,7 +296,8 @@ class TFT5ModelTest(TFModelTesterMixin, unittest.TestCase):
         config = config_and_inputs[0]
         config.tie_word_embeddings = False
         config.feed_forward_proj = "gated-gelu"
-        self.model_tester.create_and_check_t5_model(config, *config_and_inputs[1:])
+        self.model_tester.create_and_check_t5_model(
+            config, *config_and_inputs[1:])
 
     def test_with_lm_head(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
@@ -273,22 +305,26 @@ class TFT5ModelTest(TFModelTesterMixin, unittest.TestCase):
 
     def test_t5_decoder_model_past(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_t5_decoder_model_past(*config_and_inputs)
+        self.model_tester.create_and_check_t5_decoder_model_past(
+            *config_and_inputs)
 
     def test_t5_decoder_model_past_with_attn_mask(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_t5_decoder_model_attention_mask_past(*config_and_inputs)
+        self.model_tester.create_and_check_t5_decoder_model_attention_mask_past(
+            *config_and_inputs)
 
     def test_t5_decoder_model_past_large_inputs(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_t5_decoder_model_past_large_inputs(*config_and_inputs)
+        self.model_tester.create_and_check_t5_decoder_model_past_large_inputs(
+            *config_and_inputs)
 
     def test_model_common_attributes(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
 
         for model_class in self.all_model_classes:
             model = model_class(config)
-            assert isinstance(model.get_input_embeddings(), tf.keras.layers.Layer)
+            assert isinstance(model.get_input_embeddings(),
+                              tf.keras.layers.Layer)
 
             if model_class in self.all_generative_model_classes:
                 x = model.get_output_embeddings()
@@ -355,11 +391,13 @@ class TFT5EncoderOnlyModelTester:
         self.is_training = is_training
 
     def prepare_config_and_inputs(self):
-        input_ids = ids_tensor([self.batch_size, self.encoder_seq_length], self.vocab_size)
+        input_ids = ids_tensor(
+            [self.batch_size, self.encoder_seq_length], self.vocab_size)
 
         attention_mask = None
         if self.use_attention_mask:
-            attention_mask = ids_tensor([self.batch_size, self.encoder_seq_length], vocab_size=2)
+            attention_mask = ids_tensor(
+                [self.batch_size, self.encoder_seq_length], vocab_size=2)
 
         config = T5Config(
             vocab_size=self.vocab_size,
@@ -397,7 +435,8 @@ class TFT5EncoderOnlyModelTester:
         result = model(input_ids=input_ids)
         encoder_output = result.last_hidden_state
 
-        self.parent.assertEqual(encoder_output.shape, (self.batch_size, self.encoder_seq_length, self.hidden_size))
+        self.parent.assertEqual(
+            encoder_output.shape, (self.batch_size, self.encoder_seq_length, self.hidden_size))
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -421,7 +460,8 @@ class TFT5EncoderOnlyModelTest(TFModelTesterMixin, unittest.TestCase):
 
     def setUp(self):
         self.model_tester = TFT5EncoderOnlyModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=T5Config, d_model=37)
+        self.config_tester = ConfigTester(
+            self, config_class=T5Config, d_model=37)
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -483,7 +523,8 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
         >>> score = t5_model.score(inputs=["Hello there"], targets=["Hi I am"], vocabulary=vocab)
         """
 
-        model = TFT5ForConditionalGeneration.from_pretrained("google/t5-v1_1-small")
+        model = TFT5ForConditionalGeneration.from_pretrained(
+            "google/t5-v1_1-small")
         tokenizer = T5Tokenizer.from_pretrained("google/t5-v1_1-small")
 
         input_ids = tokenizer("Hello there", return_tensors="tf").input_ids
@@ -515,12 +556,14 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
             'prosecutors say the marriages were part of an immigration scam . if convicted, barrientos faces two criminal counts of "offering a false instrument for filing in the first degree" she has been married 10 times, with nine of her marriages occurring between 1999 and 2002 .',
         ]
 
-        task_specific_config = getattr(model.config, "task_specific_params", {})
+        task_specific_config = getattr(
+            model.config, "task_specific_params", {})
         summarization_config = task_specific_config.get("summarization", {})
         model.config.update(summarization_config)
 
         dct = tok(
-            [model.config.prefix + x for x in [FRANCE_ARTICLE, SHORTER_ARTICLE, IRAN_ARTICLE, ARTICLE_SUBWAY]],
+            [model.config.prefix + x for x in [FRANCE_ARTICLE,
+                                               SHORTER_ARTICLE, IRAN_ARTICLE, ARTICLE_SUBWAY]],
             max_length=512,
             padding="max_length",
             truncation=True,
@@ -554,8 +597,10 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
         tok = T5Tokenizer.from_pretrained("t5-base")
         model = self.model
 
-        task_specific_config = getattr(model.config, "task_specific_params", {})
-        translation_config = task_specific_config.get("translation_en_to_de", {})
+        task_specific_config = getattr(
+            model.config, "task_specific_params", {})
+        translation_config = task_specific_config.get(
+            "translation_en_to_de", {})
         self.model.config.update(translation_config)
 
         original_input = '"Luigi often said to me that he never wanted the brothers to end up in court", she wrote.'
@@ -563,7 +608,8 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
             '"Luigi sagte mir oft, dass er nie wollte, dass die Brüder am Gericht sitzen", schrieb sie.'
         )
 
-        input_ids = tok.encode(model.config.prefix + original_input, return_tensors="tf")
+        input_ids = tok.encode(model.config.prefix +
+                               original_input, return_tensors="tf")
 
         output = model.generate(
             input_ids=input_ids,
@@ -574,7 +620,8 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
             do_sample=False,
             early_stopping=True,
         )
-        translation = tok.decode(output[0], skip_special_tokens=True, clean_up_tokenization_spaces=False)
+        translation = tok.decode(
+            output[0], skip_special_tokens=True, clean_up_tokenization_spaces=False)
 
         self.assertEqual(translation, expected_translation)
 
@@ -583,8 +630,10 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
         model = self.model
         tok = T5Tokenizer.from_pretrained("t5-base")
 
-        task_specific_config = getattr(model.config, "task_specific_params", {})
-        translation_config = task_specific_config.get("translation_en_to_fr", {})
+        task_specific_config = getattr(
+            model.config, "task_specific_params", {})
+        translation_config = task_specific_config.get(
+            "translation_en_to_fr", {})
         model.config.update(translation_config)
 
         en_text = ' This image section from an infrared recording by the Spitzer telescope shows a "family portrait" of countless generations of stars: the oldest stars are seen as blue dots. '
@@ -597,7 +646,8 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
             "de points bleus."
         )
 
-        input_ids = tok(model.config.prefix + en_text, return_tensors="tf").input_ids
+        input_ids = tok(model.config.prefix + en_text,
+                        return_tensors="tf").input_ids
 
         output = model.generate(
             input_ids=input_ids,
@@ -608,7 +658,8 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
             do_sample=False,
             early_stopping=True,
         )
-        translation = tok.decode(output[0], skip_special_tokens=True, clean_up_tokenization_spaces=False)
+        translation = tok.decode(
+            output[0], skip_special_tokens=True, clean_up_tokenization_spaces=False)
 
         self.assertEqual(translation, new_truncated_translation)
 
@@ -617,14 +668,17 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
         model = self.model
         tok = T5Tokenizer.from_pretrained("t5-base")
 
-        task_specific_config = getattr(model.config, "task_specific_params", {})
-        translation_config = task_specific_config.get("translation_en_to_ro", {})
+        task_specific_config = getattr(
+            model.config, "task_specific_params", {})
+        translation_config = task_specific_config.get(
+            "translation_en_to_ro", {})
         model.config.update(translation_config)
 
         original_input = "Taco Bell said it plans to add 2,000 locations in the US by 2022."
         expected_translation = "Taco Bell a declarat că intenţionează să adauge 2 000 de locaţii în SUA până în 2022."
 
-        input_ids = tok.encode(model.config.prefix + original_input, return_tensors="tf")
+        input_ids = tok.encode(model.config.prefix +
+                               original_input, return_tensors="tf")
 
         output = model.generate(
             input_ids=input_ids,
@@ -635,6 +689,7 @@ class TFT5ModelIntegrationTests(unittest.TestCase):
             do_sample=False,
             early_stopping=True,
         )
-        translation = tok.decode(output[0], skip_special_tokens=True, clean_up_tokenization_spaces=False)
+        translation = tok.decode(
+            output[0], skip_special_tokens=True, clean_up_tokenization_spaces=False)
 
         self.assertEqual(translation, expected_translation)

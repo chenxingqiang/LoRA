@@ -40,15 +40,18 @@ class AlbertTransformerWithPabee(AlbertTransformer):
         else:
             hidden_states = hidden_states[0]
 
-        layers_per_group = int(self.config.num_hidden_layers / self.config.num_hidden_groups)
+        layers_per_group = int(
+            self.config.num_hidden_layers / self.config.num_hidden_groups)
 
         # Index of the hidden group
-        group_idx = int(current_layer / (self.config.num_hidden_layers / self.config.num_hidden_groups))
+        group_idx = int(
+            current_layer / (self.config.num_hidden_layers / self.config.num_hidden_groups))
 
         layer_group_output = self.albert_layer_groups[group_idx](
             hidden_states,
             attention_mask,
-            head_mask[group_idx * layers_per_group : (group_idx + 1) * layers_per_group],
+            head_mask[group_idx *
+                      layers_per_group: (group_idx + 1) * layers_per_group],
         )
         hidden_states = layer_group_output[0]
 
@@ -128,25 +131,30 @@ class AlbertModelWithPabee(AlbertModel):
         """
 
         if input_ids is not None and inputs_embeds is not None:
-            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both input_ids and inputs_embeds at the same time")
         elif input_ids is not None:
             input_shape = input_ids.size()
         elif inputs_embeds is not None:
             input_shape = inputs_embeds.size()[:-1]
         else:
-            raise ValueError("You have to specify either input_ids or inputs_embeds")
+            raise ValueError(
+                "You have to specify either input_ids or inputs_embeds")
 
         device = input_ids.device if input_ids is not None else inputs_embeds.device
 
         if attention_mask is None:
             attention_mask = torch.ones(input_shape, device=device)
         if token_type_ids is None:
-            token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=device)
+            token_type_ids = torch.zeros(
+                input_shape, dtype=torch.long, device=device)
 
         extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
-        extended_attention_mask = extended_attention_mask.to(dtype=self.dtype)  # fp16 compatibility
+        extended_attention_mask = extended_attention_mask.to(
+            dtype=self.dtype)  # fp16 compatibility
         extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
-        head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
+        head_mask = self.get_head_mask(
+            head_mask, self.config.num_hidden_layers)
 
         embedding_output = self.embeddings(
             input_ids, position_ids=position_ids, token_type_ids=token_type_ids, inputs_embeds=inputs_embeds
@@ -163,13 +171,17 @@ class AlbertModelWithPabee(AlbertModel):
                     head_mask=head_mask,
                 )
 
-                pooled_output = self.pooler_activation(self.pooler(encoder_outputs[0][:, 0]))
+                pooled_output = self.pooler_activation(
+                    self.pooler(encoder_outputs[0][:, 0]))
                 logits = output_layers[i](output_dropout(pooled_output))
                 res.append(logits)
         elif self.patience == 0:  # Use all layers for inference
-            encoder_outputs = self.encoder(encoder_outputs, extended_attention_mask, head_mask=head_mask)
-            pooled_output = self.pooler_activation(self.pooler(encoder_outputs[0][:, 0]))
-            res = [output_layers[self.config.num_hidden_layers - 1](pooled_output)]
+            encoder_outputs = self.encoder(
+                encoder_outputs, extended_attention_mask, head_mask=head_mask)
+            pooled_output = self.pooler_activation(
+                self.pooler(encoder_outputs[0][:, 0]))
+            res = [output_layers[self.config.num_hidden_layers - 1]
+                   (pooled_output)]
         else:
             patient_counter = 0
             patient_result = None
@@ -183,7 +195,8 @@ class AlbertModelWithPabee(AlbertModel):
                     head_mask=head_mask,
                 )
 
-                pooled_output = self.pooler_activation(self.pooler(encoder_outputs[0][:, 0]))
+                pooled_output = self.pooler_activation(
+                    self.pooler(encoder_outputs[0][:, 0]))
                 logits = output_layers[i](pooled_output)
                 if regression:
                     labels = logits.detach()
@@ -225,7 +238,8 @@ class AlbertForSequenceClassificationWithPabee(AlbertPreTrainedModel):
         self.albert = AlbertModelWithPabee(config)
         self.dropout = nn.Dropout(config.classifier_dropout_prob)
         self.classifiers = nn.ModuleList(
-            [nn.Linear(config.hidden_size, self.config.num_labels) for _ in range(config.num_hidden_layers)]
+            [nn.Linear(config.hidden_size, self.config.num_labels)
+             for _ in range(config.num_hidden_layers)]
         )
 
         self.init_weights()
@@ -305,7 +319,8 @@ class AlbertForSequenceClassificationWithPabee(AlbertPreTrainedModel):
                     loss = loss_fct(logits_item.view(-1), labels.view(-1))
                 else:
                     loss_fct = CrossEntropyLoss()
-                    loss = loss_fct(logits_item.view(-1, self.num_labels), labels.view(-1))
+                    loss = loss_fct(
+                        logits_item.view(-1, self.num_labels), labels.view(-1))
                 if total_loss is None:
                     total_loss = loss
                 else:

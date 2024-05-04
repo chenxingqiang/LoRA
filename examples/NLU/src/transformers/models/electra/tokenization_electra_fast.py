@@ -17,7 +17,8 @@ from ..bert.tokenization_bert_fast import BertTokenizerFast
 from .tokenization_electra import ElectraTokenizer
 
 
-VOCAB_FILES_NAMES = {"vocab_file": "vocab.txt", "tokenizer_file": "tokenizer.json"}
+VOCAB_FILES_NAMES = {"vocab_file": "vocab.txt",
+                     "tokenizer_file": "tokenizer.json"}
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {

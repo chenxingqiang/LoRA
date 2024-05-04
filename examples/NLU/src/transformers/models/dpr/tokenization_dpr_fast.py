@@ -27,7 +27,8 @@ from .tokenization_dpr import DPRContextEncoderTokenizer, DPRQuestionEncoderToke
 
 logger = logging.get_logger(__name__)
 
-VOCAB_FILES_NAMES = {"vocab_file": "vocab.txt", "tokenizer_file": "tokenizer.json"}
+VOCAB_FILES_NAMES = {"vocab_file": "vocab.txt",
+                     "tokenizer_file": "tokenizer.json"}
 
 CONTEXT_ENCODER_PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
@@ -125,10 +126,12 @@ class DPRQuestionEncoderTokenizerFast(BertTokenizerFast):
 
 
 DPRSpanPrediction = collections.namedtuple(
-    "DPRSpanPrediction", ["span_score", "relevance_score", "doc_id", "start_index", "end_index", "text"]
+    "DPRSpanPrediction", ["span_score", "relevance_score",
+                          "doc_id", "start_index", "end_index", "text"]
 )
 
-DPRReaderOutput = collections.namedtuple("DPRReaderOutput", ["start_logits", "end_logits", "relevance_logits"])
+DPRReaderOutput = collections.namedtuple(
+    "DPRReaderOutput", ["start_logits", "end_logits", "relevance_logits"])
 
 
 CUSTOM_DPR_READER_DOCSTRING = r"""
@@ -237,12 +240,15 @@ class CustomDPRReaderTokenizerMixin:
         titles = titles if not isinstance(titles, str) else [titles]
         texts = texts if not isinstance(texts, str) else [texts]
         n_passages = len(titles)
-        questions = questions if not isinstance(questions, str) else [questions] * n_passages
+        questions = questions if not isinstance(questions, str) else [
+            questions] * n_passages
         assert len(titles) == len(
             texts
         ), "There should be as many titles than texts but got {} titles and {} texts.".format(len(titles), len(texts))
-        encoded_question_and_titles = super().__call__(questions, titles, padding=False, truncation=False)["input_ids"]
-        encoded_texts = super().__call__(texts, add_special_tokens=False, padding=False, truncation=False)["input_ids"]
+        encoded_question_and_titles = super().__call__(
+            questions, titles, padding=False, truncation=False)["input_ids"]
+        encoded_texts = super().__call__(texts, add_special_tokens=False,
+                                         padding=False, truncation=False)["input_ids"]
         encoded_inputs = {
             "input_ids": [
                 (encoded_question_and_title + encoded_text)[:max_length]
@@ -254,7 +260,8 @@ class CustomDPRReaderTokenizerMixin:
         if return_attention_mask is not False:
             attention_mask = []
             for input_ids in encoded_inputs["input_ids"]:
-                attention_mask.append([int(input_id != self.pad_token_id) for input_id in input_ids])
+                attention_mask.append(
+                    [int(input_id != self.pad_token_id) for input_id in input_ids])
             encoded_inputs["attention_mask"] = attention_mask
         return self.pad(encoded_inputs, padding=padding, max_length=max_length, return_tensors=return_tensors)
 
@@ -299,12 +306,14 @@ class CustomDPRReaderTokenizerMixin:
         input_ids = reader_input["input_ids"]
         start_logits, end_logits, relevance_logits = reader_output[:3]
         n_passages = len(relevance_logits)
-        sorted_docs = sorted(range(n_passages), reverse=True, key=relevance_logits.__getitem__)
+        sorted_docs = sorted(range(n_passages), reverse=True,
+                             key=relevance_logits.__getitem__)
         nbest_spans_predictions: List[DPRReaderOutput] = []
         for doc_id in sorted_docs:
             sequence_ids = list(input_ids[doc_id])
             # assuming question & title information is at the beginning of the sequence
-            passage_offset = sequence_ids.index(self.sep_token_id, 2) + 1  # second sep id
+            passage_offset = sequence_ids.index(
+                self.sep_token_id, 2) + 1  # second sep id
             if sequence_ids[-1] == self.pad_token_id:
                 sequence_len = sequence_ids.index(self.pad_token_id)
             else:
@@ -321,12 +330,14 @@ class CustomDPRReaderTokenizerMixin:
                 end_index += passage_offset
                 nbest_spans_predictions.append(
                     DPRSpanPrediction(
-                        span_score=start_logits[doc_id][start_index] + end_logits[doc_id][end_index],
+                        span_score=start_logits[doc_id][start_index] +
+                        end_logits[doc_id][end_index],
                         relevance_score=relevance_logits[doc_id],
                         doc_id=doc_id,
                         start_index=start_index,
                         end_index=end_index,
-                        text=self.decode(sequence_ids[start_index : end_index + 1]),
+                        text=self.decode(
+                            sequence_ids[start_index: end_index + 1]),
                     )
                 )
             if len(nbest_spans_predictions) >= num_spans:
@@ -346,14 +357,17 @@ class CustomDPRReaderTokenizerMixin:
         """
         scores = []
         for (start_index, start_score) in enumerate(start_logits):
-            for (answer_length, end_score) in enumerate(end_logits[start_index : start_index + max_answer_length]):
-                scores.append(((start_index, start_index + answer_length), start_score + end_score))
+            for (answer_length, end_score) in enumerate(end_logits[start_index: start_index + max_answer_length]):
+                scores.append(
+                    ((start_index, start_index + answer_length), start_score + end_score))
         scores = sorted(scores, key=lambda x: x[1], reverse=True)
         chosen_span_intervals = []
         for (start_index, end_index), score in scores:
-            assert start_index <= end_index, "Wrong span indices: [{}:{}]".format(start_index, end_index)
+            assert start_index <= end_index, "Wrong span indices: [{}:{}]".format(
+                start_index, end_index)
             length = end_index - start_index + 1
-            assert length <= max_answer_length, "Span is too long: {} > {}".format(length, max_answer_length)
+            assert length <= max_answer_length, "Span is too long: {} > {}".format(
+                length, max_answer_length)
             if any(
                 [
                     start_index <= prev_start_index <= prev_end_index <= end_index

@@ -71,13 +71,16 @@ def eval_data_dir(
     if fp16:
         model = model.half()
     # determine if we need to increase num_beams
-    use_task_specific_params(model, task)  # update config with task specific params
-    num_beams = generate_kwargs.pop("num_beams", model.config.num_beams)  # AttributeError risk?
+    # update config with task specific params
+    use_task_specific_params(model, task)
+    num_beams = generate_kwargs.pop(
+        "num_beams", model.config.num_beams)  # AttributeError risk?
     if num_return_sequences > num_beams:
         num_beams = num_return_sequences
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    logger.info(f"Inferred tokenizer type: {tokenizer.__class__}")  # if this is wrong, check config.model_type.
+    # if this is wrong, check config.model_type.
+    logger.info(f"Inferred tokenizer type: {tokenizer.__class__}")
 
     if max_source_length is None:
         max_source_length = tokenizer.model_max_length
@@ -95,8 +98,10 @@ def eval_data_dir(
     )
     # I set shuffle=True for a more accurate progress bar.
     # If all the longest samples are first, the prog bar estimate is too high at the beginning.
-    sampler = ds.make_sortish_sampler(bs, distributed=True, add_extra_examples=False, shuffle=True)
-    data_loader = DataLoader(ds, sampler=sampler, batch_size=bs, collate_fn=ds.collate_fn)
+    sampler = ds.make_sortish_sampler(
+        bs, distributed=True, add_extra_examples=False, shuffle=True)
+    data_loader = DataLoader(
+        ds, sampler=sampler, batch_size=bs, collate_fn=ds.collate_fn)
     results = []
     for batch in tqdm(data_loader):
         summaries = model.generate(
@@ -106,10 +111,12 @@ def eval_data_dir(
             num_beams=num_beams,
             **generate_kwargs,
         )
-        preds = tokenizer.batch_decode(summaries, skip_special_tokens=True, clean_up_tokenization_spaces=False)
+        preds = tokenizer.batch_decode(
+            summaries, skip_special_tokens=True, clean_up_tokenization_spaces=False)
         ids = batch["ids"]
         if num_return_sequences > 1:
-            preds = chunks(preds, num_return_sequences)  # batch size chunks, each of size num_return_seq
+            # batch size chunks, each of size num_return_seq
+            preds = chunks(preds, num_return_sequences)
         for i, pred in enumerate(preds):
             results.append(dict(pred=pred, id=ids[i].item()))
     save_json(results, save_path)
@@ -127,13 +134,16 @@ def run_generate():
         help="like facebook/bart-large-cnn,t5-base, etc.",
         default="sshleifer/distilbart-xsum-12-3",
     )
-    parser.add_argument("--save_dir", type=str, help="where to save", default="tmp_gen")
+    parser.add_argument("--save_dir", type=str,
+                        help="where to save", default="tmp_gen")
     parser.add_argument("--max_source_length", type=int, default=None)
     parser.add_argument(
         "--type_path", type=str, default="test", help="which subset to evaluate typically train/val/test"
     )
-    parser.add_argument("--task", type=str, default="summarization", help="used for task_specific_params + metrics")
-    parser.add_argument("--bs", type=int, default=8, required=False, help="batch size")
+    parser.add_argument("--task", type=str, default="summarization",
+                        help="used for task_specific_params + metrics")
+    parser.add_argument("--bs", type=int, default=8,
+                        required=False, help="batch size")
     parser.add_argument(
         "--local_rank", type=int, default=-1, required=False, help="should be passed by distributed.launch"
     )
@@ -167,7 +177,8 @@ def run_generate():
     Path(json_save_dir).mkdir(exist_ok=True)  # this handles locking.
     intermediate_files = list(json_save_dir.glob("rank_*.json"))
     if intermediate_files:
-        raise ValueError(f"Found files at {json_save_dir} please move or remove them.")
+        raise ValueError(
+            f"Found files at {json_save_dir} please move or remove them.")
         # In theory, a node could finish and save before another node hits this. If this happens, we can address later.
     dataset_kwargs = {}
     if args.src_lang is not None:
@@ -196,11 +207,13 @@ def run_generate():
     if args.local_rank <= 0:
         save_dir = Path(args.save_dir)
         save_dir.mkdir(exist_ok=True)
-        partial_results = gather_results_from_each_node(num_replicas, json_save_dir, args.sync_timeout)
+        partial_results = gather_results_from_each_node(
+            num_replicas, json_save_dir, args.sync_timeout)
         preds = combine_partial_results(partial_results)
         if args.num_return_sequences > 1:
             save_path = save_dir.joinpath("pseudolabel_results.json")
-            print(f"Saving aggregated results at {save_path}, intermediate in {json_save_dir}/")
+            print(
+                f"Saving aggregated results at {save_path}, intermediate in {json_save_dir}/")
             save_json(preds, save_path)
             return
         tgt_file = Path(args.data_dir).joinpath(args.type_path + ".target")
@@ -216,12 +229,15 @@ def run_generate():
         metrics["seconds_per_sample"] = round(runtime / metrics["n_obs"], 4)
         metrics["n_gpus"] = num_replicas
         # TODO(@stas00): add whatever metadata to metrics
-        metrics_save_path = save_dir.joinpath(f"{args.type_path}_{metric_name}.json")
+        metrics_save_path = save_dir.joinpath(
+            f"{args.type_path}_{metric_name}.json")
         save_json(metrics, metrics_save_path, indent=None)
         print(metrics)
-        write_txt_file(preds, save_dir.joinpath(f"{args.type_path}_generations.txt"))
+        write_txt_file(preds, save_dir.joinpath(
+            f"{args.type_path}_generations.txt"))
         if args.debug:
-            write_txt_file(labels, save_dir.joinpath(f"{args.type_path}.target"))
+            write_txt_file(labels, save_dir.joinpath(
+                f"{args.type_path}.target"))
         else:
             shutil.rmtree(json_save_dir)
 

@@ -52,26 +52,33 @@ class BenchmarkArguments:
 
     sequence_lengths: List[int] = list_field(
         default=[8, 32, 128, 512],
-        metadata={"help": "List of sequence lengths for which memory and time performance will be evaluated"},
+        metadata={
+            "help": "List of sequence lengths for which memory and time performance will be evaluated"},
     )
 
     inference: bool = field(
         default=True,
-        metadata={"help": "Whether to benchmark inference of model. Inference can be disabled via --no-inference."},
+        metadata={
+            "help": "Whether to benchmark inference of model. Inference can be disabled via --no-inference."},
     )
     cuda: bool = field(
         default=True,
-        metadata={"help": "Whether to run on available cuda devices. Cuda can be disabled via --no-cuda."},
+        metadata={
+            "help": "Whether to run on available cuda devices. Cuda can be disabled via --no-cuda."},
     )
     tpu: bool = field(
         default=True, metadata={"help": "Whether to run on available tpu devices. TPU can be disabled via --no-tpu."}
     )
-    fp16: bool = field(default=False, metadata={"help": "Use FP16 to accelerate inference."})
-    training: bool = field(default=False, metadata={"help": "Benchmark training of model"})
-    verbose: bool = field(default=False, metadata={"help": "Verbose memory tracing"})
+    fp16: bool = field(default=False, metadata={
+                       "help": "Use FP16 to accelerate inference."})
+    training: bool = field(default=False, metadata={
+                           "help": "Benchmark training of model"})
+    verbose: bool = field(default=False, metadata={
+                          "help": "Verbose memory tracing"})
     speed: bool = field(
         default=True,
-        metadata={"help": "Whether to perform speed measurements. Speed measurements can be disabled via --no-speed."},
+        metadata={
+            "help": "Whether to perform speed measurements. Speed measurements can be disabled via --no-speed."},
     )
     memory: bool = field(
         default=True,
@@ -79,10 +86,14 @@ class BenchmarkArguments:
             "help": "Whether to perform memory measurements. Memory measurements can be disabled via --no-memory"
         },
     )
-    trace_memory_line_by_line: bool = field(default=False, metadata={"help": "Trace memory line by line"})
-    save_to_csv: bool = field(default=False, metadata={"help": "Save result to a CSV file"})
-    log_print: bool = field(default=False, metadata={"help": "Save all print statements in a log file"})
-    env_print: bool = field(default=False, metadata={"help": "Whether to print environment information"})
+    trace_memory_line_by_line: bool = field(
+        default=False, metadata={"help": "Trace memory line by line"})
+    save_to_csv: bool = field(default=False, metadata={
+                              "help": "Save result to a CSV file"})
+    log_print: bool = field(default=False, metadata={
+                            "help": "Save all print statements in a log file"})
+    env_print: bool = field(default=False, metadata={
+                            "help": "Whether to print environment information"})
     multi_process: bool = field(
         default=True,
         metadata={
@@ -99,11 +110,13 @@ class BenchmarkArguments:
     )
     train_time_csv_file: str = field(
         default=f"train_time_{round(time())}.csv",
-        metadata={"help": "CSV filename used if saving time results to csv for training."},
+        metadata={
+            "help": "CSV filename used if saving time results to csv for training."},
     )
     train_memory_csv_file: str = field(
         default=f"train_memory_{round(time())}.csv",
-        metadata={"help": "CSV filename used if saving memory results to csv for training."},
+        metadata={
+            "help": "CSV filename used if saving memory results to csv for training."},
     )
     env_info_csv_file: str = field(
         default=f"env_info_{round(time())}.csv",
@@ -111,9 +124,11 @@ class BenchmarkArguments:
     )
     log_filename: str = field(
         default=f"log_{round(time())}.csv",
-        metadata={"help": "Log filename used if print statements are saved in log."},
+        metadata={
+            "help": "Log filename used if print statements are saved in log."},
     )
-    repeat: int = field(default=3, metadata={"help": "Times an experiment will be run."})
+    repeat: int = field(default=3, metadata={
+                        "help": "Times an experiment will be run."})
     only_pretrain_model: bool = field(
         default=False,
         metadata={

@@ -29,11 +29,10 @@ This is for evaluating each exit layer for fine-tuned DeeBERT models.
 
 This is for evaluating fine-tuned DeeBERT models, given a number of different early exit entropy thresholds.
 
-
-
 ## Citation
 
 Please cite our paper if you find the resource useful:
+
 ```
 @inproceedings{xin-etal-2020-deebert,
     title = "{D}ee{BERT}: Dynamic Early Exiting for Accelerating {BERT} Inference",
@@ -51,4 +50,3 @@ Please cite our paper if you find the resource useful:
     pages = "2246--2251",
 }
 ```
-

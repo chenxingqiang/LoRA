@@ -74,7 +74,8 @@ class TrainerIntegrationDeepSpeed(TestCasePlus):
 
         with CaptureStd() as cs:
             with mockenv_context(**self.dist_env_1_gpu):
-                trainer = get_regression_trainer(local_rank=0, deepspeed=self.ds_config_file)
+                trainer = get_regression_trainer(
+                    local_rank=0, deepspeed=self.ds_config_file)
                 trainer.train()
         assert "DeepSpeed info" in cs.out, "expected DeepSpeed logger output but got none"
 
@@ -158,7 +159,8 @@ class TrainerIntegrationDeepSpeed(TestCasePlus):
         self.assertEqual(no_grad_accum_b, yes_grad_accum_b)
 
         # see the note above how to get identical loss on a small bs
-        self.assertAlmostEqual(no_grad_accum_loss, yes_grad_accum_loss, places=5)
+        self.assertAlmostEqual(
+            no_grad_accum_loss, yes_grad_accum_loss, places=5)
 
 
 @slow
@@ -196,7 +198,8 @@ class TestDeepSpeed(TestCasePlus):
             extra_args_str=extra_args_str,
             remove_args_str=remove_args_str,
         )
-        train_metrics = load_json(os.path.join(output_dir, "train_results.json"))
+        train_metrics = load_json(os.path.join(
+            output_dir, "train_results.json"))
         assert "train_runtime" in train_metrics
 
     def run_trainer(

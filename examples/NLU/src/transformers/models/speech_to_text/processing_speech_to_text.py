@@ -102,8 +102,10 @@ class Speech2TextProcessor:
                 Additional keyword arguments passed along to both :class:`~transformers.PreTrainedFeatureExtractor` and
                 :class:`~transformers.PreTrainedTokenizer`
         """
-        feature_extractor = Speech2TextFeatureExtractor.from_pretrained(pretrained_model_name_or_path, **kwargs)
-        tokenizer = Speech2TextTokenizer.from_pretrained(pretrained_model_name_or_path, **kwargs)
+        feature_extractor = Speech2TextFeatureExtractor.from_pretrained(
+            pretrained_model_name_or_path, **kwargs)
+        tokenizer = Speech2TextTokenizer.from_pretrained(
+            pretrained_model_name_or_path, **kwargs)
 
         return cls(feature_extractor=feature_extractor, tokenizer=tokenizer)
 

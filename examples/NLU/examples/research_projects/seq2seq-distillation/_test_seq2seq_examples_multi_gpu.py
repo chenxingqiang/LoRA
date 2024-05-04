@@ -12,7 +12,8 @@ from utils import load_json
 
 CUDA_AVAILABLE = torch.cuda.is_available()
 ARTICLES = [" Sam ate lunch today.", "Sams lunch ingredients."]
-SUMMARIES = ["A very interesting story about what I ate for lunch.", "Avocado, celery, turkey, coffee"]
+SUMMARIES = ["A very interesting story about what I ate for lunch.",
+             "Avocado, celery, turkey, coffee"]
 CHEAP_ARGS = {
     "max_tokens_per_batch": None,
     "supervise_forward": True,
@@ -38,7 +39,8 @@ CHEAP_ARGS = {
     "student_decoder_layers": 1,
     "val_check_interval": 1.0,
     "output_dir": "",
-    "fp16": False,  # TODO(SS): set this to CUDA_AVAILABLE if ci installs apex or start using native amp
+    # TODO(SS): set this to CUDA_AVAILABLE if ci installs apex or start using native amp
+    "fp16": False,
     "no_teacher": False,
     "fp16_opt_level": "O1",
     "gpus": 1 if CUDA_AVAILABLE else 0,
@@ -126,7 +128,8 @@ class TestSummarizationDistillerMultiGPU(TestCasePlus):
         args_d: dict = CHEAP_ARGS.copy()
         tmp_dir = make_test_data_dir(tmp_dir=self.get_auto_remove_tmp_dir())
         output_dir = self.get_auto_remove_tmp_dir()
-        args_d.update(data_dir=tmp_dir, output_dir=output_dir, **default_updates)
+        args_d.update(data_dir=tmp_dir, output_dir=output_dir,
+                      **default_updates)
 
         def convert(k, v):
             if k in ["tgt_suffix", "server_ip", "server_port", "out", "n_tpu_cores"]:
@@ -137,8 +140,10 @@ class TestSummarizationDistillerMultiGPU(TestCasePlus):
                 return f"--{k}"
             return f"--{k}={v}"
 
-        cli_args = [x for x in (convert(k, v) for k, v in args_d.items()) if len(x)]
-        cmd = [sys.executable, f"{self.test_file_dir}/distillation.py"] + cli_args
+        cli_args = [x for x in (convert(k, v)
+                                for k, v in args_d.items()) if len(x)]
+        cmd = [sys.executable,
+               f"{self.test_file_dir}/distillation.py"] + cli_args
         execute_subprocess_async(cmd, env=self.get_env())
 
         contents = os.listdir(output_dir)
@@ -160,5 +165,6 @@ class TestSummarizationDistillerMultiGPU(TestCasePlus):
         self.assertGreaterEqual(last_step_stats["val_avg_gen_time"], 0.01)
         self.assertIsInstance(last_step_stats[f"val_avg_{val_metric}"], float)
         self.assertEqual(len(metrics["test"]), 1)
-        desired_n_evals = int(args_d["max_epochs"] * (1 / args_d["val_check_interval"]) / 2 + 1)
+        desired_n_evals = int(
+            args_d["max_epochs"] * (1 / args_d["val_check_interval"]) / 2 + 1)
         self.assertEqual(len(metrics["val"]), desired_n_evals)

@@ -69,8 +69,9 @@ def scaled_dot_product_attention(q, k, v, mask, attention_mask=None, head_mask=N
     scaled_attention_logits = matmul_qk / np.sqrt(dk)
 
     if mask is not None:
-        nd, ns = scaled_attention_logits.size(-2), scaled_attention_logits.size(-1)
-        scaled_attention_logits += mask[ns - nd : ns, :ns] * -1e4
+        nd, ns = scaled_attention_logits.size(
+            -2), scaled_attention_logits.size(-1)
+        scaled_attention_logits += mask[ns - nd: ns, :ns] * -1e4
 
     if attention_mask is not None:
         # Apply the attention mask
@@ -106,7 +107,8 @@ class MultiHeadAttention(torch.nn.Module):
         attention_head_size = self.d_model_size // self.num_heads
         if len(heads) == 0:
             return
-        heads, index = find_pruneable_heads_and_indices(heads, self.num_heads, attention_head_size, self.pruned_heads)
+        heads, index = find_pruneable_heads_and_indices(
+            heads, self.num_heads, attention_head_size, self.pruned_heads)
 
         # Prune linear layers
         self.Wq = prune_linear_layer(self.Wq, index)
@@ -154,10 +156,12 @@ class MultiHeadAttention(torch.nn.Module):
         else:
             present = (None,)
 
-        output = scaled_dot_product_attention(q, k, v, mask, attention_mask, head_mask)
+        output = scaled_dot_product_attention(
+            q, k, v, mask, attention_mask, head_mask)
         scaled_attention = output[0].permute([0, 2, 1, 3])
         attn = output[1]
-        original_size_attention = scaled_attention.reshape(batch_size, -1, self.d_model_size)
+        original_size_attention = scaled_attention.reshape(
+            batch_size, -1, self.d_model_size)
         output = self.dense(original_size_attention)
 
         outputs = (output, present)
@@ -225,11 +229,13 @@ class CTRLPreTrainedModel(PreTrainedModel):
         if isinstance(module, (nn.Linear, Conv1D)):
             # Slightly different from the TF version which uses truncated_normal for initialization
             # cf https://github.com/pytorch/pytorch/pull/5617
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            module.weight.data.normal_(
+                mean=0.0, std=self.config.initializer_range)
             if module.bias is not None:
                 module.bias.data.zero_()
         elif isinstance(module, nn.Embedding):
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            module.weight.data.normal_(
+                mean=0.0, std=self.config.initializer_range)
             if module.padding_idx is not None:
                 module.weight.data[module.padding_idx].zero_()
         elif isinstance(module, nn.LayerNorm):
@@ -328,15 +334,18 @@ class CTRLModel(CTRLPreTrainedModel):
         self.d_model_size = config.n_embd
         self.num_layers = config.n_layer
 
-        self.pos_encoding = positional_encoding(config.n_positions, self.d_model_size, torch.float)
+        self.pos_encoding = positional_encoding(
+            config.n_positions, self.d_model_size, torch.float)
 
         self.w = nn.Embedding(config.vocab_size, config.n_embd)
 
         self.dropout = nn.Dropout(config.embd_pdrop)
         self.h = nn.ModuleList(
-            [EncoderLayer(config.n_embd, config.n_head, config.dff, config.resid_pdrop) for _ in range(config.n_layer)]
+            [EncoderLayer(config.n_embd, config.n_head, config.dff,
+                          config.resid_pdrop) for _ in range(config.n_layer)]
         )
-        self.layernorm = nn.LayerNorm(config.n_embd, eps=config.layer_norm_epsilon)
+        self.layernorm = nn.LayerNorm(
+            config.n_embd, eps=config.layer_norm_epsilon)
 
         self.init_weights()
 
@@ -383,7 +392,8 @@ class CTRLModel(CTRLPreTrainedModel):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         if input_ids is not None and inputs_embeds is not None:
-            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both input_ids and inputs_embeds at the same time")
         elif input_ids is not None:
             input_shape = input_ids.size()
             input_ids = input_ids.view(-1, input_shape[-1])
@@ -392,7 +402,8 @@ class CTRLModel(CTRLPreTrainedModel):
             input_shape = inputs_embeds.size()[:-1]
             batch_size = inputs_embeds.shape[0]
         else:
-            raise ValueError("You have to specify either input_ids or inputs_embeds")
+            raise ValueError(
+                "You have to specify either input_ids or inputs_embeds")
 
         if past_key_values is None:
             past_length = 0
@@ -401,7 +412,8 @@ class CTRLModel(CTRLPreTrainedModel):
             past_length = past_key_values[0][0].size(-2)
         if position_ids is None:
             device = input_ids.device if input_ids is not None else inputs_embeds.device
-            position_ids = torch.arange(past_length, input_shape[-1] + past_length, dtype=torch.long, device=device)
+            position_ids = torch.arange(
+                past_length, input_shape[-1] + past_length, dtype=torch.long, device=device)
             position_ids = position_ids.unsqueeze(0).view(-1, input_shape[-1])
 
         # Attention mask.
@@ -420,7 +432,8 @@ class CTRLModel(CTRLPreTrainedModel):
             # positions we want to attend and -10000.0 for masked positions.
             # Since we are adding it to the raw scores before the softmax, this is
             # effectively the same as removing these entirely.
-            attention_mask = attention_mask.to(dtype=self.dtype)  # fp16 compatibility
+            attention_mask = attention_mask.to(
+                dtype=self.dtype)  # fp16 compatibility
             attention_mask = (1.0 - attention_mask) * -10000.0
 
         # Prepare head mask if needed
@@ -438,11 +451,13 @@ class CTRLModel(CTRLPreTrainedModel):
             inputs_embeds = self.w(input_ids)
         # inputs_embeds = embedded.unsqueeze(0) if len(input_ids.shape)<2 else embedded
         seq_len = input_shape[-1]
-        mask = torch.triu(torch.ones(seq_len + past_length, seq_len + past_length), 1).to(inputs_embeds.device)
+        mask = torch.triu(torch.ones(seq_len + past_length,
+                          seq_len + past_length), 1).to(inputs_embeds.device)
 
         inputs_embeds *= np.sqrt(self.d_model_size)
 
-        pos_embeds = self.pos_encoding[position_ids, :].to(inputs_embeds.device)
+        pos_embeds = self.pos_encoding[position_ids, :].to(
+            inputs_embeds.device)
 
         hidden_states = inputs_embeds + pos_embeds + token_type_embeds
 
@@ -568,7 +583,8 @@ class CTRLLMHeadModel(CTRLPreTrainedModel):
             shift_labels = labels[..., 1:].contiguous()
             # Flatten the tokens
             loss_fct = CrossEntropyLoss()
-            loss = loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+            loss = loss_fct(
+                shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
 
         if not return_dict:
             output = (lm_logits,) + transformer_outputs[1:]
@@ -590,7 +606,8 @@ class CTRLLMHeadModel(CTRLPreTrainedModel):
         called. This is required to match :obj:`past_key_values` with the correct beam_idx at every generation step.
         """
         return tuple(
-            tuple(past_state.index_select(0, beam_idx.to(past_state.device)) for past_state in layer_past)
+            tuple(past_state.index_select(0, beam_idx.to(past_state.device))
+                  for past_state in layer_past)
             for layer_past in past
         )
 
@@ -677,7 +694,8 @@ class CTRLForSequenceClassification(CTRLPreTrainedModel):
             sequence_lengths = -1
         else:
             if input_ids is not None:
-                sequence_lengths = torch.ne(input_ids, self.config.pad_token_id).sum(-1) - 1
+                sequence_lengths = torch.ne(
+                    input_ids, self.config.pad_token_id).sum(-1) - 1
             else:
                 sequence_lengths = -1
                 logger.warning(
@@ -692,10 +710,12 @@ class CTRLForSequenceClassification(CTRLPreTrainedModel):
             if self.num_labels == 1:
                 #  We are doing regression
                 loss_fct = MSELoss()
-                loss = loss_fct(pooled_logits.view(-1), labels.to(self.dtype).view(-1))
+                loss = loss_fct(pooled_logits.view(-1),
+                                labels.to(self.dtype).view(-1))
             else:
                 loss_fct = CrossEntropyLoss()
-                loss = loss_fct(pooled_logits.view(-1, self.num_labels), labels.view(-1))
+                loss = loss_fct(
+                    pooled_logits.view(-1, self.num_labels), labels.view(-1))
 
         if not return_dict:
             output = (pooled_logits,) + transformer_outputs[2:]

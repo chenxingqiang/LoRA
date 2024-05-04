@@ -98,17 +98,20 @@ class MBartTokenizer(XLMRobertaTokenizer):
     suffix_tokens: List[int] = []
 
     def __init__(self, *args, tokenizer_file=None, src_lang=None, tgt_lang=None, **kwargs):
-        super().__init__(*args, tokenizer_file=tokenizer_file, src_lang=src_lang, tgt_lang=tgt_lang, **kwargs)
+        super().__init__(*args, tokenizer_file=tokenizer_file,
+                         src_lang=src_lang, tgt_lang=tgt_lang, **kwargs)
 
         self.sp_model_size = len(self.sp_model)
         self.lang_code_to_id = {
             code: self.sp_model_size + i + self.fairseq_offset for i, code in enumerate(FAIRSEQ_LANGUAGE_CODES)
         }
         self.id_to_lang_code = {v: k for k, v in self.lang_code_to_id.items()}
-        self.fairseq_tokens_to_ids["<mask>"] = len(self.sp_model) + len(self.lang_code_to_id) + self.fairseq_offset
+        self.fairseq_tokens_to_ids["<mask>"] = len(
+            self.sp_model) + len(self.lang_code_to_id) + self.fairseq_offset
 
         self.fairseq_tokens_to_ids.update(self.lang_code_to_id)
-        self.fairseq_ids_to_tokens = {v: k for k, v in self.fairseq_tokens_to_ids.items()}
+        self.fairseq_ids_to_tokens = {v: k for k,
+                                      v in self.fairseq_tokens_to_ids.items()}
         self._additional_special_tokens = list(self.lang_code_to_id.keys())
 
         self._src_lang = src_lang if src_lang is not None else "en_XX"
@@ -118,7 +121,8 @@ class MBartTokenizer(XLMRobertaTokenizer):
 
     @property
     def vocab_size(self):
-        return len(self.sp_model) + len(self.lang_code_to_id) + self.fairseq_offset + 1  # Plus 1 for the mask token
+        # Plus 1 for the mask token
+        return len(self.sp_model) + len(self.lang_code_to_id) + self.fairseq_offset + 1
 
     @property
     def src_lang(self) -> str:

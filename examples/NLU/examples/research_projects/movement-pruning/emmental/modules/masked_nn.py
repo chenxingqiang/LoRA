@@ -65,8 +65,10 @@ class MaskedLinear(nn.Linear):
                 Choices: ["topK", "threshold", "sigmoied_threshold", "magnitude", "l0"]
                 Default: ``topK``
         """
-        super(MaskedLinear, self).__init__(in_features=in_features, out_features=out_features, bias=bias)
-        assert pruning_method in ["topK", "threshold", "sigmoied_threshold", "magnitude", "l0"]
+        super(MaskedLinear, self).__init__(
+            in_features=in_features, out_features=out_features, bias=bias)
+        assert pruning_method in ["topK", "threshold",
+                                  "sigmoied_threshold", "magnitude", "l0"]
         self.pruning_method = pruning_method
 
         if self.pruning_method in ["topK", "threshold", "sigmoied_threshold", "l0"]:
@@ -79,7 +81,8 @@ class MaskedLinear(nn.Linear):
         if self.mask_init == "constant":
             init.constant_(self.mask_scores, val=self.mask_scale)
         elif self.mask_init == "uniform":
-            init.uniform_(self.mask_scores, a=-self.mask_scale, b=self.mask_scale)
+            init.uniform_(self.mask_scores, a=-
+                          self.mask_scale, b=self.mask_scale)
         elif self.mask_init == "kaiming":
             init.kaiming_uniform_(self.mask_scores, a=math.sqrt(5))
 
@@ -95,8 +98,10 @@ class MaskedLinear(nn.Linear):
         elif self.pruning_method == "l0":
             l, r, b = -0.1, 1.1, 2 / 3
             if self.training:
-                u = torch.zeros_like(self.mask_scores).uniform_().clamp(0.0001, 0.9999)
-                s = torch.sigmoid((u.log() - (1 - u).log() + self.mask_scores) / b)
+                u = torch.zeros_like(
+                    self.mask_scores).uniform_().clamp(0.0001, 0.9999)
+                s = torch.sigmoid(
+                    (u.log() - (1 - u).log() + self.mask_scores) / b)
             else:
                 s = torch.sigmoid(self.mask_scores)
             s_bar = s * (r - l) + l

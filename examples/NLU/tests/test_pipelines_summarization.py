@@ -69,21 +69,24 @@ class SimpleSummarizationPipelineTests(unittest.TestCase):
         #     real_tokenizer = PreTrainedTokenizerFast(tokenizer_file=f.name, model_max_length=model_max_length)
         # real_tokenizer._tokenizer.save("tokenizer.json")
         # # + add missing config.json with albert as model_type
-        tokenizer = AutoTokenizer.from_pretrained("Narsil/small_summarization_test")
+        tokenizer = AutoTokenizer.from_pretrained(
+            "Narsil/small_summarization_test")
         nlp = pipeline(task="summarization", model=model, tokenizer=tokenizer)
 
         with self.assertLogs("transformers", level="WARNING"):
             with self.assertRaises(IndexError):
                 _ = nlp("This is a test")
 
-        output = nlp("This is a test", truncation=TruncationStrategy.ONLY_FIRST)
+        output = nlp("This is a test",
+                     truncation=TruncationStrategy.ONLY_FIRST)
         # 2 is default BOS from Bart.
         self.assertEqual(output, [{"summary_text": "\x02 L L L"}])
 
 
 class SummarizationPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCase):
     pipeline_task = "summarization"
-    pipeline_running_kwargs = {"num_beams": 2, "min_length": 2, "max_length": 5}
+    pipeline_running_kwargs = {"num_beams": 2,
+                               "min_length": 2, "max_length": 5}
     small_models = [
         "patrickvonplaten/t5-tiny-random",
         "sshleifer/bart-tiny-random",

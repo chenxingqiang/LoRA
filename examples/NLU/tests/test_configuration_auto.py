@@ -22,7 +22,8 @@ from transformers.models.roberta.configuration_roberta import RobertaConfig
 from transformers.testing_utils import DUMMY_UNKWOWN_IDENTIFIER
 
 
-SAMPLE_ROBERTA_CONFIG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures/dummy-config.json")
+SAMPLE_ROBERTA_CONFIG = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), "fixtures/dummy-config.json")
 
 
 class AutoConfigTest(unittest.TestCase):
@@ -50,4 +51,5 @@ class AutoConfigTest(unittest.TestCase):
         # no key string should be included in a later key string (typical failure case)
         keys = list(CONFIG_MAPPING.keys())
         for i, key in enumerate(keys):
-            self.assertFalse(any(key in later_key for later_key in keys[i + 1 :]))
+            self.assertFalse(
+                any(key in later_key for later_key in keys[i + 1:]))

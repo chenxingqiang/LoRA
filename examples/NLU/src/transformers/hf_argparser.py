@@ -103,7 +103,8 @@ class HfArgumentParser(ArgumentParser):
                     kwargs["required"] = True
             elif field.type is bool or field.type == Optional[bool]:
                 if field.default is True:
-                    self.add_argument(f"--no_{field.name}", action="store_false", dest=field.name, **kwargs)
+                    self.add_argument(
+                        f"--no_{field.name}", action="store_false", dest=field.name, **kwargs)
 
                 # Hack because type=bool in argparse does not behave as we want.
                 kwargs["type"] = string_to_bool
@@ -117,7 +118,8 @@ class HfArgumentParser(ArgumentParser):
                     # This is the value that will get picked if we do --field_name (without value)
                     kwargs["const"] = True
             elif (
-                hasattr(field.type, "__origin__") and re.search(r"^typing\.List\[(.*)\]$", str(field.type)) is not None
+                hasattr(field.type, "__origin__") and re.search(
+                    r"^typing\.List\[(.*)\]$", str(field.type)) is not None
             ):
                 kwargs["nargs"] = "+"
                 kwargs["type"] = field.type.__args__[0]
@@ -174,7 +176,8 @@ class HfArgumentParser(ArgumentParser):
 
             if args_file.exists():
                 fargs = args_file.read_text().split()
-                args = fargs + args if args is not None else fargs + sys.argv[1:]
+                args = fargs + \
+                    args if args is not None else fargs + sys.argv[1:]
                 # in case of duplicate arguments the first one has precedence
                 # so we append rather than prepend.
         namespace, remaining_args = self.parse_known_args(args=args)
@@ -193,7 +196,8 @@ class HfArgumentParser(ArgumentParser):
             return (*outputs, remaining_args)
         else:
             if remaining_args:
-                raise ValueError(f"Some specified arguments are not used by the HfArgumentParser: {remaining_args}")
+                raise ValueError(
+                    f"Some specified arguments are not used by the HfArgumentParser: {remaining_args}")
 
             return (*outputs,)
 

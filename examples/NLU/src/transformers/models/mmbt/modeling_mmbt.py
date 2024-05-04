@@ -38,7 +38,8 @@ class ModalEmbeddings(nn.Module):
         super().__init__()
         self.config = config
         self.encoder = encoder
-        self.proj_embeddings = nn.Linear(config.modal_hidden_size, config.hidden_size)
+        self.proj_embeddings = nn.Linear(
+            config.modal_hidden_size, config.hidden_size)
         self.position_embeddings = embeddings.position_embeddings
         self.token_type_embeddings = embeddings.token_type_embeddings
         self.word_embeddings = embeddings.word_embeddings
@@ -52,16 +53,20 @@ class ModalEmbeddings(nn.Module):
         if start_token is not None:
             start_token_embeds = self.word_embeddings(start_token)
             seq_length += 1
-            token_embeddings = torch.cat([start_token_embeds.unsqueeze(1), token_embeddings], dim=1)
+            token_embeddings = torch.cat(
+                [start_token_embeds.unsqueeze(1), token_embeddings], dim=1)
 
         if end_token is not None:
             end_token_embeds = self.word_embeddings(end_token)
             seq_length += 1
-            token_embeddings = torch.cat([token_embeddings, end_token_embeds.unsqueeze(1)], dim=1)
+            token_embeddings = torch.cat(
+                [token_embeddings, end_token_embeds.unsqueeze(1)], dim=1)
 
         if position_ids is None:
-            position_ids = torch.arange(seq_length, dtype=torch.long, device=input_modal.device)
-            position_ids = position_ids.unsqueeze(0).expand(input_modal.size(0), seq_length)
+            position_ids = torch.arange(
+                seq_length, dtype=torch.long, device=input_modal.device)
+            position_ids = position_ids.unsqueeze(
+                0).expand(input_modal.size(0), seq_length)
 
         if token_type_ids is None:
             token_type_ids = torch.zeros(
@@ -185,7 +190,8 @@ class MMBTModel(nn.Module, ModuleUtilsMixin):
         super().__init__()
         self.config = config
         self.transformer = transformer
-        self.modal_encoder = ModalEmbeddings(config, encoder, transformer.embeddings)
+        self.modal_encoder = ModalEmbeddings(
+            config, encoder, transformer.embeddings)
 
     @add_start_docstrings_to_model_forward(MMBT_INPUTS_DOCSTRING)
     @replace_return_docstrings(output_type=BaseModelOutputWithPooling, config_class=_CONFIG_FOR_DOC)
@@ -225,13 +231,15 @@ class MMBTModel(nn.Module, ModuleUtilsMixin):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         if input_ids is not None and inputs_embeds is not None:
-            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both input_ids and inputs_embeds at the same time")
         elif input_ids is not None:
             input_txt_shape = input_ids.size()
         elif inputs_embeds is not None:
             input_txt_shape = inputs_embeds.size()[:-1]
         else:
-            raise ValueError("You have to specify either input_ids or inputs_embeds")
+            raise ValueError(
+                "You have to specify either input_ids or inputs_embeds")
 
         device = input_ids.device if input_ids is not None else inputs_embeds.device
 
@@ -246,7 +254,8 @@ class MMBTModel(nn.Module, ModuleUtilsMixin):
         input_modal_shape = modal_embeddings.size()[:-1]
 
         if token_type_ids is None:
-            token_type_ids = torch.ones(input_txt_shape, dtype=torch.long, device=device)
+            token_type_ids = torch.ones(
+                input_txt_shape, dtype=torch.long, device=device)
 
         txt_embeddings = self.transformer.embeddings(
             input_ids=input_ids, position_ids=position_ids, token_type_ids=token_type_ids, inputs_embeds=inputs_embeds
@@ -269,9 +278,12 @@ class MMBTModel(nn.Module, ModuleUtilsMixin):
                 [torch.ones(input_modal_shape, device=device), encoder_attention_mask], dim=1
             )
 
-        extended_attention_mask = self.get_extended_attention_mask(attention_mask, input_shape, self.device)
-        encoder_extended_attention_mask = self.invert_attention_mask(encoder_attention_mask)
-        head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
+        extended_attention_mask = self.get_extended_attention_mask(
+            attention_mask, input_shape, self.device)
+        encoder_extended_attention_mask = self.invert_attention_mask(
+            encoder_attention_mask)
+        head_mask = self.get_head_mask(
+            head_mask, self.config.num_hidden_layers)
 
         encoder_outputs = self.transformer.encoder(
             embedding_output,
@@ -393,7 +405,8 @@ class MMBTForClassification(nn.Module):
                 loss = loss_fct(logits.view(-1), labels.view(-1))
             else:
                 loss_fct = CrossEntropyLoss()
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+                loss = loss_fct(
+                    logits.view(-1, self.num_labels), labels.view(-1))
 
         if not return_dict:
             output = (logits,) + outputs[2:]

@@ -67,7 +67,8 @@ def glue_convert_examples_to_features(
     warnings.warn(DEPRECATION_WARNING.format("function"), FutureWarning)
     if is_tf_available() and isinstance(examples, tf.data.Dataset):
         if task is None:
-            raise ValueError("When calling glue_convert_examples_to_features from TF, the task parameter is required.")
+            raise ValueError(
+                "When calling glue_convert_examples_to_features from TF, the task parameter is required.")
         return _tf_glue_convert_examples_to_features(examples, tokenizer, max_length=max_length, task=task)
     return _glue_convert_examples_to_features(
         examples, tokenizer, max_length=max_length, task=task, label_list=label_list, output_mode=output_mode
@@ -88,8 +89,10 @@ if is_tf_available():
 
         """
         processor = glue_processors[task]()
-        examples = [processor.tfds_map(processor.get_example_from_tensor_dict(example)) for example in examples]
-        features = glue_convert_examples_to_features(examples, tokenizer, max_length=max_length, task=task)
+        examples = [processor.tfds_map(
+            processor.get_example_from_tensor_dict(example)) for example in examples]
+        features = glue_convert_examples_to_features(
+            examples, tokenizer, max_length=max_length, task=task)
         label_type = tf.float32 if task == "sts-b" else tf.int64
 
         def gen():
@@ -103,7 +106,8 @@ if is_tf_available():
         return tf.data.Dataset.from_generator(
             gen,
             ({k: tf.int32 for k in input_names}, label_type),
-            ({k: tf.TensorShape([None]) for k in input_names}, tf.TensorShape([])),
+            ({k: tf.TensorShape([None])
+              for k in input_names}, tf.TensorShape([])),
         )
 
 
@@ -125,7 +129,8 @@ def _glue_convert_examples_to_features(
             logger.info("Using label list %s for task %s" % (label_list, task))
         if output_mode is None:
             output_mode = glue_output_modes[task]
-            logger.info("Using output mode %s for task %s" % (output_mode, task))
+            logger.info("Using output mode %s for task %s" %
+                        (output_mode, task))
 
     label_map = {label: i for i, label in enumerate(label_list)}
 
@@ -185,7 +190,8 @@ class MrpcProcessor(DataProcessor):
 
     def get_train_examples(self, data_dir):
         """See base class."""
-        logger.info("LOOKING AT {}".format(os.path.join(data_dir, "train.tsv")))
+        logger.info("LOOKING AT {}".format(
+            os.path.join(data_dir, "train.tsv")))
         return self._create_examples(self._read_tsv(os.path.join(data_dir, "train.tsv")), "train")
 
     def get_dev_examples(self, data_dir):
@@ -210,7 +216,8 @@ class MrpcProcessor(DataProcessor):
             text_a = line[3]
             text_b = line[4]
             label = None if set_type == "test" else line[0]
-            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+            examples.append(InputExample(
+                guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
 
@@ -256,7 +263,8 @@ class MnliProcessor(DataProcessor):
             text_a = line[8]
             text_b = line[9]
             label = None if set_type.startswith("test") else line[-1]
-            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+            examples.append(InputExample(
+                guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
 
@@ -319,7 +327,8 @@ class ColaProcessor(DataProcessor):
             guid = "%s-%s" % (set_type, i)
             text_a = line[text_index]
             label = None if test_mode else line[1]
-            examples.append(InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
+            examples.append(InputExample(
+                guid=guid, text_a=text_a, text_b=None, label=label))
         return examples
 
 
@@ -365,7 +374,8 @@ class Sst2Processor(DataProcessor):
             guid = "%s-%s" % (set_type, i)
             text_a = line[text_index]
             label = None if set_type == "test" else line[1]
-            examples.append(InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
+            examples.append(InputExample(
+                guid=guid, text_a=text_a, text_b=None, label=label))
         return examples
 
 
@@ -411,7 +421,8 @@ class StsbProcessor(DataProcessor):
             text_a = line[7]
             text_b = line[8]
             label = None if set_type == "test" else line[-1]
-            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+            examples.append(InputExample(
+                guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
 
@@ -463,7 +474,8 @@ class QqpProcessor(DataProcessor):
                 label = None if test_mode else line[5]
             except IndexError:
                 continue
-            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+            examples.append(InputExample(
+                guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
 
@@ -509,7 +521,8 @@ class QnliProcessor(DataProcessor):
             text_a = line[1]
             text_b = line[2]
             label = None if set_type == "test" else line[-1]
-            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+            examples.append(InputExample(
+                guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
 
@@ -555,7 +568,8 @@ class RteProcessor(DataProcessor):
             text_a = line[1]
             text_b = line[2]
             label = None if set_type == "test" else line[-1]
-            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+            examples.append(InputExample(
+                guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
 
@@ -601,7 +615,8 @@ class WnliProcessor(DataProcessor):
             text_a = line[1]
             text_b = line[2]
             label = None if set_type == "test" else line[-1]
-            examples.append(InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label))
+            examples.append(InputExample(
+                guid=guid, text_a=text_a, text_b=text_b, label=label))
         return examples
 
 

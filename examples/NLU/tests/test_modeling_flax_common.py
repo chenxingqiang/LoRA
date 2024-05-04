@@ -29,7 +29,8 @@ if is_flax_available():
     import jax.numpy as jnp
     from transformers.modeling_flax_utils import convert_state_dict_from_pt
 
-    os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.12"  # assumed parallelism: 8
+    # assumed parallelism: 8
+    os.environ["XLA_PYTHON_CLIENT_MEM_FRACTION"] = "0.12"
 
 if is_torch_available():
     import torch
@@ -66,7 +67,8 @@ class FlaxModelTesterMixin:
 
     def assert_almost_equals(self, a: np.ndarray, b: np.ndarray, tol: float):
         diff = np.abs((a - b)).max()
-        self.assertLessEqual(diff, tol, f"Difference between torch and flax is {diff} (>= {tol}).")
+        self.assertLessEqual(
+            diff, tol, f"Difference between torch and flax is {diff} (>= {tol}).")
 
     @is_pt_flax_cross_test
     def test_equivalence_flax_pytorch(self):
@@ -74,34 +76,42 @@ class FlaxModelTesterMixin:
 
         for model_class in self.all_model_classes:
             with self.subTest(model_class.__name__):
-                pt_model_class_name = model_class.__name__[4:]  # Skip the "Flax" at the beginning
+                pt_model_class_name = model_class.__name__[
+                    4:]  # Skip the "Flax" at the beginning
                 pt_model_class = getattr(transformers, pt_model_class_name)
                 pt_model = pt_model_class(config).eval()
 
-                fx_state = convert_state_dict_from_pt(model_class, pt_model.state_dict(), config)
+                fx_state = convert_state_dict_from_pt(
+                    model_class, pt_model.state_dict(), config)
                 fx_model = model_class(config, dtype=jnp.float32)
                 fx_model.params = fx_state
 
-                pt_inputs = {k: torch.tensor(v.tolist()) for k, v in inputs_dict.items()}
+                pt_inputs = {k: torch.tensor(v.tolist())
+                             for k, v in inputs_dict.items()}
 
                 with torch.no_grad():
                     pt_outputs = pt_model(**pt_inputs).to_tuple()
 
                 fx_outputs = fx_model(**inputs_dict)
-                self.assertEqual(len(fx_outputs), len(pt_outputs), "Output lengths differ between Flax and PyTorch")
+                self.assertEqual(len(fx_outputs), len(
+                    pt_outputs), "Output lengths differ between Flax and PyTorch")
                 for fx_output, pt_output in zip(fx_outputs, pt_outputs):
-                    self.assert_almost_equals(fx_output, pt_output.numpy(), 1e-3)
+                    self.assert_almost_equals(
+                        fx_output, pt_output.numpy(), 1e-3)
 
                 with tempfile.TemporaryDirectory() as tmpdirname:
                     pt_model.save_pretrained(tmpdirname)
-                    fx_model_loaded = model_class.from_pretrained(tmpdirname, from_pt=True)
+                    fx_model_loaded = model_class.from_pretrained(
+                        tmpdirname, from_pt=True)
 
                 fx_outputs_loaded = fx_model_loaded(**inputs_dict)
                 self.assertEqual(
-                    len(fx_outputs_loaded), len(pt_outputs), "Output lengths differ between Flax and PyTorch"
+                    len(fx_outputs_loaded), len(
+                        pt_outputs), "Output lengths differ between Flax and PyTorch"
                 )
                 for fx_output_loaded, pt_output in zip(fx_outputs_loaded, pt_outputs):
-                    self.assert_almost_equals(fx_output_loaded, pt_output.numpy(), 5e-3)
+                    self.assert_almost_equals(
+                        fx_output_loaded, pt_output.numpy(), 5e-3)
 
     @require_flax
     def test_from_pretrained_save_pretrained(self):
@@ -149,9 +159,11 @@ class FlaxModelTesterMixin:
         for model_class in self.all_model_classes:
             model_class_name = model_class.__name__
             module_class_name = (
-                model_class_name[:-5] + "Module" if model_class_name[-5:] == "Model" else model_class_name + "Module"
+                model_class_name[:-5] + "Module" if model_class_name[-5:
+                                                                     ] == "Model" else model_class_name + "Module"
             )
-            bert_modeling_flax_module = __import__(model_class.__module__, fromlist=[module_class_name])
+            bert_modeling_flax_module = __import__(
+                model_class.__module__, fromlist=[module_class_name])
             module_cls = getattr(bert_modeling_flax_module, module_class_name)
 
             self.assertIsNotNone(module_cls)

@@ -34,8 +34,10 @@ class PhobertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         merges = ["#version: 0.2", "l à</w>"]
         self.special_tokens_map = {"unk_token": "<unk>"}
 
-        self.vocab_file = os.path.join(self.tmpdirname, VOCAB_FILES_NAMES["vocab_file"])
-        self.merges_file = os.path.join(self.tmpdirname, VOCAB_FILES_NAMES["merges_file"])
+        self.vocab_file = os.path.join(
+            self.tmpdirname, VOCAB_FILES_NAMES["vocab_file"])
+        self.merges_file = os.path.join(
+            self.tmpdirname, VOCAB_FILES_NAMES["merges_file"])
 
         with open(self.vocab_file, "w", encoding="utf-8") as fp:
             for token in vocab_tokens:
@@ -53,7 +55,8 @@ class PhobertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         return input_text, output_text
 
     def test_full_tokenizer(self):
-        tokenizer = PhobertTokenizer(self.vocab_file, self.merges_file, **self.special_tokens_map)
+        tokenizer = PhobertTokenizer(
+            self.vocab_file, self.merges_file, **self.special_tokens_map)
         text = "Tôi là VinAI Research"
         bpe_tokens = "T@@ ô@@ i l@@ à V@@ i@@ n@@ A@@ I R@@ e@@ s@@ e@@ a@@ r@@ c@@ h".split()
         tokens = tokenizer.tokenize(text)
@@ -62,5 +65,7 @@ class PhobertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 
         input_tokens = tokens + [tokenizer.unk_token]
 
-        input_bpe_tokens = [4, 3, 5, 3, 3, 3, 3, 3, 3, 6, 7, 9, 3, 9, 3, 3, 3, 3, 3]
-        self.assertListEqual(tokenizer.convert_tokens_to_ids(input_tokens), input_bpe_tokens)
+        input_bpe_tokens = [4, 3, 5, 3, 3, 3, 3,
+                            3, 3, 6, 7, 9, 3, 9, 3, 3, 3, 3, 3]
+        self.assertListEqual(tokenizer.convert_tokens_to_ids(
+            input_tokens), input_bpe_tokens)

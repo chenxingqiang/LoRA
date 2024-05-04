@@ -49,7 +49,7 @@ print("test output:", len(outputs.logits[0]))
 
 # Save
 mname_tiny = "tiny-wmt19-en-de"
-tiny_model.half() # makes it smaller
+tiny_model.half()  # makes it smaller
 tiny_model.save_pretrained(mname_tiny)
 tokenizer.save_pretrained(mname_tiny)
 

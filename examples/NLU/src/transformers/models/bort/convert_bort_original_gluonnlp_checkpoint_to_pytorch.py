@@ -117,7 +117,8 @@ def convert_bort_checkpoint_to_pytorch(bort_checkpoint_path: str, pytorch_dump_f
         use_decoder=False,
     )
 
-    original_bort.load_parameters(bort_checkpoint_path, cast_dtype=True, ignore_extra=True)
+    original_bort.load_parameters(
+        bort_checkpoint_path, cast_dtype=True, ignore_extra=True)
     params = original_bort._collect_params_with_prefix()
 
     # Build our config 🤗
@@ -315,4 +316,5 @@ if __name__ == "__main__":
         "--pytorch_dump_folder_path", default=None, type=str, required=True, help="Path to the output PyTorch model."
     )
     args = parser.parse_args()
-    convert_bort_checkpoint_to_pytorch(args.bort_checkpoint_path, args.pytorch_dump_folder_path)
+    convert_bort_checkpoint_to_pytorch(
+        args.bort_checkpoint_path, args.pytorch_dump_folder_path)

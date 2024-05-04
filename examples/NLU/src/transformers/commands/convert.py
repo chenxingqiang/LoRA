@@ -49,14 +49,16 @@ class ConvertCommand(BaseTransformersCLICommand):
             help="CLI tool to run convert model from original "
             "author checkpoints to Transformers PyTorch checkpoints.",
         )
-        train_parser.add_argument("--model_type", type=str, required=True, help="Model's type.")
+        train_parser.add_argument(
+            "--model_type", type=str, required=True, help="Model's type.")
         train_parser.add_argument(
             "--tf_checkpoint", type=str, required=True, help="TensorFlow checkpoint path or folder."
         )
         train_parser.add_argument(
             "--pytorch_dump_output", type=str, required=True, help="Path to the PyTorch saved model output."
         )
-        train_parser.add_argument("--config", type=str, default="", help="Configuration file path or folder.")
+        train_parser.add_argument(
+            "--config", type=str, default="", help="Configuration file path or folder.")
         train_parser.add_argument(
             "--finetuning_task_name",
             type=str,
@@ -92,7 +94,8 @@ class ConvertCommand(BaseTransformersCLICommand):
             except ImportError:
                 raise ImportError(IMPORT_ERROR_MESSAGE)
 
-            convert_tf_checkpoint_to_pytorch(self._tf_checkpoint, self._config, self._pytorch_dump_output)
+            convert_tf_checkpoint_to_pytorch(
+                self._tf_checkpoint, self._config, self._pytorch_dump_output)
         elif self._model_type == "bert":
             try:
                 from ..models.bert.convert_bert_original_tf_checkpoint_to_pytorch import (
@@ -101,7 +104,8 @@ class ConvertCommand(BaseTransformersCLICommand):
             except ImportError:
                 raise ImportError(IMPORT_ERROR_MESSAGE)
 
-            convert_tf_checkpoint_to_pytorch(self._tf_checkpoint, self._config, self._pytorch_dump_output)
+            convert_tf_checkpoint_to_pytorch(
+                self._tf_checkpoint, self._config, self._pytorch_dump_output)
         elif self._model_type == "funnel":
             try:
                 from ..models.funnel.convert_funnel_original_tf_checkpoint_to_pytorch import (
@@ -110,20 +114,23 @@ class ConvertCommand(BaseTransformersCLICommand):
             except ImportError:
                 raise ImportError(IMPORT_ERROR_MESSAGE)
 
-            convert_tf_checkpoint_to_pytorch(self._tf_checkpoint, self._config, self._pytorch_dump_output)
+            convert_tf_checkpoint_to_pytorch(
+                self._tf_checkpoint, self._config, self._pytorch_dump_output)
         elif self._model_type == "t5":
             try:
                 from ..models.t5.convert_t5_original_tf_checkpoint_to_pytorch import convert_tf_checkpoint_to_pytorch
             except ImportError:
                 raise ImportError(IMPORT_ERROR_MESSAGE)
 
-            convert_tf_checkpoint_to_pytorch(self._tf_checkpoint, self._config, self._pytorch_dump_output)
+            convert_tf_checkpoint_to_pytorch(
+                self._tf_checkpoint, self._config, self._pytorch_dump_output)
         elif self._model_type == "gpt":
             from ..models.openai.convert_openai_original_tf_checkpoint_to_pytorch import (
                 convert_openai_checkpoint_to_pytorch,
             )
 
-            convert_openai_checkpoint_to_pytorch(self._tf_checkpoint, self._config, self._pytorch_dump_output)
+            convert_openai_checkpoint_to_pytorch(
+                self._tf_checkpoint, self._config, self._pytorch_dump_output)
         elif self._model_type == "transfo_xl":
             try:
                 from ..models.transfo_xl.convert_transfo_xl_original_tf_checkpoint_to_pytorch import (
@@ -149,7 +156,8 @@ class ConvertCommand(BaseTransformersCLICommand):
             except ImportError:
                 raise ImportError(IMPORT_ERROR_MESSAGE)
 
-            convert_gpt2_checkpoint_to_pytorch(self._tf_checkpoint, self._config, self._pytorch_dump_output)
+            convert_gpt2_checkpoint_to_pytorch(
+                self._tf_checkpoint, self._config, self._pytorch_dump_output)
         elif self._model_type == "xlnet":
             try:
                 from ..models.xlnet.convert_xlnet_original_tf_checkpoint_to_pytorch import (
@@ -166,13 +174,15 @@ class ConvertCommand(BaseTransformersCLICommand):
                 convert_xlm_checkpoint_to_pytorch,
             )
 
-            convert_xlm_checkpoint_to_pytorch(self._tf_checkpoint, self._pytorch_dump_output)
+            convert_xlm_checkpoint_to_pytorch(
+                self._tf_checkpoint, self._pytorch_dump_output)
         elif self._model_type == "lxmert":
             from ..models.lxmert.convert_lxmert_original_pytorch_checkpoint_to_pytorch import (
                 convert_lxmert_checkpoint_to_pytorch,
             )
 
-            convert_lxmert_checkpoint_to_pytorch(self._tf_checkpoint, self._pytorch_dump_output)
+            convert_lxmert_checkpoint_to_pytorch(
+                self._tf_checkpoint, self._pytorch_dump_output)
         else:
             raise ValueError(
                 "--model_type should be selected in the list [bert, gpt, gpt2, t5, transfo_xl, xlnet, xlm, lxmert]"

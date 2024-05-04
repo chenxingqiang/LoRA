@@ -24,23 +24,29 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--vocab', type=str, default=None, help='vocab path')
 
-parser.add_argument('--sample_file', default=None, type=str, help='ft sample file')
-parser.add_argument('--input_file', default=None, type=str, help='ft input file')
+parser.add_argument('--sample_file', default=None,
+                    type=str, help='ft sample file')
+parser.add_argument('--input_file', default=None,
+                    type=str, help='ft input file')
 
-parser.add_argument('--output_ref_file', default=None, type=str, help='output reference file')
-parser.add_argument('--output_pred_file', default=None, type=str, help='output predicion file')
+parser.add_argument('--output_ref_file', default=None,
+                    type=str, help='output reference file')
+parser.add_argument('--output_pred_file', default=None,
+                    type=str, help='output predicion file')
 
-parser.add_argument('--ref_unique_file', default=None, type=str, help='reference unique id file')
+parser.add_argument('--ref_unique_file', default=None,
+                    type=str, help='reference unique id file')
 
-parser.add_argument('--ref_type', default='e2e', choices=['e2e', 'webnlg', 'dart'], 
+parser.add_argument('--ref_type', default='e2e', choices=['e2e', 'webnlg', 'dart'],
                     help='e2e style reference type; webnlg style reference type.')
-parser.add_argument('--ref_num', default=4, type=int, help='number of references.')
+parser.add_argument('--ref_num', default=4, type=int,
+                    help='number of references.')
 
 
 parser.add_argument('--tokenize', action='store_true', help='')
 parser.add_argument('--lower', action='store_true', help='')
 
-parser.add_argument('--filter', default='all', choices=['all', 'seen', 'unseen'], 
+parser.add_argument('--filter', default='all', choices=['all', 'seen', 'unseen'],
                     help='for webnlg only, filter categories that are seen during training, unseen, or all')
 
 args = parser.parse_args()
@@ -79,8 +85,8 @@ if __name__ == "__main__":
         print('len refer dict', len(ref_unique), 'unique', len(uniques))
 
     with open(args.sample_file, 'r') as sample_reader, \
-             open(args.input_file, 'r', encoding='utf8') as input_reader, \
-             open(args.output_pred_file, 'w', encoding='utf8') as pred_writer:
+            open(args.input_file, 'r', encoding='utf8') as input_reader, \
+            open(args.output_pred_file, 'w', encoding='utf8') as pred_writer:
 
         refer_dict = {}
         context_list = []
@@ -96,7 +102,7 @@ if __name__ == "__main__":
 
             if args.filter == 'all':
                 keep = True
-            if args.filter == 'seen' and items['cate']: 
+            if args.filter == 'seen' and items['cate']:
                 keep = True
             if args.filter == 'unseen' and not items['cate']:
                 keep = True
@@ -110,7 +116,8 @@ if __name__ == "__main__":
                 if not _key in refer_dict:
                     refer_dict[_key] = {}
                     refer_dict[_key]['references'] = []
-                refer_dict[_key]['references'].append(completion.split('<|endoftext|>')[0].split('\n\n')[0].strip())
+                refer_dict[_key]['references'].append(completion.split(
+                    '<|endoftext|>')[0].split('\n\n')[0].strip())
 
             line_id += 1
 
@@ -126,9 +133,10 @@ if __name__ == "__main__":
             else:
                 _key = ref_unique[_id]
 
-            #assert _key in refer_dict
+            # assert _key in refer_dict
             if _key in refer_dict:
-                refer_dict[_key]['sample'] = enc.decode(_pred_tokens).split('<|endoftext|>')[0].split('\n\n')[0].strip() 
+                refer_dict[_key]['sample'] = enc.decode(_pred_tokens).split('<|endoftext|>')[
+                    0].split('\n\n')[0].strip()
 
         references = [refer_dict[s]['references'] for s in refer_dict]
         hypothesis = [refer_dict[s]['sample'] for s in refer_dict]
@@ -137,26 +145,32 @@ if __name__ == "__main__":
             with open(args.output_ref_file, 'w', encoding='utf8') as ref_writer:
                 for ref, hyp in zip(references, hypothesis):
                     for r in ref:
-                        ref_writer.write(post_process(r, args.tokenize, args.lower) + '\n')
+                        ref_writer.write(post_process(
+                            r, args.tokenize, args.lower) + '\n')
                     ref_writer.write('\n')
-                    pred_writer.write(post_process(hyp, args.tokenize, args.lower) + '\n')
+                    pred_writer.write(post_process(
+                        hyp, args.tokenize, args.lower) + '\n')
 
         elif args.ref_type in ['webnlg', 'dart']:
             if not os.path.exists(args.output_ref_file):
                 os.makedirs(args.output_ref_file)
 
             reference_writers = [
-                open(os.path.join(args.output_ref_file, f'reference{fid}'), 'w', encoding='utf8') 
+                open(os.path.join(args.output_ref_file,
+                     f'reference{fid}'), 'w', encoding='utf8')
                 for fid in range(0, args.ref_num)
-            ] 
-            
+            ]
+
             for ref, hyp in zip(references, hypothesis):
                 for fid in range(0, args.ref_num):
                     if len(ref) > fid:
-                        reference_writers[fid].write(post_process(ref[fid], args.tokenize, args.lower) + '\n')
+                        reference_writers[fid].write(post_process(
+                            ref[fid], args.tokenize, args.lower) + '\n')
                     else:
-                        reference_writers[fid].write(post_process(ref[0], args.tokenize, args.lower) + '\n')
-                pred_writer.write(post_process(hyp, args.tokenize, args.lower) + '\n')
-                    
+                        reference_writers[fid].write(post_process(
+                            ref[0], args.tokenize, args.lower) + '\n')
+                pred_writer.write(post_process(
+                    hyp, args.tokenize, args.lower) + '\n')
+
             for writer in reference_writers:
                 writer.close()

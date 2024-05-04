@@ -80,8 +80,10 @@ class IBertEmbeddings(nn.Module):
         )
 
         # position_ids (1, len position emb) is contiguous in memory and exported when serialized
-        self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand((1, -1)))
-        self.position_embedding_type = getattr(config, "position_embedding_type", "absolute")
+        self.register_buffer("position_ids", torch.arange(
+            config.max_position_embeddings).expand((1, -1)))
+        self.position_embedding_type = getattr(
+            config, "position_embedding_type", "absolute")
 
         # End copy
         self.padding_idx = config.pad_token_id
@@ -94,8 +96,10 @@ class IBertEmbeddings(nn.Module):
         )
 
         # Integer-only addition between embeddings
-        self.embeddings_act1 = QuantAct(self.embedding_act_bit, quant_mode=self.quant_mode)
-        self.embeddings_act2 = QuantAct(self.embedding_act_bit, quant_mode=self.quant_mode)
+        self.embeddings_act1 = QuantAct(
+            self.embedding_act_bit, quant_mode=self.quant_mode)
+        self.embeddings_act2 = QuantAct(
+            self.embedding_act_bit, quant_mode=self.quant_mode)
 
         # self.LayerNorm is not snake-cased to stick with TensorFlow model variable name and be able to load
         # any TensorFlow checkpoint file
@@ -106,7 +110,8 @@ class IBertEmbeddings(nn.Module):
             quant_mode=self.quant_mode,
             force_dequant=config.force_dequant,
         )
-        self.output_activation = QuantAct(self.act_bit, quant_mode=self.quant_mode)
+        self.output_activation = QuantAct(
+            self.act_bit, quant_mode=self.quant_mode)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(
@@ -119,7 +124,8 @@ class IBertEmbeddings(nn.Module):
                     input_ids, self.padding_idx, past_key_values_length
                 ).to(input_ids.device)
             else:
-                position_ids = self.create_position_ids_from_inputs_embeds(inputs_embeds)
+                position_ids = self.create_position_ids_from_inputs_embeds(
+                    inputs_embeds)
 
         if input_ids is not None:
             input_shape = input_ids.size()
@@ -127,13 +133,16 @@ class IBertEmbeddings(nn.Module):
             input_shape = inputs_embeds.size()[:-1]
 
         if token_type_ids is None:
-            token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=self.position_ids.device)
+            token_type_ids = torch.zeros(
+                input_shape, dtype=torch.long, device=self.position_ids.device)
 
         if inputs_embeds is None:
-            inputs_embeds, inputs_embeds_scaling_factor = self.word_embeddings(input_ids)
+            inputs_embeds, inputs_embeds_scaling_factor = self.word_embeddings(
+                input_ids)
         else:
             inputs_embeds_scaling_factor = None
-        token_type_embeddings, token_type_embeddings_scaling_factor = self.token_type_embeddings(token_type_ids)
+        token_type_embeddings, token_type_embeddings_scaling_factor = self.token_type_embeddings(
+            token_type_ids)
 
         embeddings, embeddings_scaling_factor = self.embeddings_act1(
             inputs_embeds,
@@ -143,7 +152,8 @@ class IBertEmbeddings(nn.Module):
         )
 
         if self.position_embedding_type == "absolute":
-            position_embeddings, position_embeddings_scaling_factor = self.position_embeddings(position_ids)
+            position_embeddings, position_embeddings_scaling_factor = self.position_embeddings(
+                position_ids)
             embeddings, embeddings_scaling_factor = self.embeddings_act1(
                 embeddings,
                 embeddings_scaling_factor,
@@ -151,9 +161,11 @@ class IBertEmbeddings(nn.Module):
                 identity_scaling_factor=position_embeddings_scaling_factor,
             )
 
-        embeddings, embeddings_scaling_factor = self.LayerNorm(embeddings, embeddings_scaling_factor)
+        embeddings, embeddings_scaling_factor = self.LayerNorm(
+            embeddings, embeddings_scaling_factor)
         embeddings = self.dropout(embeddings)
-        embeddings, embeddings_scaling_factor = self.output_activation(embeddings, embeddings_scaling_factor)
+        embeddings, embeddings_scaling_factor = self.output_activation(
+            embeddings, embeddings_scaling_factor)
         return embeddings, embeddings_scaling_factor
 
     def create_position_ids_from_inputs_embeds(self, inputs_embeds):
@@ -188,7 +200,8 @@ class IBertSelfAttention(nn.Module):
         self.act_bit = 8
 
         self.num_attention_heads = config.num_attention_heads
-        self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
+        self.attention_head_size = int(
+            config.hidden_size / config.num_attention_heads)
         self.all_head_size = self.num_attention_heads * self.attention_head_size
 
         # Q, K, V Linear layers
@@ -221,21 +234,28 @@ class IBertSelfAttention(nn.Module):
         )
 
         # Requantization (32bit -> 8bit) for Q, K, V activations
-        self.query_activation = QuantAct(self.act_bit, quant_mode=self.quant_mode)
-        self.key_activation = QuantAct(self.act_bit, quant_mode=self.quant_mode)
-        self.value_activation = QuantAct(self.act_bit, quant_mode=self.quant_mode)
-        self.output_activation = QuantAct(self.act_bit, quant_mode=self.quant_mode)
+        self.query_activation = QuantAct(
+            self.act_bit, quant_mode=self.quant_mode)
+        self.key_activation = QuantAct(
+            self.act_bit, quant_mode=self.quant_mode)
+        self.value_activation = QuantAct(
+            self.act_bit, quant_mode=self.quant_mode)
+        self.output_activation = QuantAct(
+            self.act_bit, quant_mode=self.quant_mode)
 
         self.dropout = nn.Dropout(config.attention_probs_dropout_prob)
-        self.position_embedding_type = getattr(config, "position_embedding_type", "absolute")
+        self.position_embedding_type = getattr(
+            config, "position_embedding_type", "absolute")
         assert (
             self.position_embedding_type == "absolute"
         ), "I-BERT only supports 'absolute' for `config.position_embedding_type`"
 
-        self.softmax = IntSoftmax(self.act_bit, quant_mode=self.quant_mode, force_dequant=config.force_dequant)
+        self.softmax = IntSoftmax(
+            self.act_bit, quant_mode=self.quant_mode, force_dequant=config.force_dequant)
 
     def transpose_for_scores(self, x):
-        new_x_shape = x.size()[:-1] + (self.num_attention_heads, self.attention_head_size)
+        new_x_shape = x.size()[
+            :-1] + (self.num_attention_heads, self.attention_head_size)
         x = x.view(*new_x_shape)
         return x.permute(0, 2, 1, 3)
 
@@ -248,15 +268,19 @@ class IBertSelfAttention(nn.Module):
         output_attentions=False,
     ):
         # Projection
-        mixed_query_layer, mixed_query_layer_scaling_factor = self.query(hidden_states, hidden_states_scaling_factor)
-        mixed_key_layer, mixed_key_layer_scaling_factor = self.key(hidden_states, hidden_states_scaling_factor)
-        mixed_value_layer, mixed_value_layer_scaling_factor = self.value(hidden_states, hidden_states_scaling_factor)
+        mixed_query_layer, mixed_query_layer_scaling_factor = self.query(
+            hidden_states, hidden_states_scaling_factor)
+        mixed_key_layer, mixed_key_layer_scaling_factor = self.key(
+            hidden_states, hidden_states_scaling_factor)
+        mixed_value_layer, mixed_value_layer_scaling_factor = self.value(
+            hidden_states, hidden_states_scaling_factor)
 
         # Requantization
         query_layer, query_layer_scaling_factor = self.query_activation(
             mixed_query_layer, mixed_query_layer_scaling_factor
         )
-        key_layer, key_layer_scaling_factor = self.key_activation(mixed_key_layer, mixed_key_layer_scaling_factor)
+        key_layer, key_layer_scaling_factor = self.key_activation(
+            mixed_key_layer, mixed_key_layer_scaling_factor)
         value_layer, value_layer_scaling_factor = self.value_activation(
             mixed_value_layer, mixed_value_layer_scaling_factor
         )
@@ -267,11 +291,13 @@ class IBertSelfAttention(nn.Module):
         value_layer = self.transpose_for_scores(value_layer)
 
         # Take the dot product between "query" and "key" to get the raw attention scores.
-        attention_scores = torch.matmul(query_layer, key_layer.transpose(-1, -2))
+        attention_scores = torch.matmul(
+            query_layer, key_layer.transpose(-1, -2))
         scale = math.sqrt(self.attention_head_size)
         attention_scores = attention_scores / scale
         if self.quant_mode:
-            attention_scores_scaling_factor = query_layer_scaling_factor * key_layer_scaling_factor / scale
+            attention_scores_scaling_factor = query_layer_scaling_factor * \
+                key_layer_scaling_factor / scale
         else:
             attention_scores_scaling_factor = None
 
@@ -294,12 +320,14 @@ class IBertSelfAttention(nn.Module):
 
         context_layer = torch.matmul(attention_probs, value_layer)
         if attention_probs_scaling_factor is not None:
-            context_layer_scaling_factor = attention_probs_scaling_factor * value_layer_scaling_factor
+            context_layer_scaling_factor = attention_probs_scaling_factor * \
+                value_layer_scaling_factor
         else:
             context_layer_scaling_factor = None
 
         context_layer = context_layer.permute(0, 2, 1, 3).contiguous()
-        new_context_layer_shape = context_layer.size()[:-2] + (self.all_head_size,)
+        new_context_layer_shape = context_layer.size()[
+            :-2] + (self.all_head_size,)
         context_layer = context_layer.view(*new_context_layer_shape)
 
         # requantization: 32-bit -> 8-bit
@@ -307,7 +335,8 @@ class IBertSelfAttention(nn.Module):
             context_layer, context_layer_scaling_factor
         )
 
-        outputs = (context_layer, attention_probs) if output_attentions else (context_layer,)
+        outputs = (context_layer, attention_probs) if output_attentions else (
+            context_layer,)
         output_scaling_factor = (
             (context_layer_scaling_factor, attention_probs_scaling_factor)
             if output_attentions
@@ -336,7 +365,8 @@ class IBertSelfOutput(nn.Module):
             quant_mode=self.quant_mode,
             per_channel=True,
         )
-        self.ln_input_act = QuantAct(self.ln_input_bit, quant_mode=self.quant_mode)
+        self.ln_input_act = QuantAct(
+            self.ln_input_bit, quant_mode=self.quant_mode)
         self.LayerNorm = IntLayerNorm(
             config.hidden_size,
             eps=config.layer_norm_eps,
@@ -344,11 +374,13 @@ class IBertSelfOutput(nn.Module):
             quant_mode=self.quant_mode,
             force_dequant=config.force_dequant,
         )
-        self.output_activation = QuantAct(self.act_bit, quant_mode=self.quant_mode)
+        self.output_activation = QuantAct(
+            self.act_bit, quant_mode=self.quant_mode)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, hidden_states, hidden_states_scaling_factor, input_tensor, input_tensor_scaling_factor):
-        hidden_states, hidden_states_scaling_factor = self.dense(hidden_states, hidden_states_scaling_factor)
+        hidden_states, hidden_states_scaling_factor = self.dense(
+            hidden_states, hidden_states_scaling_factor)
         hidden_states = self.dropout(hidden_states)
         hidden_states, hidden_states_scaling_factor = self.ln_input_act(
             hidden_states,
@@ -356,7 +388,8 @@ class IBertSelfOutput(nn.Module):
             identity=input_tensor,
             identity_scaling_factor=input_tensor_scaling_factor,
         )
-        hidden_states, hidden_states_scaling_factor = self.LayerNorm(hidden_states, hidden_states_scaling_factor)
+        hidden_states, hidden_states_scaling_factor = self.LayerNorm(
+            hidden_states, hidden_states_scaling_factor)
 
         hidden_states, hidden_states_scaling_factor = self.output_activation(
             hidden_states, hidden_states_scaling_factor
@@ -386,8 +419,10 @@ class IBertAttention(nn.Module):
         self.output.dense = prune_linear_layer(self.output.dense, index, dim=1)
 
         # Update hyper params and store pruned heads
-        self.self.num_attention_heads = self.self.num_attention_heads - len(heads)
-        self.self.all_head_size = self.self.attention_head_size * self.self.num_attention_heads
+        self.self.num_attention_heads = self.self.num_attention_heads - \
+            len(heads)
+        self.self.all_head_size = self.self.attention_head_size * \
+            self.self.num_attention_heads
         self.pruned_heads = self.pruned_heads.union(heads)
 
     def forward(
@@ -408,8 +443,10 @@ class IBertAttention(nn.Module):
         attention_output, attention_output_scaling_factor = self.output(
             self_outputs[0], self_outputs_scaling_factor[0], hidden_states, hidden_states_scaling_factor
         )
-        outputs = (attention_output,) + self_outputs[1:]  # add attentions if we output them
-        outputs_scaling_factor = (attention_output_scaling_factor,) + self_outputs_scaling_factor[1:]
+        # add attentions if we output them
+        outputs = (attention_output,) + self_outputs[1:]
+        outputs_scaling_factor = (
+            attention_output_scaling_factor,) + self_outputs_scaling_factor[1:]
         return outputs, outputs_scaling_factor
 
 
@@ -430,11 +467,14 @@ class IBertIntermediate(nn.Module):
             per_channel=True,
         )
         assert config.hidden_act == "gelu", "I-BERT only supports 'gelu' for `config.hidden_act`"
-        self.intermediate_act_fn = IntGELU(quant_mode=self.quant_mode, force_dequant=config.force_dequant)
-        self.output_activation = QuantAct(self.act_bit, quant_mode=self.quant_mode)
+        self.intermediate_act_fn = IntGELU(
+            quant_mode=self.quant_mode, force_dequant=config.force_dequant)
+        self.output_activation = QuantAct(
+            self.act_bit, quant_mode=self.quant_mode)
 
     def forward(self, hidden_states, hidden_states_scaling_factor):
-        hidden_states, hidden_states_scaling_factor = self.dense(hidden_states, hidden_states_scaling_factor)
+        hidden_states, hidden_states_scaling_factor = self.dense(
+            hidden_states, hidden_states_scaling_factor)
         hidden_states, hidden_states_scaling_factor = self.intermediate_act_fn(
             hidden_states, hidden_states_scaling_factor
         )
@@ -465,7 +505,8 @@ class IBertOutput(nn.Module):
             quant_mode=self.quant_mode,
             per_channel=True,
         )
-        self.ln_input_act = QuantAct(self.ln_input_bit, quant_mode=self.quant_mode)
+        self.ln_input_act = QuantAct(
+            self.ln_input_bit, quant_mode=self.quant_mode)
         self.LayerNorm = IntLayerNorm(
             config.hidden_size,
             eps=config.layer_norm_eps,
@@ -473,11 +514,13 @@ class IBertOutput(nn.Module):
             quant_mode=self.quant_mode,
             force_dequant=config.force_dequant,
         )
-        self.output_activation = QuantAct(self.act_bit, quant_mode=self.quant_mode)
+        self.output_activation = QuantAct(
+            self.act_bit, quant_mode=self.quant_mode)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, hidden_states, hidden_states_scaling_factor, input_tensor, input_tensor_scaling_factor):
-        hidden_states, hidden_states_scaling_factor = self.dense(hidden_states, hidden_states_scaling_factor)
+        hidden_states, hidden_states_scaling_factor = self.dense(
+            hidden_states, hidden_states_scaling_factor)
         hidden_states = self.dropout(hidden_states)
         hidden_states, hidden_states_scaling_factor = self.ln_input_act(
             hidden_states,
@@ -485,7 +528,8 @@ class IBertOutput(nn.Module):
             identity=input_tensor,
             identity_scaling_factor=input_tensor_scaling_factor,
         )
-        hidden_states, hidden_states_scaling_factor = self.LayerNorm(hidden_states, hidden_states_scaling_factor)
+        hidden_states, hidden_states_scaling_factor = self.LayerNorm(
+            hidden_states, hidden_states_scaling_factor)
 
         hidden_states, hidden_states_scaling_factor = self.output_activation(
             hidden_states, hidden_states_scaling_factor
@@ -504,8 +548,10 @@ class IBertLayer(nn.Module):
         self.intermediate = IBertIntermediate(config)
         self.output = IBertOutput(config)
 
-        self.pre_intermediate_act = QuantAct(self.act_bit, quant_mode=self.quant_mode)
-        self.pre_output_act = QuantAct(self.act_bit, quant_mode=self.quant_mode)
+        self.pre_intermediate_act = QuantAct(
+            self.act_bit, quant_mode=self.quant_mode)
+        self.pre_output_act = QuantAct(
+            self.act_bit, quant_mode=self.quant_mode)
 
     def forward(
         self,
@@ -525,7 +571,8 @@ class IBertLayer(nn.Module):
         attention_output = self_attention_outputs[0]
         attention_output_scaling_factor = self_attention_outputs_scaling_factor[0]
 
-        outputs = self_attention_outputs[1:]  # add self attentions if we output attention weights
+        # add self attentions if we output attention weights
+        outputs = self_attention_outputs[1:]
 
         layer_output, layer_output_scaling_factor = self.feed_forward_chunk(
             attention_output, attention_output_scaling_factor
@@ -556,7 +603,8 @@ class IBertEncoder(nn.Module):
         super().__init__()
         self.config = config
         self.quant_mode = config.quant_mode
-        self.layer = nn.ModuleList([IBertLayer(config) for _ in range(config.num_hidden_layers)])
+        self.layer = nn.ModuleList([IBertLayer(config)
+                                   for _ in range(config.num_hidden_layers)])
 
     def forward(
         self,
@@ -580,7 +628,8 @@ class IBertEncoder(nn.Module):
             layer_head_mask = head_mask[i] if head_mask is not None else None
 
             if getattr(self.config, "gradient_checkpointing", False) and self.training:
-                raise NotImplementedError("gradient checkpointing is not currently supported")
+                raise NotImplementedError(
+                    "gradient checkpointing is not currently supported")
 
             else:
                 layer_outputs = layer_module(
@@ -649,11 +698,13 @@ class IBertPreTrainedModel(PreTrainedModel):
         if isinstance(module, (QuantLinear, nn.Linear)):
             # Slightly different from the TF version which uses truncated_normal for initialization
             # cf https://github.com/pytorch/pytorch/pull/5617
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            module.weight.data.normal_(
+                mean=0.0, std=self.config.initializer_range)
             if module.bias is not None:
                 module.bias.data.zero_()
         elif isinstance(module, (QuantEmbedding, nn.Embedding)):
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            module.weight.data.normal_(
+                mean=0.0, std=self.config.initializer_range)
             if module.padding_idx is not None:
                 module.weight.data[module.padding_idx].zero_()
         elif isinstance(module, (IntLayerNorm, nn.LayerNorm)):
@@ -661,7 +712,8 @@ class IBertPreTrainedModel(PreTrainedModel):
             module.weight.data.fill_(1.0)
 
     def resize_token_embeddings(self, new_num_tokens=None):
-        raise NotImplementedError("`resize_token_embeddings` is not supported for I-BERT.")
+        raise NotImplementedError(
+            "`resize_token_embeddings` is not supported for I-BERT.")
 
 
 IBERT_START_DOCSTRING = r"""
@@ -800,7 +852,8 @@ class IBertModel(IBertPreTrainedModel):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         if input_ids is not None and inputs_embeds is not None:
-            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both input_ids and inputs_embeds at the same time")
         elif input_ids is not None:
             input_shape = input_ids.size()
             batch_size, seq_length = input_shape
@@ -808,25 +861,30 @@ class IBertModel(IBertPreTrainedModel):
             input_shape = inputs_embeds.size()[:-1]
             batch_size, seq_length = input_shape
         else:
-            raise ValueError("You have to specify either input_ids or inputs_embeds")
+            raise ValueError(
+                "You have to specify either input_ids or inputs_embeds")
 
         device = input_ids.device if input_ids is not None else inputs_embeds.device
 
         if attention_mask is None:
-            attention_mask = torch.ones(((batch_size, seq_length)), device=device)
+            attention_mask = torch.ones(
+                ((batch_size, seq_length)), device=device)
         if token_type_ids is None:
-            token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=device)
+            token_type_ids = torch.zeros(
+                input_shape, dtype=torch.long, device=device)
 
         # We can provide a self-attention mask of dimensions [batch_size, from_seq_length, to_seq_length]
         # ourselves in which case we just need to make it broadcastable to all heads.
-        extended_attention_mask: torch.Tensor = self.get_extended_attention_mask(attention_mask, input_shape, device)
+        extended_attention_mask: torch.Tensor = self.get_extended_attention_mask(
+            attention_mask, input_shape, device)
 
         # Prepare head mask if needed
         # 1.0 in head_mask indicate we keep the head
         # attention_probs has shape bsz x n_heads x N x N
         # input head_mask has shape [num_heads] or [num_hidden_layers x num_heads]
         # and head_mask is converted to shape [num_hidden_layers x batch x num_heads x seq_length x seq_length]
-        head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
+        head_mask = self.get_head_mask(
+            head_mask, self.config.num_hidden_layers)
 
         embedding_output, embedding_output_scaling_factor = self.embeddings(
             input_ids=input_ids,
@@ -844,7 +902,8 @@ class IBertModel(IBertPreTrainedModel):
             return_dict=return_dict,
         )
         sequence_output = encoder_outputs[0]
-        pooled_output = self.pooler(sequence_output) if self.pooler is not None else None
+        pooled_output = self.pooler(
+            sequence_output) if self.pooler is not None else None
 
         if not return_dict:
             return (sequence_output, pooled_output) + encoder_outputs[1:]
@@ -861,7 +920,8 @@ class IBertModel(IBertPreTrainedModel):
 
 @add_start_docstrings("""I-BERT Model with a `language modeling` head on top. """, IBERT_START_DOCSTRING)
 class IBertForMaskedLM(IBertPreTrainedModel):
-    _keys_to_ignore_on_load_missing = [r"position_ids", r"lm_head.decoder.bias"]
+    _keys_to_ignore_on_load_missing = [
+        r"position_ids", r"lm_head.decoder.bias"]
     _keys_to_ignore_on_load_unexpected = [r"pooler"]
 
     def __init__(self, config):
@@ -926,7 +986,8 @@ class IBertForMaskedLM(IBertPreTrainedModel):
         masked_lm_loss = None
         if labels is not None:
             loss_fct = CrossEntropyLoss()
-            masked_lm_loss = loss_fct(prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
+            masked_lm_loss = loss_fct(
+                prediction_scores.view(-1, self.config.vocab_size), labels.view(-1))
 
         if not return_dict:
             output = (prediction_scores,) + outputs[2:]
@@ -946,9 +1007,11 @@ class IBertLMHead(nn.Module):
     def __init__(self, config):
         super().__init__()
         self.dense = nn.Linear(config.hidden_size, config.hidden_size)
-        self.layer_norm = nn.LayerNorm(config.hidden_size, eps=config.layer_norm_eps)
+        self.layer_norm = nn.LayerNorm(
+            config.hidden_size, eps=config.layer_norm_eps)
 
-        self.decoder = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
+        self.decoder = nn.Linear(
+            config.hidden_size, config.vocab_size, bias=False)
         self.bias = nn.Parameter(torch.zeros(config.vocab_size))
 
         # Need a link between the two variables so that the bias is correctly resized with `resize_token_embeddings`
@@ -1034,7 +1097,8 @@ class IBertForSequenceClassification(IBertPreTrainedModel):
                 loss = loss_fct(logits.view(-1), labels.view(-1))
             else:
                 loss_fct = CrossEntropyLoss()
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+                loss = loss_fct(
+                    logits.view(-1, self.num_labels), labels.view(-1))
 
         if not return_dict:
             output = (logits,) + outputs[2:]
@@ -1096,12 +1160,17 @@ class IBertForMultipleChoice(IBertPreTrainedModel):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
         num_choices = input_ids.shape[1] if input_ids is not None else inputs_embeds.shape[1]
 
-        flat_input_ids = input_ids.view(-1, input_ids.size(-1)) if input_ids is not None else None
-        flat_position_ids = position_ids.view(-1, position_ids.size(-1)) if position_ids is not None else None
-        flat_token_type_ids = token_type_ids.view(-1, token_type_ids.size(-1)) if token_type_ids is not None else None
-        flat_attention_mask = attention_mask.view(-1, attention_mask.size(-1)) if attention_mask is not None else None
+        flat_input_ids = input_ids.view(-1, input_ids.size(-1)
+                                        ) if input_ids is not None else None
+        flat_position_ids = position_ids.view(
+            -1, position_ids.size(-1)) if position_ids is not None else None
+        flat_token_type_ids = token_type_ids.view(
+            -1, token_type_ids.size(-1)) if token_type_ids is not None else None
+        flat_attention_mask = attention_mask.view(
+            -1, attention_mask.size(-1)) if attention_mask is not None else None
         flat_inputs_embeds = (
-            inputs_embeds.view(-1, inputs_embeds.size(-2), inputs_embeds.size(-1))
+            inputs_embeds.view(-1, inputs_embeds.size(-2),
+                               inputs_embeds.size(-1))
             if inputs_embeds is not None
             else None
         )
@@ -1213,11 +1282,13 @@ class IBertForTokenClassification(IBertPreTrainedModel):
                 active_loss = attention_mask.view(-1) == 1
                 active_logits = logits.view(-1, self.num_labels)
                 active_labels = torch.where(
-                    active_loss, labels.view(-1), torch.tensor(loss_fct.ignore_index).type_as(labels)
+                    active_loss, labels.view(-1), torch.tensor(
+                        loss_fct.ignore_index).type_as(labels)
                 )
                 loss = loss_fct(active_logits, active_labels)
             else:
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+                loss = loss_fct(
+                    logits.view(-1, self.num_labels), labels.view(-1))
 
         if not return_dict:
             output = (logits,) + outputs[2:]
@@ -1365,5 +1436,6 @@ def create_position_ids_from_input_ids(input_ids, padding_idx, past_key_values_l
     """
     # The series of casts and type-conversions here are carefully balanced to both work with ONNX export and XLA.
     mask = input_ids.ne(padding_idx).int()
-    incremental_indices = (torch.cumsum(mask, dim=1).type_as(mask) + past_key_values_length) * mask
+    incremental_indices = (torch.cumsum(mask, dim=1).type_as(
+        mask) + past_key_values_length) * mask
     return incremental_indices.long() + padding_idx

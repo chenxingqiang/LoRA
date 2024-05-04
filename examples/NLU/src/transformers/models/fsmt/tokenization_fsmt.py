@@ -299,7 +299,8 @@ class FSMTTokenizer(PreTrainedTokenizer):
             return token + "</w>"
 
         while True:
-            bigram = min(pairs, key=lambda pair: self.bpe_ranks.get(pair, float("inf")))
+            bigram = min(pairs, key=lambda pair: self.bpe_ranks.get(
+                pair, float("inf")))
             if bigram not in self.bpe_ranks:
                 break
             first, second = bigram
@@ -444,7 +445,8 @@ class FSMTTokenizer(PreTrainedTokenizer):
                 )
             return list(
                 map(
-                    lambda x: 1 if x in [self.sep_token_id, self.cls_token_id] else 0,
+                    lambda x: 1 if x in [
+                        self.sep_token_id, self.cls_token_id] else 0,
                     token_ids_0,
                 )
             )
@@ -489,17 +491,21 @@ class FSMTTokenizer(PreTrainedTokenizer):
 
     def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
         if not os.path.isdir(save_directory):
-            logger.error("Vocabulary path ({}) should be a directory".format(save_directory))
+            logger.error(
+                "Vocabulary path ({}) should be a directory".format(save_directory))
             return
 
         src_vocab_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["src_vocab_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["src_vocab_file"]
         )
         tgt_vocab_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["tgt_vocab_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["tgt_vocab_file"]
         )
         merges_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["merges_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["merges_file"]
         )
 
         with open(src_vocab_file, "w", encoding="utf-8") as f:
@@ -515,7 +521,8 @@ class FSMTTokenizer(PreTrainedTokenizer):
                 if index != token_index:
                     logger.warning(
                         "Saving vocabulary to {}: BPE merge indices are not consecutive."
-                        " Please check that the tokenizer is not corrupted!".format(merges_file)
+                        " Please check that the tokenizer is not corrupted!".format(
+                            merges_file)
                     )
                     index = token_index
                 writer.write(" ".join(bpe_tokens) + "\n")

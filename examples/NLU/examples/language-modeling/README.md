@@ -60,7 +60,6 @@ python run_clm.py \
     --output_dir /tmp/test-clm
 ```
 
-
 ### RoBERTa/BERT/DistilBERT and masked language modeling
 
 The following example fine-tunes RoBERTa on WikiText-2. Here too, we're using the raw WikiText-2. The loss is different
@@ -100,18 +99,18 @@ sure all your batches have the same length.
 
 ### Whole word masking
 
-This part was moved to `examples/research_projects/mlm_wwm`. 
+This part was moved to `examples/research_projects/mlm_wwm`.
 
 ### XLNet and permutation language modeling
 
-XLNet uses a different training objective, which is permutation language modeling. It is an autoregressive method 
-to learn bidirectional contexts by maximizing the expected likelihood over all permutations of the input 
+XLNet uses a different training objective, which is permutation language modeling. It is an autoregressive method
+to learn bidirectional contexts by maximizing the expected likelihood over all permutations of the input
 sequence factorization order.
 
-We use the `--plm_probability` flag to define the ratio of length of a span of masked tokens to surrounding 
+We use the `--plm_probability` flag to define the ratio of length of a span of masked tokens to surrounding
 context length for permutation language modeling.
 
-The `--max_span_length` flag may also be used to limit the length of a span of masked tokens used 
+The `--max_span_length` flag may also be used to limit the length of a span of masked tokens used
 for permutation language modeling.
 
 Here is how to fine-tune XLNet on wikitext-2:

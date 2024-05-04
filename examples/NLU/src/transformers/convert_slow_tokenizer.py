@@ -41,7 +41,8 @@ class SentencePieceExtractor:
 
     def extract(self) -> Tuple[Dict[str, int], List[Tuple]]:
         sp = self.sp
-        vocab = {sp.id_to_piece(index): index for index in range(sp.GetPieceSize())}
+        vocab = {sp.id_to_piece(
+            index): index for index in range(sp.GetPieceSize())}
 
         # Merges
         merges = []
@@ -72,7 +73,8 @@ class Converter:
 class BertConverter(Converter):
     def converted(self) -> Tokenizer:
         vocab = self.original_tokenizer.vocab
-        tokenizer = Tokenizer(WordPiece(vocab, unk_token=str(self.original_tokenizer.unk_token)))
+        tokenizer = Tokenizer(
+            WordPiece(vocab, unk_token=str(self.original_tokenizer.unk_token)))
 
         tokenize_chinese_chars = False
         strip_accents = False
@@ -111,7 +113,8 @@ class BertConverter(Converter):
 class FunnelConverter(Converter):
     def converted(self) -> Tokenizer:
         vocab = self.original_tokenizer.vocab
-        tokenizer = Tokenizer(WordPiece(vocab, unk_token=str(self.original_tokenizer.unk_token)))
+        tokenizer = Tokenizer(
+            WordPiece(vocab, unk_token=str(self.original_tokenizer.unk_token)))
 
         tokenize_chinese_chars = False
         strip_accents = False
@@ -135,7 +138,8 @@ class FunnelConverter(Converter):
         sep_token_id = self.original_tokenizer.sep_token_id
 
         tokenizer.post_processor = processors.TemplateProcessing(
-            single=f"{cls}:2 $A:0 {sep}:0",  # token_type_id is 2 for Funnel transformer
+            # token_type_id is 2 for Funnel transformer
+            single=f"{cls}:2 $A:0 {sep}:0",
             pair=f"{cls}:2 $A:0 {sep}:0 $B:1 {sep}:1",
             special_tokens=[
                 (cls, cls_token_id),
@@ -150,7 +154,8 @@ class FunnelConverter(Converter):
 class MPNetConverter(Converter):
     def converted(self) -> Tokenizer:
         vocab = self.original_tokenizer.vocab
-        tokenizer = Tokenizer(WordPiece(vocab, unk_token=str(self.original_tokenizer.unk_token)))
+        tokenizer = Tokenizer(
+            WordPiece(vocab, unk_token=str(self.original_tokenizer.unk_token)))
 
         tokenize_chinese_chars = False
         strip_accents = False
@@ -175,7 +180,8 @@ class MPNetConverter(Converter):
 
         tokenizer.post_processor = processors.TemplateProcessing(
             single=f"{cls}:0 $A:0 {sep}:0",
-            pair=f"{cls}:0 $A:0 {sep}:0 {sep}:0 $B:1 {sep}:1",  # MPNet uses two [SEP] tokens
+            # MPNet uses two [SEP] tokens
+            pair=f"{cls}:0 $A:0 {sep}:0 {sep}:0 $B:1 {sep}:1",
             special_tokens=[
                 (cls, cls_token_id),
                 (sep, sep_token_id),
@@ -229,7 +235,8 @@ class GPT2Converter(Converter):
             )
         )
 
-        tokenizer.pre_tokenizer = pre_tokenizers.ByteLevel(add_prefix_space=self.original_tokenizer.add_prefix_space)
+        tokenizer.pre_tokenizer = pre_tokenizers.ByteLevel(
+            add_prefix_space=self.original_tokenizer.add_prefix_space)
         tokenizer.decoder = decoders.ByteLevel()
         tokenizer.post_processor = processors.ByteLevel(trim_offsets=False)
 
@@ -256,12 +263,15 @@ class HerbertConverter(Converter):
             )
         )
 
-        tokenizer.normalizer = normalizers.BertNormalizer(lowercase=False, strip_accents=False)
+        tokenizer.normalizer = normalizers.BertNormalizer(
+            lowercase=False, strip_accents=False)
         tokenizer.pre_tokenizer = pre_tokenizers.BertPreTokenizer()
         tokenizer.decoder = decoders.BPEDecoder(suffix=token_suffix)
         tokenizer.post_processor = processors.BertProcessing(
-            sep=(self.original_tokenizer.sep_token, self.original_tokenizer.sep_token_id),
-            cls=(self.original_tokenizer.cls_token, self.original_tokenizer.cls_token_id),
+            sep=(self.original_tokenizer.sep_token,
+                 self.original_tokenizer.sep_token_id),
+            cls=(self.original_tokenizer.cls_token,
+                 self.original_tokenizer.cls_token_id),
         )
 
         return tokenizer
@@ -284,7 +294,8 @@ class RobertaConverter(Converter):
             )
         )
 
-        tokenizer.pre_tokenizer = pre_tokenizers.ByteLevel(add_prefix_space=ot.add_prefix_space)
+        tokenizer.pre_tokenizer = pre_tokenizers.ByteLevel(
+            add_prefix_space=ot.add_prefix_space)
         tokenizer.decoder = decoders.ByteLevel()
         tokenizer.post_processor = processors.RobertaProcessing(
             sep=(ot.sep_token, ot.sep_token_id),
@@ -305,7 +316,8 @@ class SpmConverter(Converter):
         from .utils import sentencepiece_model_pb2 as model_pb2
 
         m = model_pb2.ModelProto()
-        m.ParseFromString(open(self.original_tokenizer.vocab_file, "rb").read())
+        m.ParseFromString(
+            open(self.original_tokenizer.vocab_file, "rb").read())
         self.proto = m
 
     def vocab(self, proto):
@@ -322,7 +334,8 @@ class SpmConverter(Converter):
         if model_type == 1:
             tokenizer = Tokenizer(Unigram(vocab, unk_id))
         elif model_type == 2:
-            _, merges = SentencePieceExtractor(self.original_tokenizer.vocab_file).extract()
+            _, merges = SentencePieceExtractor(
+                self.original_tokenizer.vocab_file).extract()
             bpe_vocab = {word: i for i, (word, score) in enumerate(vocab)}
             tokenizer = Tokenizer(
                 BPE(
@@ -342,7 +355,8 @@ class SpmConverter(Converter):
     def normalizer(self, proto):
         precompiled_charsmap = proto.normalizer_spec.precompiled_charsmap
         return normalizers.Sequence(
-            [normalizers.Precompiled(precompiled_charsmap), normalizers.Replace(Regex(" {2,}"), " ")]
+            [normalizers.Precompiled(precompiled_charsmap),
+             normalizers.Replace(Regex(" {2,}"), " ")]
         )
 
     def pre_tokenizer(self, replacement, add_prefix_space):
@@ -359,8 +373,10 @@ class SpmConverter(Converter):
 
         replacement = "▁"
         add_prefix_space = True
-        tokenizer.pre_tokenizer = self.pre_tokenizer(replacement, add_prefix_space)
-        tokenizer.decoder = decoders.Metaspace(replacement=replacement, add_prefix_space=add_prefix_space)
+        tokenizer.pre_tokenizer = self.pre_tokenizer(
+            replacement, add_prefix_space)
+        tokenizer.decoder = decoders.Metaspace(
+            replacement=replacement, add_prefix_space=add_prefix_space)
         post_processor = self.post_processor()
         if post_processor:
             tokenizer.post_processor = post_processor
@@ -371,7 +387,8 @@ class SpmConverter(Converter):
 class AlbertConverter(SpmConverter):
     def vocab(self, proto):
         return [
-            (piece.piece, piece.score) if check_number_comma(piece.piece) else (piece.piece, piece.score - 100)
+            (piece.piece, piece.score) if check_number_comma(
+                piece.piece) else (piece.piece, piece.score - 100)
             for piece in proto.pieces
         ]
 
@@ -559,7 +576,8 @@ class XLMRobertaConverter(SpmConverter):
 class XLNetConverter(SpmConverter):
     def vocab(self, proto):
         return [
-            (piece.piece, piece.score) if check_number_comma(piece.piece) else (piece.piece, piece.score - 100)
+            (piece.piece, piece.score) if check_number_comma(
+                piece.piece) else (piece.piece, piece.score - 100)
             for piece in proto.pieces
         ]
 
@@ -606,7 +624,8 @@ class PegasusConverter(SpmConverter):
             (self.original_tokenizer.mask_token_sent, 0.0),
             (self.original_tokenizer.mask_token, 0.0),
         ]
-        vocab += [(f"<unk_{i}>", -100.0) for i in range(2, self.original_tokenizer.offset)]
+        vocab += [(f"<unk_{i}>", -100.0)
+                  for i in range(2, self.original_tokenizer.offset)]
         vocab += [(piece.piece, piece.score) for piece in proto.pieces[2:]]
         return vocab
 
@@ -617,7 +636,8 @@ class PegasusConverter(SpmConverter):
         return pre_tokenizers.Sequence(
             [
                 pre_tokenizers.WhitespaceSplit(),
-                pre_tokenizers.Metaspace(replacement=replacement, add_prefix_space=add_prefix_space),
+                pre_tokenizers.Metaspace(
+                    replacement=replacement, add_prefix_space=add_prefix_space),
             ]
         )
 
@@ -633,7 +653,8 @@ class T5Converter(SpmConverter):
     def vocab(self, proto):
         num_extra_ids = self.original_tokenizer._extra_ids
         vocab = [(piece.piece, piece.score) for piece in proto.pieces]
-        vocab += [("<extra_id_{}>".format(i), 0.0) for i in range(num_extra_ids - 1, -1, -1)]
+        vocab += [("<extra_id_{}>".format(i), 0.0)
+                  for i in range(num_extra_ids - 1, -1, -1)]
         return vocab
 
     def post_processor(self):

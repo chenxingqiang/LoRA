@@ -103,14 +103,16 @@ def get_default_model(targeted_task: Dict, framework: Optional[str], task_option
     defaults = targeted_task["default"]
     if task_options:
         if task_options not in defaults:
-            raise ValueError("The task does not provide any default models for options {}".format(task_options))
+            raise ValueError(
+                "The task does not provide any default models for options {}".format(task_options))
         default_models = defaults[task_options]["model"]
     elif "model" in defaults:
         default_models = targeted_task["default"]["model"]
     else:
         # XXX This error message needs to be updated to be more generic if more tasks are going to become
         # parametrized
-        raise ValueError('The task defaults can\'t be correctly selected. You probably meant "translation_XX_to_YY"')
+        raise ValueError(
+            'The task defaults can\'t be correctly selected. You probably meant "translation_XX_to_YY"')
 
     if framework is None:
         framework = "pt"
@@ -180,15 +182,18 @@ class PipelineDataFormat:
         self.is_multi_columns = len(self.column) > 1
 
         if self.is_multi_columns:
-            self.column = [tuple(c.split("=")) if "=" in c else (c, c) for c in self.column]
+            self.column = [tuple(c.split("=")) if "=" in c else (c, c)
+                           for c in self.column]
 
         if output_path is not None and not overwrite:
             if exists(abspath(self.output_path)):
-                raise OSError("{} already exists on disk".format(self.output_path))
+                raise OSError(
+                    "{} already exists on disk".format(self.output_path))
 
         if input_path is not None:
             if not exists(abspath(self.input_path)):
-                raise OSError("{} doesnt exist on disk".format(self.input_path))
+                raise OSError(
+                    "{} doesnt exist on disk".format(self.input_path))
 
     @abstractmethod
     def __iter__(self):
@@ -257,7 +262,8 @@ class PipelineDataFormat:
         elif format == "pipe":
             return PipedPipelineDataFormat(output_path, input_path, column, overwrite=overwrite)
         else:
-            raise KeyError("Unknown reader {} (Available reader are json/csv/pipe)".format(format))
+            raise KeyError(
+                "Unknown reader {} (Available reader are json/csv/pipe)".format(format))
 
 
 class CsvPipelineDataFormat(PipelineDataFormat):
@@ -481,7 +487,8 @@ class Pipeline(_ScikitCompat):
         self.tokenizer = tokenizer
         self.modelcard = modelcard
         self.framework = framework
-        self.device = device if framework == "tf" else torch.device("cpu" if device < 0 else "cuda:{}".format(device))
+        self.device = device if framework == "tf" else torch.device(
+            "cpu" if device < 0 else "cuda:{}".format(device))
         self.binary_output = binary_output
 
         # Special handling
@@ -502,7 +509,8 @@ class Pipeline(_ScikitCompat):
                 A path to the directory where to saved. It will be created if it doesn't exist.
         """
         if os.path.isfile(save_directory):
-            logger.error("Provided path ({}) should be a directory, not a file".format(save_directory))
+            logger.error(
+                "Provided path ({}) should be a directory, not a file".format(save_directory))
             return
         os.makedirs(save_directory, exist_ok=True)
 
@@ -569,7 +577,8 @@ class Pipeline(_ScikitCompat):
                 The list of models supported by the pipeline, or a dictionary with model class values.
         """
         if not isinstance(supported_models, list):  # Create from a model mapping
-            supported_models = [item[1].__name__ for item in supported_models.items()]
+            supported_models = [
+                item[1].__name__ for item in supported_models.items()]
         if self.model.__class__.__name__ not in supported_models:
             raise PipelineException(
                 self.task,

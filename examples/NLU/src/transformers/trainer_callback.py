@@ -93,7 +93,8 @@ class TrainerState:
 
     def save_to_json(self, json_path: str):
         """ Save the content of this instance in JSON format inside :obj:`json_path`."""
-        json_string = json.dumps(dataclasses.asdict(self), indent=2, sort_keys=True) + "\n"
+        json_string = json.dumps(dataclasses.asdict(
+            self), indent=2, sort_keys=True) + "\n"
         with open(json_path, "w", encoding="utf-8") as f:
             f.write(json_string)
 
@@ -298,7 +299,8 @@ class CallbackHandler(TrainerCallback):
 
     def add_callback(self, callback):
         cb = callback() if isinstance(callback, type) else callback
-        cb_class = callback if isinstance(callback, type) else callback.__class__
+        cb_class = callback if isinstance(
+            callback, type) else callback.__class__
         if cb_class in [c.__class__ for c in self.callbacks]:
             logger.warn(
                 f"You are adding a {cb_class} to the callbacks of this Trainer, but there is already one. The current"
@@ -471,7 +473,8 @@ class ProgressCallback(TrainerCallback):
     def on_prediction_step(self, args, state, control, eval_dataloader=None, **kwargs):
         if state.is_local_process_zero:
             if self.prediction_bar is None:
-                self.prediction_bar = tqdm(total=len(eval_dataloader), leave=self.training_bar is None)
+                self.prediction_bar = tqdm(
+                    total=len(eval_dataloader), leave=self.training_bar is None)
             self.prediction_bar.update(1)
 
     def on_evaluate(self, args, state, control, **kwargs):

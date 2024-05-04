@@ -42,7 +42,7 @@ args = parser.parse_args()
 
 if __name__ == "__main__":
     enc = encoder.get_encoder(args.vocab)
-    
+
     writer = open(args.output, 'w')
 
     with open(args.input, 'r') as reader:
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
             bos = 50256
             eos = 50256
-            context_bpes, _ = enc.encode(context) 
+            context_bpes, _ = enc.encode(context)
             context_bpes += [bos] if args.add_bos else []
 
             completion_bpes, _ = enc.encode(' ' + completion)
@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
             ft_json = {}
             ft_json['context'] = context_bpes
-            ft_json['completion'] = completion_bpes 
+            ft_json['completion'] = completion_bpes
             writer.write(json.dumps(ft_json)+'\n')
 
             line_idx += 1

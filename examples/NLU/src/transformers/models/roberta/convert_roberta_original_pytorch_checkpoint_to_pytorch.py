@@ -68,7 +68,8 @@ def convert_roberta_checkpoint_to_pytorch(
         config.num_labels = roberta.model.classification_heads["mnli"].out_proj.weight.shape[0]
     print("Our BERT config:", config)
 
-    model = RobertaForSequenceClassification(config) if classification_head else RobertaForMaskedLM(config)
+    model = RobertaForSequenceClassification(
+        config) if classification_head else RobertaForMaskedLM(config)
     model.eval()
 
     # Now let's copy all the weights.
@@ -128,8 +129,10 @@ def convert_roberta_checkpoint_to_pytorch(
     if classification_head:
         model.classifier.dense.weight = roberta.model.classification_heads["mnli"].dense.weight
         model.classifier.dense.bias = roberta.model.classification_heads["mnli"].dense.bias
-        model.classifier.out_proj.weight = roberta.model.classification_heads["mnli"].out_proj.weight
-        model.classifier.out_proj.bias = roberta.model.classification_heads["mnli"].out_proj.bias
+        model.classifier.out_proj.weight = roberta.model.classification_heads[
+            "mnli"].out_proj.weight
+        model.classifier.out_proj.bias = roberta.model.classification_heads[
+            "mnli"].out_proj.bias
     else:
         # LM Head
         model.lm_head.dense.weight = roberta.model.encoder.lm_head.dense.weight
@@ -140,11 +143,13 @@ def convert_roberta_checkpoint_to_pytorch(
         model.lm_head.decoder.bias = roberta.model.encoder.lm_head.bias
 
     # Let's check that we get the same results.
-    input_ids: torch.Tensor = roberta.encode(SAMPLE_TEXT).unsqueeze(0)  # batch of size 1
+    input_ids: torch.Tensor = roberta.encode(
+        SAMPLE_TEXT).unsqueeze(0)  # batch of size 1
 
     our_output = model(input_ids)[0]
     if classification_head:
-        their_output = roberta.model.classification_heads["mnli"](roberta.extract_features(input_ids))
+        their_output = roberta.model.classification_heads["mnli"](
+            roberta.extract_features(input_ids))
     else:
         their_output = roberta.model(input_ids)[0]
     print(our_output.shape, their_output.shape)

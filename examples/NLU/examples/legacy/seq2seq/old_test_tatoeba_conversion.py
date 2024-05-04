@@ -34,5 +34,6 @@ class TatoebaConversionTester(unittest.TestCase):
 
     @slow
     def test_model_card(self):
-        content, mmeta = self.resolver.write_model_card("opus-mt-he-en", dry_run=True)
+        content, mmeta = self.resolver.write_model_card(
+            "opus-mt-he-en", dry_run=True)
         assert mmeta["long_pair"] == "heb-eng"

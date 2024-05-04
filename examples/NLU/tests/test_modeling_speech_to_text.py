@@ -125,10 +125,13 @@ class Speech2TextModelTester:
 
     def prepare_config_and_inputs(self):
         input_features = floats_tensor(
-            [self.batch_size, self.seq_length, self.input_feat_per_channel], self.vocab_size
+            [self.batch_size, self.seq_length,
+                self.input_feat_per_channel], self.vocab_size
         )
-        attention_mask = torch.ones([self.batch_size, self.seq_length], dtype=torch.long, device=torch_device)
-        decoder_input_ids = ids_tensor([self.batch_size, self.seq_length], self.vocab_size).clamp(2)
+        attention_mask = torch.ones(
+            [self.batch_size, self.seq_length], dtype=torch.long, device=torch_device)
+        decoder_input_ids = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size).clamp(2)
 
         config = Speech2TextConfig(
             vocab_size=self.vocab_size,
@@ -176,37 +179,46 @@ class Speech2TextModelTester:
         return input_lengths
 
     def create_and_check_decoder_model_past_large_inputs(self, config, inputs_dict):
-        model = Speech2TextModel(config=config).get_decoder().to(torch_device).eval()
+        model = Speech2TextModel(
+            config=config).get_decoder().to(torch_device).eval()
         input_ids = inputs_dict["decoder_input_ids"]
         attention_mask = inputs_dict["decoder_attention_mask"]
 
         # first forward pass
-        outputs = model(input_ids, attention_mask=attention_mask, use_cache=True)
+        outputs = model(
+            input_ids, attention_mask=attention_mask, use_cache=True)
 
         output, past_key_values = outputs.to_tuple()
 
         # create hypothetical multiple next token and extent to next_input_ids
-        next_tokens = ids_tensor((self.batch_size, 3), config.vocab_size).clamp(2)
+        next_tokens = ids_tensor((self.batch_size, 3),
+                                 config.vocab_size).clamp(2)
         next_attn_mask = ids_tensor((self.batch_size, 3), 2)
 
         # append to next input_ids and
         next_input_ids = torch.cat([input_ids, next_tokens], dim=-1)
-        next_attention_mask = torch.cat([attention_mask, next_attn_mask], dim=-1)
+        next_attention_mask = torch.cat(
+            [attention_mask, next_attn_mask], dim=-1)
 
-        output_from_no_past = model(next_input_ids, attention_mask=next_attention_mask)["last_hidden_state"]
+        output_from_no_past = model(next_input_ids, attention_mask=next_attention_mask)[
+            "last_hidden_state"]
         output_from_past = model(next_tokens, attention_mask=next_attention_mask, past_key_values=past_key_values)[
             "last_hidden_state"
         ]
 
         # select random slice
         random_slice_idx = ids_tensor((1,), output_from_past.shape[-1]).item()
-        output_from_no_past_slice = output_from_no_past[:, -3:, random_slice_idx].detach()
-        output_from_past_slice = output_from_past[:, :, random_slice_idx].detach()
+        output_from_no_past_slice = output_from_no_past[:, -
+                                                        3:, random_slice_idx].detach()
+        output_from_past_slice = output_from_past[:,
+                                                  :, random_slice_idx].detach()
 
-        self.parent.assertTrue(output_from_past_slice.shape[1] == next_tokens.shape[1])
+        self.parent.assertTrue(
+            output_from_past_slice.shape[1] == next_tokens.shape[1])
 
         # test that outputs are equal for slice
-        self.parent.assertTrue(torch.allclose(output_from_past_slice, output_from_no_past_slice, atol=1e-2))
+        self.parent.assertTrue(torch.allclose(
+            output_from_past_slice, output_from_no_past_slice, atol=1e-2))
 
     def check_encoder_decoder_model_standalone(self, config, inputs_dict):
         model = Speech2TextModel(config=config).to(torch_device).eval()
@@ -218,18 +230,21 @@ class Speech2TextModelTester:
         with tempfile.TemporaryDirectory() as tmpdirname:
             encoder = model.get_encoder()
             encoder.save_pretrained(tmpdirname)
-            encoder = Speech2TextEncoder.from_pretrained(tmpdirname).to(torch_device)
+            encoder = Speech2TextEncoder.from_pretrained(
+                tmpdirname).to(torch_device)
 
         encoder_last_hidden_state_2 = encoder(
             inputs_dict["input_features"], attention_mask=inputs_dict["attention_mask"]
         )[0]
 
-        self.parent.assertTrue((encoder_last_hidden_state_2 - encoder_last_hidden_state).abs().max().item() < 1e-3)
+        self.parent.assertTrue(
+            (encoder_last_hidden_state_2 - encoder_last_hidden_state).abs().max().item() < 1e-3)
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             decoder = model.get_decoder()
             decoder.save_pretrained(tmpdirname)
-            decoder = Speech2TextDecoder.from_pretrained(tmpdirname).to(torch_device)
+            decoder = Speech2TextDecoder.from_pretrained(
+                tmpdirname).to(torch_device)
 
         last_hidden_state_2 = decoder(
             input_ids=inputs_dict["decoder_input_ids"],
@@ -238,13 +253,16 @@ class Speech2TextModelTester:
             encoder_attention_mask=inputs_dict["attention_mask"],
         )[0]
 
-        self.parent.assertTrue((last_hidden_state_2 - last_hidden_state).abs().max().item() < 1e-3)
+        self.parent.assertTrue(
+            (last_hidden_state_2 - last_hidden_state).abs().max().item() < 1e-3)
 
 
 @require_torch
 class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase):
-    all_model_classes = (Speech2TextModel, Speech2TextForConditionalGeneration) if is_torch_available() else ()
-    all_generative_model_classes = (Speech2TextForConditionalGeneration,) if is_torch_available() else ()
+    all_model_classes = (
+        Speech2TextModel, Speech2TextForConditionalGeneration) if is_torch_available() else ()
+    all_generative_model_classes = (
+        Speech2TextForConditionalGeneration,) if is_torch_available() else ()
     is_encoder_decoder = True
     test_pruning = False
     test_head_masking = False
@@ -268,16 +286,19 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
 
             with tempfile.TemporaryDirectory() as tmpdirname:
                 model.save_pretrained(tmpdirname)
-                model2, info = model_class.from_pretrained(tmpdirname, output_loading_info=True)
+                model2, info = model_class.from_pretrained(
+                    tmpdirname, output_loading_info=True)
             self.assertEqual(info["missing_keys"], [])
 
     def test_decoder_model_past_with_large_inputs(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_decoder_model_past_large_inputs(*config_and_inputs)
+        self.model_tester.create_and_check_decoder_model_past_large_inputs(
+            *config_and_inputs)
 
     def test_encoder_decoder_model_standalone(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs_for_common()
-        self.model_tester.check_encoder_decoder_model_standalone(*config_and_inputs)
+        self.model_tester.check_encoder_decoder_model_standalone(
+            *config_and_inputs)
 
     def test_inputs_embeds(self):
         pass
@@ -293,12 +314,14 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
         config, input_dict = self.model_tester.prepare_config_and_inputs()
         input_features = input_dict["input_features"]
         attention_mask = input_dict["attention_mask"]
-        model = Speech2TextForConditionalGeneration(config).eval().to(torch_device)
+        model = Speech2TextForConditionalGeneration(
+            config).eval().to(torch_device)
         if torch_device == "cuda":
             input_features = input_features.half()
             model.half()
         model.generate(input_features, attention_mask=attention_mask)
-        model.generate(input_features, num_beams=4, do_sample=True, early_stopping=False, num_return_sequences=3)
+        model.generate(input_features, num_beams=4, do_sample=True,
+                       early_stopping=False, num_return_sequences=3)
 
     def test_forward_signature(self):
         config, _ = self.model_tester.prepare_config_and_inputs_for_common()
@@ -320,7 +343,8 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
                 if "head_mask" and "decoder_head_mask" in arg_names
                 else ["encoder_outputs"]
             )
-            self.assertListEqual(arg_names[: len(expected_arg_names)], expected_arg_names)
+            self.assertListEqual(
+                arg_names[: len(expected_arg_names)], expected_arg_names)
 
     def test_hidden_states_output(self):
         def check_hidden_states_output(inputs_dict, config, model_class):
@@ -329,7 +353,8 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
             model.eval()
 
             with torch.no_grad():
-                outputs = model(**self._prepare_for_class(inputs_dict, model_class))
+                outputs = model(
+                    **self._prepare_for_class(inputs_dict, model_class))
 
             hidden_states = outputs.encoder_hidden_states if config.is_encoder_decoder else outputs.hidden_states
 
@@ -343,7 +368,8 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
             else:
                 seq_length = self.model_tester.seq_length
 
-            subsampled_seq_length = model._get_subsampled_output_lengths(seq_length)
+            subsampled_seq_length = model._get_subsampled_output_lengths(
+                seq_length)
 
             self.assertListEqual(
                 list(hidden_states[0].shape[-2:]),
@@ -356,7 +382,8 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
                 self.assertIsInstance(hidden_states, (list, tuple))
                 self.assertEqual(len(hidden_states), expected_num_layers)
                 seq_len = getattr(self.model_tester, "seq_length", None)
-                decoder_seq_length = getattr(self.model_tester, "decoder_seq_length", seq_len)
+                decoder_seq_length = getattr(
+                    self.model_tester, "decoder_seq_length", seq_len)
 
                 self.assertListEqual(
                     list(hidden_states[0].shape[-2:]),
@@ -380,10 +407,14 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
         config.return_dict = True
 
         seq_len = getattr(self.model_tester, "seq_length", None)
-        decoder_seq_length = getattr(self.model_tester, "decoder_seq_length", seq_len)
-        encoder_seq_length = getattr(self.model_tester, "encoder_seq_length", seq_len)
-        decoder_key_length = getattr(self.model_tester, "decoder_key_length", decoder_seq_length)
-        encoder_key_length = getattr(self.model_tester, "key_length", encoder_seq_length)
+        decoder_seq_length = getattr(
+            self.model_tester, "decoder_seq_length", seq_len)
+        encoder_seq_length = getattr(
+            self.model_tester, "encoder_seq_length", seq_len)
+        decoder_key_length = getattr(
+            self.model_tester, "decoder_key_length", decoder_seq_length)
+        encoder_key_length = getattr(
+            self.model_tester, "key_length", encoder_seq_length)
 
         for model_class in self.all_model_classes:
             inputs_dict["output_attentions"] = True
@@ -393,13 +424,17 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
             model.to(torch_device)
             model.eval()
 
-            subsampled_encoder_seq_length = model._get_subsampled_output_lengths(encoder_seq_length)
-            subsampled_encoder_key_length = model._get_subsampled_output_lengths(encoder_key_length)
+            subsampled_encoder_seq_length = model._get_subsampled_output_lengths(
+                encoder_seq_length)
+            subsampled_encoder_key_length = model._get_subsampled_output_lengths(
+                encoder_key_length)
 
             with torch.no_grad():
-                outputs = model(**self._prepare_for_class(inputs_dict, model_class))
+                outputs = model(
+                    **self._prepare_for_class(inputs_dict, model_class))
             attentions = outputs.encoder_attentions if config.is_encoder_decoder else outputs.attentions
-            self.assertEqual(len(attentions), self.model_tester.num_hidden_layers)
+            self.assertEqual(
+                len(attentions), self.model_tester.num_hidden_layers)
 
             # check that output_attentions also work using config
             del inputs_dict["output_attentions"]
@@ -408,13 +443,16 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
             model.to(torch_device)
             model.eval()
             with torch.no_grad():
-                outputs = model(**self._prepare_for_class(inputs_dict, model_class))
+                outputs = model(
+                    **self._prepare_for_class(inputs_dict, model_class))
             attentions = outputs.encoder_attentions if config.is_encoder_decoder else outputs.attentions
-            self.assertEqual(len(attentions), self.model_tester.num_hidden_layers)
+            self.assertEqual(
+                len(attentions), self.model_tester.num_hidden_layers)
 
             self.assertListEqual(
                 list(attentions[0].shape[-3:]),
-                [self.model_tester.num_attention_heads, subsampled_encoder_seq_length, subsampled_encoder_key_length],
+                [self.model_tester.num_attention_heads,
+                    subsampled_encoder_seq_length, subsampled_encoder_key_length],
             )
             out_len = len(outputs)
 
@@ -431,16 +469,19 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
             # decoder attentions
             decoder_attentions = outputs.decoder_attentions
             self.assertIsInstance(decoder_attentions, (list, tuple))
-            self.assertEqual(len(decoder_attentions), self.model_tester.num_hidden_layers)
+            self.assertEqual(len(decoder_attentions),
+                             self.model_tester.num_hidden_layers)
             self.assertListEqual(
                 list(decoder_attentions[0].shape[-3:]),
-                [self.model_tester.num_attention_heads, decoder_seq_length, decoder_key_length],
+                [self.model_tester.num_attention_heads,
+                    decoder_seq_length, decoder_key_length],
             )
 
             # cross attentions
             cross_attentions = outputs.cross_attentions
             self.assertIsInstance(cross_attentions, (list, tuple))
-            self.assertEqual(len(cross_attentions), self.model_tester.num_hidden_layers)
+            self.assertEqual(len(cross_attentions),
+                             self.model_tester.num_hidden_layers)
             self.assertListEqual(
                 list(cross_attentions[0].shape[-3:]),
                 [
@@ -457,17 +498,20 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
             model.to(torch_device)
             model.eval()
             with torch.no_grad():
-                outputs = model(**self._prepare_for_class(inputs_dict, model_class))
+                outputs = model(
+                    **self._prepare_for_class(inputs_dict, model_class))
 
             added_hidden_states = 2
             self.assertEqual(out_len + added_hidden_states, len(outputs))
 
             self_attentions = outputs.encoder_attentions if config.is_encoder_decoder else outputs.attentions
 
-            self.assertEqual(len(self_attentions), self.model_tester.num_hidden_layers)
+            self.assertEqual(len(self_attentions),
+                             self.model_tester.num_hidden_layers)
             self.assertListEqual(
                 list(self_attentions[0].shape[-3:]),
-                [self.model_tester.num_attention_heads, subsampled_encoder_seq_length, subsampled_encoder_key_length],
+                [self.model_tester.num_attention_heads,
+                    subsampled_encoder_seq_length, subsampled_encoder_key_length],
             )
 
     def test_resize_tokens_embeddings(self):
@@ -495,7 +539,8 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
             model_embed = model.resize_token_embeddings(model_vocab_size + 10)
             self.assertEqual(model.config.vocab_size, model_vocab_size + 10)
             # Check that it actually resizes the embeddings matrix
-            self.assertEqual(model_embed.weight.shape[0], cloned_embeddings.shape[0] + 10)
+            self.assertEqual(
+                model_embed.weight.shape[0], cloned_embeddings.shape[0] + 10)
             # Check that the model can still do a forward pass successfully (every parameter should be resized)
             model(**self._prepare_for_class(inputs_dict, model_class))
 
@@ -503,11 +548,13 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
             model_embed = model.resize_token_embeddings(model_vocab_size - 15)
             self.assertEqual(model.config.vocab_size, model_vocab_size - 15)
             # Check that it actually resizes the embeddings matrix
-            self.assertEqual(model_embed.weight.shape[0], cloned_embeddings.shape[0] - 15)
+            self.assertEqual(
+                model_embed.weight.shape[0], cloned_embeddings.shape[0] - 15)
 
             # make sure that decoder_input_ids are resized
             if "decoder_input_ids" in inputs_dict:
-                inputs_dict["decoder_input_ids"].clamp_(max=model_vocab_size - 15 - 1)
+                inputs_dict["decoder_input_ids"].clamp_(
+                    max=model_vocab_size - 15 - 1)
             model(**self._prepare_for_class(inputs_dict, model_class))
 
             # Check that adding and removing tokens has not modified the first part of the embedding matrix.
@@ -545,10 +592,12 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
             model.resize_token_embeddings(model_vocab_size + 10)
             self.assertEqual(model.config.vocab_size, model_vocab_size + 10)
             output_embeds = model.get_output_embeddings()
-            self.assertEqual(output_embeds.weight.shape[0], model_vocab_size + 10)
+            self.assertEqual(
+                output_embeds.weight.shape[0], model_vocab_size + 10)
             # Check bias if present
             if output_embeds.bias is not None:
-                self.assertEqual(output_embeds.bias.shape[0], model_vocab_size + 10)
+                self.assertEqual(
+                    output_embeds.bias.shape[0], model_vocab_size + 10)
             # Check that the model can still do a forward pass successfully (every parameter should be resized)
             model(**self._prepare_for_class(inputs_dict, model_class))
 
@@ -557,13 +606,16 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
             self.assertEqual(model.config.vocab_size, model_vocab_size - 15)
             # Check that it actually resizes the embeddings matrix
             output_embeds = model.get_output_embeddings()
-            self.assertEqual(output_embeds.weight.shape[0], model_vocab_size - 15)
+            self.assertEqual(
+                output_embeds.weight.shape[0], model_vocab_size - 15)
             # Check bias if present
             if output_embeds.bias is not None:
-                self.assertEqual(output_embeds.bias.shape[0], model_vocab_size - 15)
+                self.assertEqual(
+                    output_embeds.bias.shape[0], model_vocab_size - 15)
             # Check that the model can still do a forward pass successfully (every parameter should be resized)
             if "decoder_input_ids" in inputs_dict:
-                inputs_dict["decoder_input_ids"].clamp_(max=model_vocab_size - 15 - 1)
+                inputs_dict["decoder_input_ids"].clamp_(
+                    max=model_vocab_size - 15 - 1)
             # Check that the model can still do a forward pass successfully (every parameter should be resized)
             model(**self._prepare_for_class(inputs_dict, model_class))
 
@@ -585,20 +637,24 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
             num_interleave, dim=0
         )
         input_ids = input_ids[:, :, 0]
-        input_ids = torch.zeros_like(input_ids[:, :1], dtype=torch.long) + model._get_decoder_start_token_id()
+        input_ids = torch.zeros_like(
+            input_ids[:, :1], dtype=torch.long) + model._get_decoder_start_token_id()
         attention_mask = None
         return encoder_outputs, input_ids, attention_mask
 
     def _check_outputs(self, output, input_ids, config, use_cache=False, num_return_sequences=1):
         batch_size, seq_length = input_ids.shape[:2]
-        subsampled_seq_length = self.model_tester.get_subsampled_output_lengths(seq_length)
+        subsampled_seq_length = self.model_tester.get_subsampled_output_lengths(
+            seq_length)
         num_sequences_in_output = batch_size * num_return_sequences
         gen_len = (
-            output.sequences.shape[-1] - 1 if config.is_encoder_decoder else output.sequences.shape[-1] - seq_length
+            output.sequences.shape[-1] -
+            1 if config.is_encoder_decoder else output.sequences.shape[-1] - seq_length
         )
 
         # scores
-        self._check_scores(num_sequences_in_output, output.scores, length=gen_len, config=config)
+        self._check_scores(num_sequences_in_output,
+                           output.scores, length=gen_len, config=config)
 
         # Attentions
         # encoder
@@ -635,7 +691,8 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
         if not self.test_torchscript:
             return
 
-        configs_no_init = _config_zero_init(config)  # To be sure we have no Nan
+        configs_no_init = _config_zero_init(
+            config)  # To be sure we have no Nan
         configs_no_init.torchscript = True
         for model_class in self.all_model_classes:
             model = model_class(config=configs_no_init)
@@ -644,13 +701,15 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
             inputs = self._prepare_for_class(inputs_dict, model_class)
 
             try:
-                model.config.use_cache = False  # FSTM still requires this hack -> FSTM should probably be refactored similar to BART afterward
+                # FSTM still requires this hack -> FSTM should probably be refactored similar to BART afterward
+                model.config.use_cache = False
                 input_features = inputs["input_features"]
                 attention_mask = inputs["attention_mask"]
                 decoder_input_ids = inputs["decoder_input_ids"]
                 decoder_attention_mask = inputs["decoder_attention_mask"]
                 traced_model = torch.jit.trace(
-                    model, (input_features, attention_mask, decoder_input_ids, decoder_attention_mask)
+                    model, (input_features, attention_mask,
+                            decoder_input_ids, decoder_attention_mask)
                 )
             except RuntimeError:
                 self.fail("Couldn't trace module.")
@@ -677,7 +736,8 @@ class Speech2TextModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.Tes
             model_state_dict = model.state_dict()
             loaded_model_state_dict = loaded_model.state_dict()
 
-            self.assertEqual(set(model_state_dict.keys()), set(loaded_model_state_dict.keys()))
+            self.assertEqual(set(model_state_dict.keys()),
+                             set(loaded_model_state_dict.keys()))
 
             models_equal = True
             for layer_name, p1 in model_state_dict.items():
@@ -709,28 +769,33 @@ class Speech2TextModelIntegrationTests(unittest.TestCase):
             batch["speech"] = speech
             return batch
 
-        ds = load_dataset("patrickvonplaten/librispeech_asr_dummy", "clean", split="validation")
+        ds = load_dataset(
+            "patrickvonplaten/librispeech_asr_dummy", "clean", split="validation")
         ds = ds.select(range(num_samples)).map(map_to_array)
 
         return ds["speech"][:num_samples]
 
     def test_generation_librispeech(self):
-        model = Speech2TextForConditionalGeneration.from_pretrained("facebook/s2t-small-librispeech-asr")
+        model = Speech2TextForConditionalGeneration.from_pretrained(
+            "facebook/s2t-small-librispeech-asr")
         model.to(torch_device)
         processor = self.default_processor
 
         input_speech = self._load_datasamples(1)
 
-        input_features = processor(input_speech, return_tensors="pt").input_features.to(torch_device)
+        input_features = processor(
+            input_speech, return_tensors="pt").input_features.to(torch_device)
 
         generated_ids = model.generate(input_features)
-        generated_transcript = processor.batch_decode(generated_ids, skip_special_tokens=True)
+        generated_transcript = processor.batch_decode(
+            generated_ids, skip_special_tokens=True)
 
         EXPECTED_TRANSCRIPTIONS = ["a man said to the universe sir i exist"]
         self.assertListEqual(generated_transcript, EXPECTED_TRANSCRIPTIONS)
 
     def test_generation_librispeech_batched(self):
-        model = Speech2TextForConditionalGeneration.from_pretrained("facebook/s2t-small-librispeech-asr")
+        model = Speech2TextForConditionalGeneration.from_pretrained(
+            "facebook/s2t-small-librispeech-asr")
         model.to(torch_device)
         processor = self.default_processor
 
@@ -741,8 +806,10 @@ class Speech2TextModelIntegrationTests(unittest.TestCase):
         input_features = inputs.input_features.to(torch_device)
         attention_mask = inputs.attention_mask.to(torch_device)
 
-        generated_ids = model.generate(input_features, attention_mask=attention_mask)
-        generated_transcripts = processor.batch_decode(generated_ids, skip_special_tokens=True)
+        generated_ids = model.generate(
+            input_features, attention_mask=attention_mask)
+        generated_transcripts = processor.batch_decode(
+            generated_ids, skip_special_tokens=True)
 
         EXPECTED_TRANSCRIPTIONS = [
             "a man said to the universe sir i exist",

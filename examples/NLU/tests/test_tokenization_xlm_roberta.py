@@ -24,7 +24,8 @@ from transformers.testing_utils import require_sentencepiece, require_tokenizers
 from .test_tokenization_common import TokenizerTesterMixin
 
 
-SAMPLE_VOCAB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures/test_sentencepiece.model")
+SAMPLE_VOCAB = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), "fixtures/test_sentencepiece.model")
 
 
 @require_sentencepiece
@@ -152,7 +153,8 @@ class XLMRobertaTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         # xlmr.eval()
         # xlmr.encode(symbols)
 
-        self.assertListEqual(original_tokenizer_encodings, self.big_tokenizer.encode(symbols))
+        self.assertListEqual(original_tokenizer_encodings,
+                             self.big_tokenizer.encode(symbols))
 
     @slow
     def test_tokenization_base_hard_symbols(self):
@@ -228,4 +230,5 @@ class XLMRobertaTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         # xlmr.eval()
         # xlmr.encode(symbols)
 
-        self.assertListEqual(original_tokenizer_encodings, self.big_tokenizer.encode(symbols))
+        self.assertListEqual(original_tokenizer_encodings,
+                             self.big_tokenizer.encode(symbols))

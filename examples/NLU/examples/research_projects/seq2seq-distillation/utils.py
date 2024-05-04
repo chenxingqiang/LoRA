@@ -68,8 +68,10 @@ def build_compute_metrics_fn(task_name: str, tokenizer: PreTrainedTokenizer) -> 
         return np.count_nonzero(tokens != tokenizer.pad_token_id)
 
     def decode_pred(pred: EvalPrediction) -> Tuple[List[str], List[str]]:
-        pred_str = tokenizer.batch_decode(pred.predictions, skip_special_tokens=True)
-        label_str = tokenizer.batch_decode(pred.label_ids, skip_special_tokens=True)
+        pred_str = tokenizer.batch_decode(
+            pred.predictions, skip_special_tokens=True)
+        label_str = tokenizer.batch_decode(
+            pred.label_ids, skip_special_tokens=True)
         pred_str = lmap(str.strip, pred_str)
         label_str = lmap(str.strip, label_str)
         return pred_str, label_str
@@ -137,7 +139,8 @@ class AbstractSeq2SeqDataset(Dataset):
             self.src_lens = self.src_lens[:n_obs]
         self.pad_token_id = self.tokenizer.pad_token_id
         self.dataset_kwargs = dataset_kwargs
-        dataset_kwargs.update({"add_prefix_space": True} if isinstance(self.tokenizer, BartTokenizer) else {})
+        dataset_kwargs.update({"add_prefix_space": True} if isinstance(
+            self.tokenizer, BartTokenizer) else {})
 
     def __len__(self):
         return len(self.src_lens)
@@ -172,9 +175,11 @@ class AbstractSeq2SeqDataset(Dataset):
             max_tokens=max_tokens_per_batch,
             required_batch_size_multiple=64,
         )
-        shuffled_batches = [batch_sampler[i] for i in np.random.permutation(range(len(batch_sampler)))]
+        shuffled_batches = [batch_sampler[i]
+                            for i in np.random.permutation(range(len(batch_sampler)))]
         # move the largest batch to the front to OOM quickly (uses an approximation for padding)
-        approximate_toks_per_batch = [max(self.src_lens[i] for i in batch) * len(batch) for batch in shuffled_batches]
+        approximate_toks_per_batch = [
+            max(self.src_lens[i] for i in batch) * len(batch) for batch in shuffled_batches]
         largest_batch_idx = np.argmax(approximate_toks_per_batch)
         shuffled_batches[0], shuffled_batches[largest_batch_idx] = (
             shuffled_batches[largest_batch_idx],
@@ -193,12 +198,15 @@ class LegacySeq2SeqDataset(AbstractSeq2SeqDataset):
     def __getitem__(self, index) -> Dict[str, torch.Tensor]:
         """Call tokenizer on src and tgt_lines"""
         index = index + 1  # linecache starts at 1
-        source_line = self.prefix + linecache.getline(str(self.src_file), index).rstrip("\n")
+        source_line = self.prefix + \
+            linecache.getline(str(self.src_file), index).rstrip("\n")
         tgt_line = linecache.getline(str(self.tgt_file), index).rstrip("\n")
         assert source_line, f"empty source line for index {index}"
         assert tgt_line, f"empty tgt line for index {index}"
-        source_inputs = self.encode_line(self.tokenizer, source_line, self.max_source_length)
-        target_inputs = self.encode_line(self.tokenizer, tgt_line, self.max_target_length)
+        source_inputs = self.encode_line(
+            self.tokenizer, source_line, self.max_source_length)
+        target_inputs = self.encode_line(
+            self.tokenizer, tgt_line, self.max_target_length)
 
         source_ids = source_inputs["input_ids"].squeeze()
         target_ids = target_inputs["input_ids"].squeeze()
@@ -226,7 +234,8 @@ class LegacySeq2SeqDataset(AbstractSeq2SeqDataset):
         target_ids = torch.stack([x["labels"] for x in batch])
         pad_token_id = self.pad_token_id
         y = trim_batch(target_ids, pad_token_id)
-        source_ids, source_mask = trim_batch(input_ids, pad_token_id, attention_mask=masks)
+        source_ids, source_mask = trim_batch(
+            input_ids, pad_token_id, attention_mask=masks)
         batch = {
             "input_ids": source_ids,
             "attention_mask": source_mask,
@@ -240,7 +249,8 @@ class Seq2SeqDataset(AbstractSeq2SeqDataset):
 
     def __getitem__(self, index) -> Dict[str, str]:
         index = index + 1  # linecache starts at 1
-        source_line = self.prefix + linecache.getline(str(self.src_file), index).rstrip("\n")
+        source_line = self.prefix + \
+            linecache.getline(str(self.src_file), index).rstrip("\n")
         tgt_line = linecache.getline(str(self.tgt_file), index).rstrip("\n")
         assert source_line, f"empty source line for index {index}"
         assert tgt_line, f"empty tgt line for index {index}"
@@ -269,7 +279,8 @@ class Seq2SeqDataCollator:
         ), f"pad_token_id is not defined for ({self.tokenizer.__class__.__name__}), it must be defined."
         self.data_args = data_args
         self.tpu_num_cores = tpu_num_cores
-        self.dataset_kwargs = {"add_prefix_space": True} if isinstance(tokenizer, BartTokenizer) else {}
+        self.dataset_kwargs = {"add_prefix_space": True} if isinstance(
+            tokenizer, BartTokenizer) else {}
         if data_args.src_lang is not None:
             self.dataset_kwargs["src_lang"] = data_args.src_lang
         if data_args.tgt_lang is not None:
@@ -289,7 +300,8 @@ class Seq2SeqDataCollator:
             labels = torch.stack([x["labels"] for x in batch])
 
             labels = trim_batch(labels, self.pad_token_id)
-            input_ids, attention_mask = trim_batch(input_ids, self.pad_token_id, attention_mask=attention_mask)
+            input_ids, attention_mask = trim_batch(
+                input_ids, self.pad_token_id, attention_mask=attention_mask)
 
         if isinstance(self.tokenizer, T5Tokenizer):
             decoder_input_ids = self._shift_right_t5(labels)
@@ -347,13 +359,17 @@ def sortish_sampler_indices(data: List, bs: int, shuffle=True) -> np.array:
 
     idxs = np.random.permutation(len(data))
     sz = bs * 50
-    ck_idx = [idxs[i : i + sz] for i in range(0, len(idxs), sz)]
-    sort_idx = np.concatenate([sorted(s, key=key_fn, reverse=True) for s in ck_idx])
+    ck_idx = [idxs[i: i + sz] for i in range(0, len(idxs), sz)]
+    sort_idx = np.concatenate(
+        [sorted(s, key=key_fn, reverse=True) for s in ck_idx])
     sz = bs
-    ck_idx = [sort_idx[i : i + sz] for i in range(0, len(sort_idx), sz)]
-    max_ck = np.argmax([key_fn(ck[0]) for ck in ck_idx])  # find the chunk with the largest key,
-    ck_idx[0], ck_idx[max_ck] = ck_idx[max_ck], ck_idx[0]  # then make sure it goes first.
-    sort_idx = np.concatenate(np.random.permutation(ck_idx[1:])) if len(ck_idx) > 1 else np.array([], dtype=np.int)
+    ck_idx = [sort_idx[i: i + sz] for i in range(0, len(sort_idx), sz)]
+    # find the chunk with the largest key,
+    max_ck = np.argmax([key_fn(ck[0]) for ck in ck_idx])
+    # then make sure it goes first.
+    ck_idx[0], ck_idx[max_ck] = ck_idx[max_ck], ck_idx[0]
+    sort_idx = np.concatenate(np.random.permutation(ck_idx[1:])) if len(
+        ck_idx) > 1 else np.array([], dtype=np.int)
     sort_idx = np.concatenate((ck_idx[0], sort_idx))
     return sort_idx
 
@@ -364,18 +380,21 @@ class DistributedSortishSampler(Sampler):
     def __init__(self, dataset, batch_size, num_replicas=None, rank=None, add_extra_examples=True, shuffle=True):
         if num_replicas is None:
             if not dist.is_available():
-                raise RuntimeError("Requires distributed package to be available")
+                raise RuntimeError(
+                    "Requires distributed package to be available")
             num_replicas = dist.get_world_size()
         if rank is None:
             if not dist.is_available():
-                raise RuntimeError("Requires distributed package to be available")
+                raise RuntimeError(
+                    "Requires distributed package to be available")
             rank = dist.get_rank()
         self.dataset = dataset
         self.num_replicas = num_replicas
         self.rank = rank
         self.epoch = 0
         if add_extra_examples:
-            self.num_samples = int(math.ceil(len(self.dataset) * 1.0 / self.num_replicas))
+            self.num_samples = int(
+                math.ceil(len(self.dataset) * 1.0 / self.num_replicas))
             self.total_size = self.num_samples * self.num_replicas
         else:
             self.total_size = len(dataset)
@@ -388,8 +407,10 @@ class DistributedSortishSampler(Sampler):
         g = torch.Generator()
         g.manual_seed(self.epoch)
 
-        sortish_data = [self.dataset.src_lens[i] for i in self.available_indices]
-        sortish_indices = sortish_sampler_indices(sortish_data, self.batch_size, shuffle=self.shuffle)
+        sortish_data = [self.dataset.src_lens[i]
+                        for i in self.available_indices]
+        sortish_indices = sortish_sampler_indices(
+            sortish_data, self.batch_size, shuffle=self.shuffle)
         indices = [self.available_indices[i] for i in sortish_indices]
         assert len(indices) == self.num_samples
         return iter(indices)
@@ -401,7 +422,8 @@ class DistributedSortishSampler(Sampler):
         indices += indices[: (self.total_size - len(indices))]
         assert len(indices) == self.total_size
         # subsample
-        available_indices = indices[self.rank : self.total_size : self.num_replicas]
+        available_indices = indices[self.rank:
+                                    self.total_size: self.num_replicas]
         return available_indices
 
     def __len__(self):
@@ -482,7 +504,8 @@ def extract_rouge_mid_statistics(dct):
     new_dict = {}
     for k1, v1 in dct.items():
         mid = v1.mid
-        new_dict[k1] = {stat: round(getattr(mid, stat), 4) for stat in ["precision", "recall", "fmeasure"]}
+        new_dict[k1] = {stat: round(getattr(mid, stat), 4) for stat in [
+            "precision", "recall", "fmeasure"]}
     return new_dict
 
 
@@ -574,7 +597,8 @@ def assert_all_frozen(model):
     model_grads: List[bool] = list(grad_status(model))
     n_require_grad = sum(lmap(int, model_grads))
     npars = len(model_grads)
-    assert not any(model_grads), f"{n_require_grad/npars:.1%} of {npars} weights require grad"
+    assert not any(
+        model_grads), f"{n_require_grad/npars:.1%} of {npars} weights require grad"
 
 
 def assert_not_all_frozen(model):
@@ -589,7 +613,8 @@ def parse_numeric_n_bool_cl_kwargs(unparsed_args: List[str]) -> Dict[str, Union[
     Assumes all values are either numeric or boolean in the form of true/false.
     """
     result = {}
-    assert len(unparsed_args) % 2 == 0, f"got odd number of unparsed args: {unparsed_args}"
+    assert len(
+        unparsed_args) % 2 == 0, f"got odd number of unparsed args: {unparsed_args}"
     num_pairs = len(unparsed_args) // 2
     for pair_num in range(num_pairs):
         i = 2 * pair_num
@@ -602,7 +627,8 @@ def parse_numeric_n_bool_cl_kwargs(unparsed_args: List[str]) -> Dict[str, Union[
             try:
                 value = int(unparsed_args[i + 1])
             except ValueError:
-                value = float(unparsed_args[i + 1])  # this can raise another informative ValueError
+                # this can raise another informative ValueError
+                value = float(unparsed_args[i + 1])
 
         result[unparsed_args[i][2:]] = value
     return result
@@ -618,7 +644,7 @@ def write_txt_file(ordered_tgt, path):
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
-        yield lst[i : i + n]
+        yield lst[i: i + n]
 
 
 def check_output_dir(args, expected_items=0):

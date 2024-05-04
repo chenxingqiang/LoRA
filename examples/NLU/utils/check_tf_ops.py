@@ -75,17 +75,20 @@ def onnx_compliancy(saved_model_path, strict, opset):
             incompatible_ops.append(op)
 
     if strict and len(incompatible_ops) > 0:
-        raise Exception(f"Found the following incompatible ops for the opset {opset}:\n" + incompatible_ops)
+        raise Exception(
+            f"Found the following incompatible ops for the opset {opset}:\n" + incompatible_ops)
     elif len(incompatible_ops) > 0:
         print(f"Found the following incompatible ops for the opset {opset}:")
         print(*incompatible_ops, sep="\n")
     else:
-        print(f"The saved model {saved_model_path} can properly be converted with ONNX.")
+        print(
+            f"The saved model {saved_model_path} can properly be converted with ONNX.")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--saved_model_path", help="Path of the saved model to check (the .pb file).")
+    parser.add_argument("--saved_model_path",
+                        help="Path of the saved model to check (the .pb file).")
     parser.add_argument(
         "--opset", default=12, type=int, help="The ONNX opset against which the model has to be tested."
     )

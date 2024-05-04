@@ -230,10 +230,14 @@ class BenchmarkTest(unittest.TestCase):
             )
             benchmark = PyTorchBenchmark(benchmark_args)
             benchmark.run()
-            self.assertTrue(Path(os.path.join(tmp_dir, "inf_time.csv")).exists())
-            self.assertTrue(Path(os.path.join(tmp_dir, "train_time.csv")).exists())
-            self.assertTrue(Path(os.path.join(tmp_dir, "inf_mem.csv")).exists())
-            self.assertTrue(Path(os.path.join(tmp_dir, "train_mem.csv")).exists())
+            self.assertTrue(
+                Path(os.path.join(tmp_dir, "inf_time.csv")).exists())
+            self.assertTrue(
+                Path(os.path.join(tmp_dir, "train_time.csv")).exists())
+            self.assertTrue(
+                Path(os.path.join(tmp_dir, "inf_mem.csv")).exists())
+            self.assertTrue(
+                Path(os.path.join(tmp_dir, "train_mem.csv")).exists())
             self.assertTrue(Path(os.path.join(tmp_dir, "env.csv")).exists())
 
     def test_trace_memory(self):

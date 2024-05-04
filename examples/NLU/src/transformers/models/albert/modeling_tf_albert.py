@@ -88,24 +88,30 @@ class TFAlbertPreTrainingLoss:
         )
         # make sure only labels that are not equal to -100
         # are taken into account as loss
-        masked_lm_active_loss = tf.not_equal(tf.reshape(tensor=labels["labels"], shape=(-1,)), -100)
+        masked_lm_active_loss = tf.not_equal(tf.reshape(
+            tensor=labels["labels"], shape=(-1,)), -100)
         masked_lm_reduced_logits = tf.boolean_mask(
-            tensor=tf.reshape(tensor=logits[0], shape=(-1, shape_list(logits[0])[2])),
+            tensor=tf.reshape(
+                tensor=logits[0], shape=(-1, shape_list(logits[0])[2])),
             mask=masked_lm_active_loss,
         )
         masked_lm_labels = tf.boolean_mask(
             tensor=tf.reshape(tensor=labels["labels"], shape=(-1,)), mask=masked_lm_active_loss
         )
-        sentence_order_active_loss = tf.not_equal(tf.reshape(tensor=labels["sentence_order_label"], shape=(-1,)), -100)
+        sentence_order_active_loss = tf.not_equal(tf.reshape(
+            tensor=labels["sentence_order_label"], shape=(-1,)), -100)
         sentence_order_reduced_logits = tf.boolean_mask(
             tensor=tf.reshape(tensor=logits[1], shape=(-1, 2)), mask=sentence_order_active_loss
         )
         sentence_order_label = tf.boolean_mask(
             tensor=tf.reshape(tensor=labels["sentence_order_label"], shape=(-1,)), mask=sentence_order_active_loss
         )
-        masked_lm_loss = loss_fn(y_true=masked_lm_labels, y_pred=masked_lm_reduced_logits)
-        sentence_order_loss = loss_fn(y_true=sentence_order_label, y_pred=sentence_order_reduced_logits)
-        masked_lm_loss = tf.reshape(tensor=masked_lm_loss, shape=(-1, shape_list(sentence_order_loss)[0]))
+        masked_lm_loss = loss_fn(
+            y_true=masked_lm_labels, y_pred=masked_lm_reduced_logits)
+        sentence_order_loss = loss_fn(
+            y_true=sentence_order_label, y_pred=sentence_order_reduced_logits)
+        masked_lm_loss = tf.reshape(
+            tensor=masked_lm_loss, shape=(-1, shape_list(sentence_order_loss)[0]))
         masked_lm_loss = tf.reduce_mean(input_tensor=masked_lm_loss, axis=0)
 
         return masked_lm_loss + sentence_order_loss
@@ -123,7 +129,8 @@ class TFAlbertEmbeddings(tf.keras.layers.Layer):
         self.max_position_embeddings = config.max_position_embeddings
         self.initializer_range = config.initializer_range
         self.embeddings_sum = tf.keras.layers.Add()
-        self.LayerNorm = tf.keras.layers.LayerNormalization(epsilon=config.layer_norm_eps, name="LayerNorm")
+        self.LayerNorm = tf.keras.layers.LayerNormalization(
+            epsilon=config.layer_norm_eps, name="LayerNorm")
         self.dropout = tf.keras.layers.Dropout(rate=config.hidden_dropout_prob)
 
     def build(self, input_shape: tf.TensorShape):
@@ -176,14 +183,20 @@ class TFAlbertEmbeddings(tf.keras.layers.Layer):
             token_type_ids = tf.fill(dims=input_shape, value=0)
 
         if position_ids is None:
-            position_ids = tf.expand_dims(tf.range(start=0, limit=input_shape[-1]), axis=0)
+            position_ids = tf.expand_dims(
+                tf.range(start=0, limit=input_shape[-1]), axis=0)
 
-        position_embeds = tf.gather(params=self.position_embeddings, indices=position_ids)
-        position_embeds = tf.tile(input=position_embeds, multiples=(input_shape[0], 1, 1))
-        token_type_embeds = tf.gather(params=self.token_type_embeddings, indices=token_type_ids)
-        final_embeddings = self.embeddings_sum(inputs=[inputs_embeds, position_embeds, token_type_embeds])
+        position_embeds = tf.gather(
+            params=self.position_embeddings, indices=position_ids)
+        position_embeds = tf.tile(
+            input=position_embeds, multiples=(input_shape[0], 1, 1))
+        token_type_embeds = tf.gather(
+            params=self.token_type_embeddings, indices=token_type_ids)
+        final_embeddings = self.embeddings_sum(
+            inputs=[inputs_embeds, position_embeds, token_type_embeds])
         final_embeddings = self.LayerNorm(inputs=final_embeddings)
-        final_embeddings = self.dropout(inputs=final_embeddings, training=training)
+        final_embeddings = self.dropout(
+            inputs=final_embeddings, training=training)
 
         return final_embeddings
 
@@ -201,7 +214,8 @@ class TFAlbertAttention(tf.keras.layers.Layer):
             )
 
         self.num_attention_heads = config.num_attention_heads
-        self.attention_head_size = int(config.hidden_size / config.num_attention_heads)
+        self.attention_head_size = int(
+            config.hidden_size / config.num_attention_heads)
         self.all_head_size = self.num_attention_heads * self.attention_head_size
         self.sqrt_att_head_size = math.sqrt(self.attention_head_size)
         self.output_attentions = config.output_attentions
@@ -218,14 +232,18 @@ class TFAlbertAttention(tf.keras.layers.Layer):
         self.dense = tf.keras.layers.Dense(
             units=config.hidden_size, kernel_initializer=get_initializer(config.initializer_range), name="dense"
         )
-        self.LayerNorm = tf.keras.layers.LayerNormalization(epsilon=config.layer_norm_eps, name="LayerNorm")
+        self.LayerNorm = tf.keras.layers.LayerNormalization(
+            epsilon=config.layer_norm_eps, name="LayerNorm")
         # Two different dropout probabilities; see https://github.com/google-research/albert/blob/master/modeling.py#L971-L993
-        self.attention_dropout = tf.keras.layers.Dropout(rate=config.attention_probs_dropout_prob)
-        self.output_dropout = tf.keras.layers.Dropout(rate=config.hidden_dropout_prob)
+        self.attention_dropout = tf.keras.layers.Dropout(
+            rate=config.attention_probs_dropout_prob)
+        self.output_dropout = tf.keras.layers.Dropout(
+            rate=config.hidden_dropout_prob)
 
     def transpose_for_scores(self, tensor: tf.Tensor, batch_size: int) -> tf.Tensor:
         # Reshape from [batch_size, seq_length, all_head_size] to [batch_size, seq_length, num_attention_heads, attention_head_size]
-        tensor = tf.reshape(tensor=tensor, shape=(batch_size, -1, self.num_attention_heads, self.attention_head_size))
+        tensor = tf.reshape(tensor=tensor, shape=(
+            batch_size, -1, self.num_attention_heads, self.attention_head_size))
 
         # Transpose the tensor from [batch_size, seq_length, num_attention_heads, attention_head_size] to [batch_size, num_attention_heads, seq_length, attention_head_size]
         return tf.transpose(tensor, perm=[0, 2, 1, 3])
@@ -261,7 +279,8 @@ class TFAlbertAttention(tf.keras.layers.Layer):
 
         # This is actually dropping out entire tokens to attend to, which might
         # seem a bit unusual, but is taken from the original Transformer paper.
-        attention_probs = self.attention_dropout(inputs=attention_probs, training=training)
+        attention_probs = self.attention_dropout(
+            inputs=attention_probs, training=training)
 
         # Mask heads if we want to
         if head_mask is not None:
@@ -271,11 +290,14 @@ class TFAlbertAttention(tf.keras.layers.Layer):
         context_layer = tf.transpose(context_layer, perm=[0, 2, 1, 3])
 
         # (batch_size, seq_len_q, all_head_size)
-        context_layer = tf.reshape(tensor=context_layer, shape=(batch_size, -1, self.all_head_size))
-        self_outputs = (context_layer, attention_probs) if output_attentions else (context_layer,)
+        context_layer = tf.reshape(tensor=context_layer, shape=(
+            batch_size, -1, self.all_head_size))
+        self_outputs = (context_layer, attention_probs) if output_attentions else (
+            context_layer,)
         hidden_states = self_outputs[0]
         hidden_states = self.dense(inputs=hidden_states)
-        hidden_states = self.output_dropout(inputs=hidden_states, training=training)
+        hidden_states = self.output_dropout(
+            inputs=hidden_states, training=training)
         attention_output = self.LayerNorm(inputs=hidden_states + input_tensor)
 
         # add attentions if we output them
@@ -325,7 +347,8 @@ class TFAlbertLayer(tf.keras.layers.Layer):
         ffn_output = self.activation(ffn_output)
         ffn_output = self.ffn_output(inputs=ffn_output)
         ffn_output = self.dropout(inputs=ffn_output, training=training)
-        hidden_states = self.full_layer_layer_norm(inputs=ffn_output + attention_outputs[0])
+        hidden_states = self.full_layer_layer_norm(
+            inputs=ffn_output + attention_outputs[0])
 
         # add attentions if we output them
         outputs = (hidden_states,) + attention_outputs[1:]
@@ -383,14 +406,16 @@ class TFAlbertTransformer(tf.keras.layers.Layer):
         self.num_hidden_layers = config.num_hidden_layers
         self.num_hidden_groups = config.num_hidden_groups
         # Number of layers in a hidden group
-        self.layers_per_group = int(config.num_hidden_layers / config.num_hidden_groups)
+        self.layers_per_group = int(
+            config.num_hidden_layers / config.num_hidden_groups)
         self.embedding_hidden_mapping_in = tf.keras.layers.Dense(
             units=config.hidden_size,
             kernel_initializer=get_initializer(config.initializer_range),
             name="embedding_hidden_mapping_in",
         )
         self.albert_layer_groups = [
-            TFAlbertLayerGroup(config, name="albert_layer_groups_._{}".format(i))
+            TFAlbertLayerGroup(
+                config, name="albert_layer_groups_._{}".format(i))
             for i in range(config.num_hidden_groups)
         ]
 
@@ -410,11 +435,13 @@ class TFAlbertTransformer(tf.keras.layers.Layer):
 
         for i in range(self.num_hidden_layers):
             # Index of the hidden group
-            group_idx = int(i / (self.num_hidden_layers / self.num_hidden_groups))
+            group_idx = int(
+                i / (self.num_hidden_layers / self.num_hidden_groups))
             layer_group_output = self.albert_layer_groups[group_idx](
                 hidden_states=hidden_states,
                 attention_mask=attention_mask,
-                head_mask=head_mask[group_idx * self.layers_per_group : (group_idx + 1) * self.layers_per_group],
+                head_mask=head_mask[group_idx * self.layers_per_group: (
+                    group_idx + 1) * self.layers_per_group],
                 output_attentions=output_attentions,
                 output_hidden_states=output_hidden_states,
                 training=training,
@@ -459,14 +486,16 @@ class TFAlbertMLMHead(tf.keras.layers.Layer):
         else:
             self.activation = config.hidden_act
 
-        self.LayerNorm = tf.keras.layers.LayerNormalization(epsilon=config.layer_norm_eps, name="LayerNorm")
+        self.LayerNorm = tf.keras.layers.LayerNormalization(
+            epsilon=config.layer_norm_eps, name="LayerNorm")
 
         # The output weights are the same as the input embeddings, but there is
         # an output-only bias for each token.
         self.decoder = input_embeddings
 
     def build(self, input_shape: tf.TensorShape):
-        self.bias = self.add_weight(shape=(self.vocab_size,), initializer="zeros", trainable=True, name="bias")
+        self.bias = self.add_weight(
+            shape=(self.vocab_size,), initializer="zeros", trainable=True, name="bias")
         self.decoder_bias = self.add_weight(
             shape=(self.vocab_size,), initializer="zeros", trainable=True, name="decoder/bias"
         )
@@ -493,10 +522,14 @@ class TFAlbertMLMHead(tf.keras.layers.Layer):
         hidden_states = self.activation(hidden_states)
         hidden_states = self.LayerNorm(inputs=hidden_states)
         seq_length = shape_list(tensor=hidden_states)[1]
-        hidden_states = tf.reshape(tensor=hidden_states, shape=[-1, self.embedding_size])
-        hidden_states = tf.matmul(a=hidden_states, b=self.decoder.weight, transpose_b=True)
-        hidden_states = tf.reshape(tensor=hidden_states, shape=[-1, seq_length, self.vocab_size])
-        hidden_states = tf.nn.bias_add(value=hidden_states, bias=self.decoder_bias)
+        hidden_states = tf.reshape(
+            tensor=hidden_states, shape=[-1, self.embedding_size])
+        hidden_states = tf.matmul(
+            a=hidden_states, b=self.decoder.weight, transpose_b=True)
+        hidden_states = tf.reshape(
+            tensor=hidden_states, shape=[-1, seq_length, self.vocab_size])
+        hidden_states = tf.nn.bias_add(
+            value=hidden_states, bias=self.decoder_bias)
 
         return hidden_states
 
@@ -568,13 +601,15 @@ class TFAlbertMainLayer(tf.keras.layers.Layer):
         )
 
         if inputs["input_ids"] is not None and inputs["inputs_embeds"] is not None:
-            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both input_ids and inputs_embeds at the same time")
         elif inputs["input_ids"] is not None:
             input_shape = shape_list(inputs["input_ids"])
         elif inputs["inputs_embeds"] is not None:
             input_shape = shape_list(inputs["inputs_embeds"])[:-1]
         else:
-            raise ValueError("You have to specify either input_ids or inputs_embeds")
+            raise ValueError(
+                "You have to specify either input_ids or inputs_embeds")
 
         if inputs["attention_mask"] is None:
             inputs["attention_mask"] = tf.fill(dims=input_shape, value=1)
@@ -595,17 +630,20 @@ class TFAlbertMainLayer(tf.keras.layers.Layer):
         # So we can broadcast to [batch_size, num_heads, from_seq_length, to_seq_length]
         # this attention mask is more simple than the triangular masking of causal attention
         # used in OpenAI GPT, we just need to prepare the broadcast dimension here.
-        extended_attention_mask = tf.reshape(inputs["attention_mask"], (input_shape[0], 1, 1, input_shape[1]))
+        extended_attention_mask = tf.reshape(
+            inputs["attention_mask"], (input_shape[0], 1, 1, input_shape[1]))
 
         # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
         # masked positions, this operation will create a tensor which is 0.0 for
         # positions we want to attend and -10000.0 for masked positions.
         # Since we are adding it to the raw scores before the softmax, this is
         # effectively the same as removing these entirely.
-        extended_attention_mask = tf.cast(extended_attention_mask, dtype=embedding_output.dtype)
+        extended_attention_mask = tf.cast(
+            extended_attention_mask, dtype=embedding_output.dtype)
         one_cst = tf.constant(1.0, dtype=embedding_output.dtype)
         ten_thousand_cst = tf.constant(-10000.0, dtype=embedding_output.dtype)
-        extended_attention_mask = tf.multiply(tf.subtract(one_cst, extended_attention_mask), ten_thousand_cst)
+        extended_attention_mask = tf.multiply(tf.subtract(
+            one_cst, extended_attention_mask), ten_thousand_cst)
 
         # Prepare head mask if needed
         # 1.0 in head_mask indicate we keep the head
@@ -628,7 +666,8 @@ class TFAlbertMainLayer(tf.keras.layers.Layer):
         )
 
         sequence_output = encoder_outputs[0]
-        pooled_output = self.pooler(inputs=sequence_output[:, 0]) if self.pooler is not None else None
+        pooled_output = self.pooler(
+            inputs=sequence_output[:, 0]) if self.pooler is not None else None
 
         if not inputs["return_dict"]:
             return (
@@ -831,8 +870,10 @@ class TFAlbertModel(TFAlbertPreTrainedModel):
 
     # Copied from transformers.models.bert.modeling_tf_bert.TFBertModel.serving_output
     def serving_output(self, output: TFBaseModelOutputWithPooling) -> TFBaseModelOutputWithPooling:
-        hs = tf.convert_to_tensor(output.hidden_states) if self.config.output_hidden_states else None
-        attns = tf.convert_to_tensor(output.attentions) if self.config.output_attentions else None
+        hs = tf.convert_to_tensor(
+            output.hidden_states) if self.config.output_hidden_states else None
+        attns = tf.convert_to_tensor(
+            output.attentions) if self.config.output_attentions else None
 
         return TFBaseModelOutputWithPooling(
             last_hidden_state=output.last_hidden_state,
@@ -859,7 +900,8 @@ class TFAlbertForPreTraining(TFAlbertPreTrainedModel, TFAlbertPreTrainingLoss):
         self.num_labels = config.num_labels
 
         self.albert = TFAlbertMainLayer(config, name="albert")
-        self.predictions = TFAlbertMLMHead(config, input_embeddings=self.albert.embeddings, name="predictions")
+        self.predictions = TFAlbertMLMHead(
+            config, input_embeddings=self.albert.embeddings, name="predictions")
         self.sop_classifier = TFAlbertSOPHead(config, name="sop_classifier")
 
     def get_lm_head(self) -> tf.keras.layers.Layer:
@@ -932,13 +974,15 @@ class TFAlbertForPreTraining(TFAlbertPreTrainedModel, TFAlbertPreTrainingLoss):
         )
         sequence_output, pooled_output = outputs[:2]
         prediction_scores = self.predictions(hidden_states=sequence_output)
-        sop_scores = self.sop_classifier(pooled_output=pooled_output, training=inputs["training"])
+        sop_scores = self.sop_classifier(
+            pooled_output=pooled_output, training=inputs["training"])
         total_loss = None
 
         if inputs["labels"] is not None and inputs["sentence_order_label"] is not None:
             d_labels = {"labels": inputs["labels"]}
             d_labels["sentence_order_label"] = inputs["sentence_order_label"]
-            total_loss = self.compute_loss(labels=d_labels, logits=(prediction_scores, sop_scores))
+            total_loss = self.compute_loss(
+                labels=d_labels, logits=(prediction_scores, sop_scores))
 
         if not inputs["return_dict"]:
             output = (prediction_scores, sop_scores) + outputs[2:]
@@ -953,8 +997,10 @@ class TFAlbertForPreTraining(TFAlbertPreTrainedModel, TFAlbertPreTrainingLoss):
         )
 
     def serving_output(self, output: TFAlbertForPreTrainingOutput) -> TFAlbertForPreTrainingOutput:
-        hs = tf.convert_to_tensor(output.hidden_states) if self.config.output_hidden_states else None
-        attns = tf.convert_to_tensor(output.attentions) if self.config.output_attentions else None
+        hs = tf.convert_to_tensor(
+            output.hidden_states) if self.config.output_hidden_states else None
+        attns = tf.convert_to_tensor(
+            output.attentions) if self.config.output_attentions else None
 
         return TFAlbertForPreTrainingOutput(
             prediction_logits=output.prediction_logits,
@@ -968,7 +1014,8 @@ class TFAlbertSOPHead(tf.keras.layers.Layer):
     def __init__(self, config: AlbertConfig, **kwargs):
         super().__init__(**kwargs)
 
-        self.dropout = tf.keras.layers.Dropout(rate=config.classifier_dropout_prob)
+        self.dropout = tf.keras.layers.Dropout(
+            rate=config.classifier_dropout_prob)
         self.classifier = tf.keras.layers.Dense(
             units=config.num_labels,
             kernel_initializer=get_initializer(config.initializer_range),
@@ -976,7 +1023,8 @@ class TFAlbertSOPHead(tf.keras.layers.Layer):
         )
 
     def call(self, pooled_output: tf.Tensor, training: bool) -> tf.Tensor:
-        dropout_pooled_output = self.dropout(inputs=pooled_output, training=training)
+        dropout_pooled_output = self.dropout(
+            inputs=pooled_output, training=training)
         logits = self.classifier(inputs=dropout_pooled_output)
 
         return logits
@@ -985,13 +1033,16 @@ class TFAlbertSOPHead(tf.keras.layers.Layer):
 @add_start_docstrings("""Albert Model with a `language modeling` head on top. """, ALBERT_START_DOCSTRING)
 class TFAlbertForMaskedLM(TFAlbertPreTrainedModel, TFMaskedLanguageModelingLoss):
     # names with a '.' represents the authorized unexpected/missing layers when a TF model is loaded from a PT model
-    _keys_to_ignore_on_load_unexpected = [r"pooler", r"predictions.decoder.weight"]
+    _keys_to_ignore_on_load_unexpected = [
+        r"pooler", r"predictions.decoder.weight"]
 
     def __init__(self, config: AlbertConfig, *inputs, **kwargs):
         super().__init__(config, *inputs, **kwargs)
 
-        self.albert = TFAlbertMainLayer(config, add_pooling_layer=False, name="albert")
-        self.predictions = TFAlbertMLMHead(config, input_embeddings=self.albert.embeddings, name="predictions")
+        self.albert = TFAlbertMainLayer(
+            config, add_pooling_layer=False, name="albert")
+        self.predictions = TFAlbertMLMHead(
+            config, input_embeddings=self.albert.embeddings, name="predictions")
 
     def get_lm_head(self) -> tf.keras.layers.Layer:
         return self.predictions
@@ -1053,9 +1104,11 @@ class TFAlbertForMaskedLM(TFAlbertPreTrainedModel, TFMaskedLanguageModelingLoss)
             training=inputs["training"],
         )
         sequence_output = outputs[0]
-        prediction_scores = self.predictions(hidden_states=sequence_output, training=inputs["training"])
+        prediction_scores = self.predictions(
+            hidden_states=sequence_output, training=inputs["training"])
         loss = (
-            None if inputs["labels"] is None else self.compute_loss(labels=inputs["labels"], logits=prediction_scores)
+            None if inputs["labels"] is None else self.compute_loss(
+                labels=inputs["labels"], logits=prediction_scores)
         )
 
         if not inputs["return_dict"]:
@@ -1072,8 +1125,10 @@ class TFAlbertForMaskedLM(TFAlbertPreTrainedModel, TFMaskedLanguageModelingLoss)
 
     # Copied from transformers.models.bert.modeling_tf_bert.TFBertForMaskedLM.serving_output
     def serving_output(self, output: TFMaskedLMOutput) -> TFMaskedLMOutput:
-        hs = tf.convert_to_tensor(output.hidden_states) if self.config.output_hidden_states else None
-        attns = tf.convert_to_tensor(output.attentions) if self.config.output_attentions else None
+        hs = tf.convert_to_tensor(
+            output.hidden_states) if self.config.output_hidden_states else None
+        attns = tf.convert_to_tensor(
+            output.attentions) if self.config.output_attentions else None
 
         return TFMaskedLMOutput(logits=output.logits, hidden_states=hs, attentions=attns)
 
@@ -1096,7 +1151,8 @@ class TFAlbertForSequenceClassification(TFAlbertPreTrainedModel, TFSequenceClass
         self.num_labels = config.num_labels
 
         self.albert = TFAlbertMainLayer(config, name="albert")
-        self.dropout = tf.keras.layers.Dropout(rate=config.classifier_dropout_prob)
+        self.dropout = tf.keras.layers.Dropout(
+            rate=config.classifier_dropout_prob)
         self.classifier = tf.keras.layers.Dense(
             units=config.num_labels, kernel_initializer=get_initializer(config.initializer_range), name="classifier"
         )
@@ -1158,9 +1214,11 @@ class TFAlbertForSequenceClassification(TFAlbertPreTrainedModel, TFSequenceClass
             training=inputs["training"],
         )
         pooled_output = outputs[1]
-        pooled_output = self.dropout(inputs=pooled_output, training=inputs["training"])
+        pooled_output = self.dropout(
+            inputs=pooled_output, training=inputs["training"])
         logits = self.classifier(inputs=pooled_output)
-        loss = None if inputs["labels"] is None else self.compute_loss(labels=inputs["labels"], logits=logits)
+        loss = None if inputs["labels"] is None else self.compute_loss(
+            labels=inputs["labels"], logits=logits)
 
         if not inputs["return_dict"]:
             output = (logits,) + outputs[2:]
@@ -1176,8 +1234,10 @@ class TFAlbertForSequenceClassification(TFAlbertPreTrainedModel, TFSequenceClass
 
     # Copied from transformers.models.bert.modeling_tf_bert.TFBertForSequenceClassification.serving_output
     def serving_output(self, output: TFSequenceClassifierOutput) -> TFSequenceClassifierOutput:
-        hs = tf.convert_to_tensor(output.hidden_states) if self.config.output_hidden_states else None
-        attns = tf.convert_to_tensor(output.attentions) if self.config.output_attentions else None
+        hs = tf.convert_to_tensor(
+            output.hidden_states) if self.config.output_hidden_states else None
+        attns = tf.convert_to_tensor(
+            output.attentions) if self.config.output_attentions else None
 
         return TFSequenceClassifierOutput(logits=output.logits, hidden_states=hs, attentions=attns)
 
@@ -1199,7 +1259,8 @@ class TFAlbertForTokenClassification(TFAlbertPreTrainedModel, TFTokenClassificat
 
         self.num_labels = config.num_labels
 
-        self.albert = TFAlbertMainLayer(config, add_pooling_layer=False, name="albert")
+        self.albert = TFAlbertMainLayer(
+            config, add_pooling_layer=False, name="albert")
         self.dropout = tf.keras.layers.Dropout(rate=config.hidden_dropout_prob)
         self.classifier = tf.keras.layers.Dense(
             units=config.num_labels, kernel_initializer=get_initializer(config.initializer_range), name="classifier"
@@ -1261,9 +1322,11 @@ class TFAlbertForTokenClassification(TFAlbertPreTrainedModel, TFTokenClassificat
             training=inputs["training"],
         )
         sequence_output = outputs[0]
-        sequence_output = self.dropout(inputs=sequence_output, training=inputs["training"])
+        sequence_output = self.dropout(
+            inputs=sequence_output, training=inputs["training"])
         logits = self.classifier(inputs=sequence_output)
-        loss = None if inputs["labels"] is None else self.compute_loss(labels=inputs["labels"], logits=logits)
+        loss = None if inputs["labels"] is None else self.compute_loss(
+            labels=inputs["labels"], logits=logits)
 
         if not inputs["return_dict"]:
             output = (logits,) + outputs[2:]
@@ -1279,8 +1342,10 @@ class TFAlbertForTokenClassification(TFAlbertPreTrainedModel, TFTokenClassificat
 
     # Copied from transformers.models.bert.modeling_tf_bert.TFBertForTokenClassification.serving_output
     def serving_output(self, output: TFTokenClassifierOutput) -> TFTokenClassifierOutput:
-        hs = tf.convert_to_tensor(output.hidden_states) if self.config.output_hidden_states else None
-        attns = tf.convert_to_tensor(output.attentions) if self.config.output_attentions else None
+        hs = tf.convert_to_tensor(
+            output.hidden_states) if self.config.output_hidden_states else None
+        attns = tf.convert_to_tensor(
+            output.attentions) if self.config.output_attentions else None
 
         return TFTokenClassifierOutput(logits=output.logits, hidden_states=hs, attentions=attns)
 
@@ -1301,7 +1366,8 @@ class TFAlbertForQuestionAnswering(TFAlbertPreTrainedModel, TFQuestionAnsweringL
 
         self.num_labels = config.num_labels
 
-        self.albert = TFAlbertMainLayer(config, add_pooling_layer=False, name="albert")
+        self.albert = TFAlbertMainLayer(
+            config, add_pooling_layer=False, name="albert")
         self.qa_outputs = tf.keras.layers.Dense(
             units=config.num_labels, kernel_initializer=get_initializer(config.initializer_range), name="qa_outputs"
         )
@@ -1370,7 +1436,8 @@ class TFAlbertForQuestionAnswering(TFAlbertPreTrainedModel, TFQuestionAnsweringL
         )
         sequence_output = outputs[0]
         logits = self.qa_outputs(inputs=sequence_output)
-        start_logits, end_logits = tf.split(value=logits, num_or_size_splits=2, axis=-1)
+        start_logits, end_logits = tf.split(
+            value=logits, num_or_size_splits=2, axis=-1)
         start_logits = tf.squeeze(input=start_logits, axis=-1)
         end_logits = tf.squeeze(input=end_logits, axis=-1)
         loss = None
@@ -1378,7 +1445,8 @@ class TFAlbertForQuestionAnswering(TFAlbertPreTrainedModel, TFQuestionAnsweringL
         if inputs["start_positions"] is not None and inputs["end_positions"] is not None:
             labels = {"start_position": inputs["start_positions"]}
             labels["end_position"] = inputs["end_positions"]
-            loss = self.compute_loss(labels=labels, logits=(start_logits, end_logits))
+            loss = self.compute_loss(
+                labels=labels, logits=(start_logits, end_logits))
 
         if not inputs["return_dict"]:
             output = (start_logits, end_logits) + outputs[2:]
@@ -1395,8 +1463,10 @@ class TFAlbertForQuestionAnswering(TFAlbertPreTrainedModel, TFQuestionAnsweringL
 
     # Copied from transformers.models.bert.modeling_tf_bert.TFBertForQuestionAnswering.serving_output
     def serving_output(self, output: TFQuestionAnsweringModelOutput) -> TFQuestionAnsweringModelOutput:
-        hs = tf.convert_to_tensor(output.hidden_states) if self.config.output_hidden_states else None
-        attns = tf.convert_to_tensor(output.attentions) if self.config.output_attentions else None
+        hs = tf.convert_to_tensor(
+            output.hidden_states) if self.config.output_hidden_states else None
+        attns = tf.convert_to_tensor(
+            output.attentions) if self.config.output_attentions else None
 
         return TFQuestionAnsweringModelOutput(
             start_logits=output.start_logits, end_logits=output.end_logits, hidden_states=hs, attentions=attns
@@ -1486,7 +1556,8 @@ class TFAlbertForMultipleChoice(TFAlbertPreTrainedModel, TFMultipleChoiceLoss):
             num_choices = shape_list(inputs["inputs_embeds"])[1]
             seq_length = shape_list(inputs["inputs_embeds"])[2]
 
-        flat_input_ids = tf.reshape(inputs["input_ids"], (-1, seq_length)) if inputs["input_ids"] is not None else None
+        flat_input_ids = tf.reshape(
+            inputs["input_ids"], (-1, seq_length)) if inputs["input_ids"] is not None else None
         flat_attention_mask = (
             tf.reshape(tensor=inputs["attention_mask"], shape=(-1, seq_length))
             if inputs["attention_mask"] is not None
@@ -1498,10 +1569,12 @@ class TFAlbertForMultipleChoice(TFAlbertPreTrainedModel, TFMultipleChoiceLoss):
             else None
         )
         flat_position_ids = (
-            tf.reshape(tensor=position_ids, shape=(-1, seq_length)) if position_ids is not None else None
+            tf.reshape(tensor=position_ids, shape=(-1, seq_length)
+                       ) if position_ids is not None else None
         )
         flat_inputs_embeds = (
-            tf.reshape(tensor=inputs["inputs_embeds"], shape=(-1, seq_length, shape_list(inputs["inputs_embeds"])[3]))
+            tf.reshape(tensor=inputs["inputs_embeds"], shape=(-1,
+                       seq_length, shape_list(inputs["inputs_embeds"])[3]))
             if inputs["inputs_embeds"] is not None
             else None
         )
@@ -1518,10 +1591,12 @@ class TFAlbertForMultipleChoice(TFAlbertPreTrainedModel, TFMultipleChoiceLoss):
             training=inputs["training"],
         )
         pooled_output = outputs[1]
-        pooled_output = self.dropout(inputs=pooled_output, training=inputs["training"])
+        pooled_output = self.dropout(
+            inputs=pooled_output, training=inputs["training"])
         logits = self.classifier(inputs=pooled_output)
         reshaped_logits = tf.reshape(tensor=logits, shape=(-1, num_choices))
-        loss = None if inputs["labels"] is None else self.compute_loss(labels=inputs["labels"], logits=reshaped_logits)
+        loss = None if inputs["labels"] is None else self.compute_loss(
+            labels=inputs["labels"], logits=reshaped_logits)
 
         if not inputs["return_dict"]:
             output = (reshaped_logits,) + outputs[2:]
@@ -1551,7 +1626,9 @@ class TFAlbertForMultipleChoice(TFAlbertPreTrainedModel, TFMultipleChoiceLoss):
 
     # Copied from transformers.models.bert.modeling_tf_bert.TFBertForMultipleChoice.serving_output
     def serving_output(self, output: TFMultipleChoiceModelOutput) -> TFMultipleChoiceModelOutput:
-        hs = tf.convert_to_tensor(output.hidden_states) if self.config.output_hidden_states else None
-        attns = tf.convert_to_tensor(output.attentions) if self.config.output_attentions else None
+        hs = tf.convert_to_tensor(
+            output.hidden_states) if self.config.output_hidden_states else None
+        attns = tf.convert_to_tensor(
+            output.attentions) if self.config.output_attentions else None
 
         return TFMultipleChoiceModelOutput(logits=output.logits, hidden_states=hs, attentions=attns)

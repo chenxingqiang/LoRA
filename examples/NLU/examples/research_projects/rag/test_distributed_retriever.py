@@ -45,7 +45,8 @@ def require_distributed_retrieval(test_case):
 
     """
     if not (is_datasets_available() and is_faiss_available() and is_psutil_available()):
-        test_case = unittest.skip("test requires Datasets, Faiss, psutil")(test_case)
+        test_case = unittest.skip(
+            "test requires Datasets, Faiss, psutil")(test_case)
     return test_case
 
 
@@ -75,7 +76,8 @@ class RagRetrieverTest(TestCase):
         ]
         dpr_tokenizer_path = os.path.join(self.tmpdirname, "dpr_tokenizer")
         os.makedirs(dpr_tokenizer_path, exist_ok=True)
-        self.vocab_file = os.path.join(dpr_tokenizer_path, DPR_VOCAB_FILES_NAMES["vocab_file"])
+        self.vocab_file = os.path.join(
+            dpr_tokenizer_path, DPR_VOCAB_FILES_NAMES["vocab_file"])
         with open(self.vocab_file, "w", encoding="utf-8") as vocab_writer:
             vocab_writer.write("".join([x + "\n" for x in vocab_tokens]))
 
@@ -103,13 +105,16 @@ class RagRetrieverTest(TestCase):
             "<unk>",
         ]
         vocab_tokens = dict(zip(vocab, range(len(vocab))))
-        merges = ["#version: 0.2", "\u0120 l", "\u0120l o", "\u0120lo w", "e r", ""]
+        merges = ["#version: 0.2", "\u0120 l",
+                  "\u0120l o", "\u0120lo w", "e r", ""]
         self.special_tokens_map = {"unk_token": "<unk>"}
 
         bart_tokenizer_path = os.path.join(self.tmpdirname, "bart_tokenizer")
         os.makedirs(bart_tokenizer_path, exist_ok=True)
-        self.vocab_file = os.path.join(bart_tokenizer_path, BART_VOCAB_FILES_NAMES["vocab_file"])
-        self.merges_file = os.path.join(bart_tokenizer_path, BART_VOCAB_FILES_NAMES["merges_file"])
+        self.vocab_file = os.path.join(
+            bart_tokenizer_path, BART_VOCAB_FILES_NAMES["vocab_file"])
+        self.merges_file = os.path.join(
+            bart_tokenizer_path, BART_VOCAB_FILES_NAMES["merges_file"])
         with open(self.vocab_file, "w", encoding="utf-8") as fp:
             fp.write(json.dumps(vocab_tokens) + "\n")
         with open(self.merges_file, "w", encoding="utf-8") as fp:
@@ -133,7 +138,8 @@ class RagRetrieverTest(TestCase):
                 "embeddings": [np.ones(self.retrieval_vector_size), 2 * np.ones(self.retrieval_vector_size)],
             }
         )
-        dataset.add_faiss_index("embeddings", string_factory="Flat", metric_type=faiss.METRIC_INNER_PRODUCT)
+        dataset.add_faiss_index(
+            "embeddings", string_factory="Flat", metric_type=faiss.METRIC_INNER_PRODUCT)
         return dataset
 
     def get_dummy_pytorch_distributed_retriever(
@@ -191,7 +197,8 @@ class RagRetrieverTest(TestCase):
         if from_disk:
             config.passages_path = os.path.join(self.tmpdirname, "dataset")
             config.index_path = os.path.join(self.tmpdirname, "index.faiss")
-            dataset.get_index("embeddings").save(os.path.join(self.tmpdirname, "index.faiss"))
+            dataset.get_index("embeddings").save(
+                os.path.join(self.tmpdirname, "index.faiss"))
             dataset.drop_index("embeddings")
             dataset.save_to_disk(os.path.join(self.tmpdirname, "dataset"))
             del dataset
@@ -228,7 +235,8 @@ class RagRetrieverTest(TestCase):
         if from_disk:
             config.passages_path = os.path.join(self.tmpdirname, "dataset")
             config.index_path = os.path.join(self.tmpdirname, "index.faiss")
-            dataset.get_index("embeddings").save(os.path.join(self.tmpdirname, "index.faiss"))
+            dataset.get_index("embeddings").save(
+                os.path.join(self.tmpdirname, "index.faiss"))
             dataset.drop_index("embeddings")
             dataset.save_to_disk(os.path.join(self.tmpdirname, "dataset"))
             del dataset
@@ -256,13 +264,18 @@ class RagRetrieverTest(TestCase):
         return retriever
 
     def distributed_retriever_check(self, retriever: RagRetriever, hidden_states: np.array, n_docs: int) -> None:
-        retrieved_doc_embeds, doc_ids, doc_dicts = retriever.retrieve(hidden_states, n_docs=n_docs)
-        self.assertEqual(retrieved_doc_embeds.shape, (2, n_docs, self.retrieval_vector_size))
+        retrieved_doc_embeds, doc_ids, doc_dicts = retriever.retrieve(
+            hidden_states, n_docs=n_docs)
+        self.assertEqual(retrieved_doc_embeds.shape,
+                         (2, n_docs, self.retrieval_vector_size))
         self.assertEqual(len(doc_dicts), 2)
-        self.assertEqual(sorted(doc_dicts[0]), ["embeddings", "id", "text", "title"])
+        self.assertEqual(sorted(doc_dicts[0]), [
+                         "embeddings", "id", "text", "title"])
         self.assertEqual(len(doc_dicts[0]["id"]), n_docs)
-        self.assertEqual(doc_dicts[0]["id"][0], "1")  # max inner product is reached with second doc
-        self.assertEqual(doc_dicts[1]["id"][0], "0")  # max inner product is reached with first doc
+        # max inner product is reached with second doc
+        self.assertEqual(doc_dicts[0]["id"][0], "1")
+        # max inner product is reached with first doc
+        self.assertEqual(doc_dicts[1]["id"][0], "0")
         self.assertListEqual(doc_ids.tolist(), [[1], [0]])
 
     def test_pytorch_distributed_retriever_retrieve(self):
@@ -272,7 +285,8 @@ class RagRetrieverTest(TestCase):
         )
 
         self.distributed_retriever_check(
-            self.get_dummy_pytorch_distributed_retriever(init_retrieval=True), hidden_states, n_docs
+            self.get_dummy_pytorch_distributed_retriever(
+                init_retrieval=True), hidden_states, n_docs
         )
 
     def test_custom_hf_index_pytorch_retriever_retrieve(self):
@@ -282,7 +296,8 @@ class RagRetrieverTest(TestCase):
         )
 
         self.distributed_retriever_check(
-            self.get_dummy_custom_hf_index_pytorch_retriever(init_retrieval=True, from_disk=False),
+            self.get_dummy_custom_hf_index_pytorch_retriever(
+                init_retrieval=True, from_disk=False),
             hidden_states,
             n_docs,
         )
@@ -294,7 +309,8 @@ class RagRetrieverTest(TestCase):
         )
 
         self.distributed_retriever_check(
-            self.get_dummy_custom_hf_index_pytorch_retriever(init_retrieval=True, from_disk=True),
+            self.get_dummy_custom_hf_index_pytorch_retriever(
+                init_retrieval=True, from_disk=True),
             hidden_states,
             n_docs,
         )
@@ -307,7 +323,8 @@ class RagRetrieverTest(TestCase):
         )
 
         self.distributed_retriever_check(
-            self.get_dummy_ray_distributed_retriever(init_retrieval=True), hidden_states, n_docs
+            self.get_dummy_ray_distributed_retriever(
+                init_retrieval=True), hidden_states, n_docs
         )
         ray.shutdown()
 
@@ -319,7 +336,8 @@ class RagRetrieverTest(TestCase):
         )
         with self.assertRaises(ValueError):
             self.distributed_retriever_check(
-                self.get_dummy_custom_hf_index_ray_retriever(init_retrieval=True, from_disk=False),
+                self.get_dummy_custom_hf_index_ray_retriever(
+                    init_retrieval=True, from_disk=False),
                 hidden_states,
                 n_docs,
             )
@@ -333,6 +351,7 @@ class RagRetrieverTest(TestCase):
         )
 
         self.distributed_retriever_check(
-            self.get_dummy_custom_hf_index_ray_retriever(init_retrieval=True, from_disk=True), hidden_states, n_docs
+            self.get_dummy_custom_hf_index_ray_retriever(
+                init_retrieval=True, from_disk=True), hidden_states, n_docs
         )
         ray.shutdown()

@@ -60,7 +60,8 @@ def make_es_index_snippets(es_client, passages_dset, index_name="english_wiki_ki
 
 def query_es_index(question, es_client, index_name="english_wiki_kilt_snippets_100w", n_results=10, min_length=20):
     q = question.lower()
-    banned = ["how", "why", "what", "where", "which", "do", "does", "is", "?", "eli5", "eli5:"]
+    banned = ["how", "why", "what", "where", "which",
+              "do", "does", "is", "?", "eli5", "eli5:"]
     q = " ".join([w for w in q.split() if w not in banned])
     response = es_client.search(
         index=index_name,
@@ -76,13 +77,16 @@ def query_es_index(question, es_client, index_name="english_wiki_kilt_snippets_1
         },
     )
     hits = response["hits"]["hits"]
-    support_doc = "<P> " + " <P> ".join([hit["_source"]["passage_text"] for hit in hits])
-    res_list = [dict([(k, hit["_source"][k]) for k in hit["_source"] if k != "passage_text"]) for hit in hits]
+    support_doc = "<P> " + \
+        " <P> ".join([hit["_source"]["passage_text"] for hit in hits])
+    res_list = [dict([(k, hit["_source"][k])
+                     for k in hit["_source"] if k != "passage_text"]) for hit in hits]
     for r, hit in zip(res_list, hits):
         r["passage_id"] = hit["_id"]
         r["score"] = hit["_score"]
         r["passage_text"] = hit["_source"]["passage_text"]
-    res_list = [res for res in res_list if len(res["passage_text"].split()) > min_length][:n_results]
+    res_list = [res for res in res_list if len(
+        res["passage_text"].split()) > min_length][:n_results]
     return support_doc, res_list
 
 
@@ -104,7 +108,8 @@ class ELI5DatasetQARetriver(Dataset):
         example = self.data[idx]
         question = example["title"]
         if self.training:
-            answers = [a for i, (a, sc) in enumerate(zip(example["answers"]["text"], example["answers"]["score"]))]
+            answers = [a for i, (a, sc) in enumerate(
+                zip(example["answers"]["text"], example["answers"]["score"]))]
             answer_tab = choice(answers).split(" ")
             start_idx = randint(0, max(0, len(answer_tab) - self.min_length))
             answer_span = " ".join(answer_tab[start_idx:])
@@ -133,7 +138,8 @@ class RetrievalQAEmbedder(torch.nn.Module):
             # prepare implicit variables
             device = input_ids.device
             input_shape = input_ids.size()
-            token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=device)
+            token_type_ids = torch.zeros(
+                input_shape, dtype=torch.long, device=device)
             head_mask = [None] * self.sent_encoder.config.num_hidden_layers
             extended_attention_mask: torch.Tensor = self.sent_encoder.get_extended_attention_mask(
                 attention_mask, input_shape, device
@@ -157,18 +163,23 @@ class RetrievalQAEmbedder(torch.nn.Module):
             # run encoding and pooling on one mini-batch at a time
             pooled_output_list = []
             for b in range(math.ceil(input_ids.shape[0] / checkpoint_batch_size)):
-                b_embedding_output = embedding_output[b * checkpoint_batch_size : (b + 1) * checkpoint_batch_size]
-                b_attention_mask = extended_attention_mask[b * checkpoint_batch_size : (b + 1) * checkpoint_batch_size]
-                pooled_output = checkpoint.checkpoint(partial_encode, b_embedding_output, b_attention_mask)
+                b_embedding_output = embedding_output[b * checkpoint_batch_size: (
+                    b + 1) * checkpoint_batch_size]
+                b_attention_mask = extended_attention_mask[b * checkpoint_batch_size: (
+                    b + 1) * checkpoint_batch_size]
+                pooled_output = checkpoint.checkpoint(
+                    partial_encode, b_embedding_output, b_attention_mask)
                 pooled_output_list.append(pooled_output)
             return torch.cat(pooled_output_list, dim=0)
 
     def embed_questions(self, q_ids, q_mask, checkpoint_batch_size=-1):
-        q_reps = self.embed_sentences_checkpointed(q_ids, q_mask, checkpoint_batch_size)
+        q_reps = self.embed_sentences_checkpointed(
+            q_ids, q_mask, checkpoint_batch_size)
         return self.project_q(q_reps)
 
     def embed_answers(self, a_ids, a_mask, checkpoint_batch_size=-1):
-        a_reps = self.embed_sentences_checkpointed(a_ids, a_mask, checkpoint_batch_size)
+        a_reps = self.embed_sentences_checkpointed(
+            a_ids, a_mask, checkpoint_batch_size)
         return self.project_a(a_reps)
 
     def forward(self, q_ids, q_mask, a_ids, a_mask, checkpoint_batch_size=-1):
@@ -176,8 +187,10 @@ class RetrievalQAEmbedder(torch.nn.Module):
         q_reps = self.embed_questions(q_ids, q_mask, checkpoint_batch_size)
         a_reps = self.embed_answers(a_ids, a_mask, checkpoint_batch_size)
         compare_scores = torch.mm(q_reps, a_reps.t())
-        loss_qa = self.ce_loss(compare_scores, torch.arange(compare_scores.shape[1]).to(device))
-        loss_aq = self.ce_loss(compare_scores.t(), torch.arange(compare_scores.shape[0]).to(device))
+        loss_qa = self.ce_loss(compare_scores, torch.arange(
+            compare_scores.shape[1]).to(device))
+        loss_aq = self.ce_loss(compare_scores.t(), torch.arange(
+            compare_scores.shape[0]).to(device))
         loss = (loss_qa + loss_aq) / 2
         return loss
 
@@ -193,7 +206,8 @@ def make_qa_retriever_model(model_name="google/bert_uncased_L-8_H-512_A-8", from
     sent_dim = bert_model(d_ids, attention_mask=d_mask)[1].shape[-1]
     qa_embedder = RetrievalQAEmbedder(bert_model, sent_dim).to(device)
     if from_file is not None:
-        param_dict = torch.load(from_file)  # has model weights, optimizer, and scheduler states
+        # has model weights, optimizer, and scheduler states
+        param_dict = torch.load(from_file)
         qa_embedder.load_state_dict(param_dict["model"])
     return tokenizer, qa_embedder
 
@@ -201,12 +215,14 @@ def make_qa_retriever_model(model_name="google/bert_uncased_L-8_H-512_A-8", from
 def make_qa_retriever_batch(qa_list, tokenizer, max_len=64, device="cuda:0"):
     q_ls = [q for q, a in qa_list]
     a_ls = [a for q, a in qa_list]
-    q_toks = tokenizer(q_ls, max_length=max_len, padding="max_length", truncation=True)
+    q_toks = tokenizer(q_ls, max_length=max_len,
+                       padding="max_length", truncation=True)
     q_ids, q_mask = (
         torch.LongTensor(q_toks["input_ids"]).to(device),
         torch.LongTensor(q_toks["attention_mask"]).to(device),
     )
-    a_toks = tokenizer(a_ls, max_length=max_len, padding="max_length", truncation=True)
+    a_toks = tokenizer(a_ls, max_length=max_len,
+                       padding="max_length", truncation=True)
     a_ids, a_mask = (
         torch.LongTensor(a_toks["input_ids"]).to(device),
         torch.LongTensor(a_toks["attention_mask"]).to(device),
@@ -221,7 +237,8 @@ def train_qa_retriever_epoch(model, dataset, tokenizer, optimizer, scheduler, ar
     model_collate_fn = functools.partial(
         make_qa_retriever_batch, tokenizer=tokenizer, max_len=args.max_length, device="cuda:0"
     )
-    data_loader = DataLoader(dataset, batch_size=args.batch_size, sampler=train_sampler, collate_fn=model_collate_fn)
+    data_loader = DataLoader(dataset, batch_size=args.batch_size,
+                             sampler=train_sampler, collate_fn=model_collate_fn)
     epoch_iterator = tqdm(data_loader, desc="Iteration", disable=True)
     # accumulate loss since last print
     loc_steps = 0
@@ -229,7 +246,8 @@ def train_qa_retriever_epoch(model, dataset, tokenizer, optimizer, scheduler, ar
     st_time = time()
     for step, batch in enumerate(epoch_iterator):
         q_ids, q_mask, a_ids, a_mask = batch
-        pre_loss = model(q_ids, q_mask, a_ids, a_mask, checkpoint_batch_size=args.checkpoint_batch_size)
+        pre_loss = model(q_ids, q_mask, a_ids, a_mask,
+                         checkpoint_batch_size=args.checkpoint_batch_size)
         loss = pre_loss.sum()
         # optimizer
         loss.backward()
@@ -261,7 +279,8 @@ def train_qa_retriever_joint_epoch(model, dataset_list, tokenizer, optimizer, sc
     # make iterator
     train_samplers = [RandomSampler(dataset) for dataset in dataset_list]
     data_loaders = [
-        DataLoader(dataset, batch_size=args.batch_size, sampler=train_sampler, collate_fn=model_collate_fn)
+        DataLoader(dataset, batch_size=args.batch_size,
+                   sampler=train_sampler, collate_fn=model_collate_fn)
         for dataset, train_sampler in zip(dataset_list, train_samplers)
     ]
     iterators = [iter(dloader) for dloader in data_loaders]
@@ -273,7 +292,8 @@ def train_qa_retriever_joint_epoch(model, dataset_list, tokenizer, optimizer, sc
     for step, (batches,) in enumerate(zip(joint_iter)):
         for batch in batches:
             q_ids, q_mask, a_ids, a_mask = batch
-            loss = model(q_ids, q_mask, a_ids, a_mask, checkpoint_batch_size=args.checkpoint_batch_size)
+            loss = model(q_ids, q_mask, a_ids, a_mask,
+                         checkpoint_batch_size=args.checkpoint_batch_size)
             # optimizer
             loss.backward()
             optimizer.step()
@@ -303,7 +323,8 @@ def evaluate_qa_retriever(model, dataset, tokenizer, args):
     model_collate_fn = functools.partial(
         make_qa_retriever_batch, tokenizer=tokenizer, max_len=args.max_length, device="cuda:0"
     )
-    data_loader = DataLoader(dataset, batch_size=args.batch_size, sampler=eval_sampler, collate_fn=model_collate_fn)
+    data_loader = DataLoader(dataset, batch_size=args.batch_size,
+                             sampler=eval_sampler, collate_fn=model_collate_fn)
     epoch_iterator = tqdm(data_loader, desc="Iteration", disable=True)
     tot_loss = 0.0
     with torch.no_grad():
@@ -315,22 +336,27 @@ def evaluate_qa_retriever(model, dataset, tokenizer, args):
 
 
 def train_qa_retriever(qar_model, qar_tokenizer, qar_train_dset, qar_valid_dset, qar_args):
-    qar_optimizer = AdamW(qar_model.parameters(), lr=qar_args.learning_rate, eps=1e-8)
+    qar_optimizer = AdamW(qar_model.parameters(),
+                          lr=qar_args.learning_rate, eps=1e-8)
     qar_scheduler = get_linear_schedule_with_warmup(
         qar_optimizer,
         num_warmup_steps=100,
-        num_training_steps=(qar_args.num_epochs + 1) * math.ceil(len(qar_train_dset) / qar_args.batch_size),
+        num_training_steps=(qar_args.num_epochs + 1) *
+        math.ceil(len(qar_train_dset) / qar_args.batch_size),
     )
     for e in range(qar_args.num_epochs):
-        train_qa_retriever_epoch(qar_model, qar_train_dset, qar_tokenizer, qar_optimizer, qar_scheduler, qar_args, e)
+        train_qa_retriever_epoch(
+            qar_model, qar_train_dset, qar_tokenizer, qar_optimizer, qar_scheduler, qar_args, e)
         m_save_dict = {
             "model": qar_model.state_dict(),
             "optimizer": qar_optimizer.state_dict(),
             "scheduler": qar_scheduler.state_dict(),
         }
         print("Saving model {}".format(qar_args.model_save_name))
-        torch.save(m_save_dict, "{}_{}.pth".format(qar_args.model_save_name, e))
-        eval_loss = evaluate_qa_retriever(qar_model, qar_valid_dset, qar_tokenizer, qar_args)
+        torch.save(m_save_dict, "{}_{}.pth".format(
+            qar_args.model_save_name, e))
+        eval_loss = evaluate_qa_retriever(
+            qar_model, qar_valid_dset, qar_tokenizer, qar_args)
         print("Evaluation loss epoch {:4d}: {:.3f}".format(e, eval_loss))
 
 
@@ -367,7 +393,8 @@ class ELI5DatasetS2S(Dataset):
         answer = example["answers"]["text"][j]
         q_id = example["q_id"]
         if self.make_doc_function is not None:
-            self.document_cache[q_id] = self.document_cache.get(q_id, self.make_doc_function(example["title"]))
+            self.document_cache[q_id] = self.document_cache.get(
+                q_id, self.make_doc_function(example["title"]))
         document = self.document_cache[q_id]
         in_st = "question: {} context: {}".format(
             question.lower().replace(" --t--", "").strip(),
@@ -384,7 +411,8 @@ def make_qa_s2s_model(model_name="facebook/bart-large", from_file=None, device="
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(device)
     if from_file is not None:
-        param_dict = torch.load(from_file)  # has model weights, optimizer, and scheduler states
+        # has model weights, optimizer, and scheduler states
+        param_dict = torch.load(from_file)
         model.load_state_dict(param_dict["model"])
     return tokenizer, model
 
@@ -392,12 +420,14 @@ def make_qa_s2s_model(model_name="facebook/bart-large", from_file=None, device="
 def make_qa_s2s_batch(qa_list, tokenizer, max_len=64, max_a_len=360, device="cuda:0"):
     q_ls = [q for q, a in qa_list]
     a_ls = [a for q, a in qa_list]
-    q_toks = tokenizer(q_ls, max_length=max_len, padding="max_length", truncation=True)
+    q_toks = tokenizer(q_ls, max_length=max_len,
+                       padding="max_length", truncation=True)
     q_ids, q_mask = (
         torch.LongTensor(q_toks["input_ids"]).to(device),
         torch.LongTensor(q_toks["attention_mask"]).to(device),
     )
-    a_toks = tokenizer(a_ls, max_length=min(max_len, max_a_len), padding="max_length", truncation=True)
+    a_toks = tokenizer(a_ls, max_length=min(max_len, max_a_len),
+                       padding="max_length", truncation=True)
     a_ids, a_mask = (
         torch.LongTensor(a_toks["input_ids"]).to(device),
         torch.LongTensor(a_toks["attention_mask"]).to(device),
@@ -423,7 +453,8 @@ def train_qa_s2s_epoch(model, dataset, tokenizer, optimizer, scheduler, args, e=
     model_collate_fn = functools.partial(
         make_qa_s2s_batch, tokenizer=tokenizer, max_len=args.max_length, device="cuda:0"
     )
-    data_loader = DataLoader(dataset, batch_size=args.batch_size, sampler=train_sampler, collate_fn=model_collate_fn)
+    data_loader = DataLoader(dataset, batch_size=args.batch_size,
+                             sampler=train_sampler, collate_fn=model_collate_fn)
     epoch_iterator = tqdm(data_loader, desc="Iteration", disable=True)
     # accumulate loss since last print
     loc_steps = 0
@@ -462,7 +493,8 @@ def eval_qa_s2s_epoch(model, dataset, tokenizer, args):
     model_collate_fn = functools.partial(
         make_qa_s2s_batch, tokenizer=tokenizer, max_len=args.max_length, device="cuda:0"
     )
-    data_loader = DataLoader(dataset, batch_size=args.batch_size, sampler=train_sampler, collate_fn=model_collate_fn)
+    data_loader = DataLoader(dataset, batch_size=args.batch_size,
+                             sampler=train_sampler, collate_fn=model_collate_fn)
     epoch_iterator = tqdm(data_loader, desc="Iteration", disable=True)
     # accumulate loss since last print
     loc_steps = 0
@@ -492,11 +524,13 @@ def eval_qa_s2s_epoch(model, dataset, tokenizer, args):
 
 
 def train_qa_s2s(qa_s2s_model, qa_s2s_tokenizer, s2s_train_dset, s2s_valid_dset, s2s_args):
-    s2s_optimizer = AdamW(qa_s2s_model.parameters(), lr=s2s_args.learning_rate, eps=1e-8)
+    s2s_optimizer = AdamW(qa_s2s_model.parameters(),
+                          lr=s2s_args.learning_rate, eps=1e-8)
     s2s_scheduler = get_linear_schedule_with_warmup(
         s2s_optimizer,
         num_warmup_steps=400,
-        num_training_steps=(s2s_args.num_epochs + 1) * math.ceil(len(s2s_train_dset) / s2s_args.batch_size),
+        num_training_steps=(s2s_args.num_epochs + 1) *
+        math.ceil(len(s2s_train_dset) / s2s_args.batch_size),
     )
     for e in range(s2s_args.num_epochs):
         train_qa_s2s_epoch(
@@ -515,8 +549,10 @@ def train_qa_s2s(qa_s2s_model, qa_s2s_tokenizer, s2s_train_dset, s2s_valid_dset,
             "scheduler": s2s_scheduler.state_dict(),
         }
         print("Saving model {}".format(s2s_args.model_save_name))
-        eval_qa_s2s_epoch(qa_s2s_model, s2s_valid_dset, qa_s2s_tokenizer, s2s_args)
-        torch.save(m_save_dict, "{}_{}.pth".format(s2s_args.model_save_name, e))
+        eval_qa_s2s_epoch(qa_s2s_model, s2s_valid_dset,
+                          qa_s2s_tokenizer, s2s_args)
+        torch.save(m_save_dict, "{}_{}.pth".format(
+            s2s_args.model_save_name, e))
 
 
 # generate answer from input "question: ... context: <p> ..."
@@ -565,24 +601,28 @@ def qa_s2s_generate(
 # ELI5-trained retrieval model usage
 ###############
 def embed_passages_for_retrieval(passages, tokenizer, qa_embedder, max_length=128, device="cuda:0"):
-    a_toks = tokenizer(passages, max_length=max_length, padding="max_length", truncation=True)
+    a_toks = tokenizer(passages, max_length=max_length,
+                       padding="max_length", truncation=True)
     a_ids, a_mask = (
         torch.LongTensor(a_toks["input_ids"]).to(device),
         torch.LongTensor(a_toks["attention_mask"]).to(device),
     )
     with torch.no_grad():
-        a_reps = qa_embedder.embed_answers(a_ids, a_mask).cpu().type(torch.float)
+        a_reps = qa_embedder.embed_answers(
+            a_ids, a_mask).cpu().type(torch.float)
     return a_reps.numpy()
 
 
 def embed_questions_for_retrieval(q_ls, tokenizer, qa_embedder, device="cuda:0"):
-    q_toks = tokenizer(q_ls, max_length=128, padding="max_length", truncation=True)
+    q_toks = tokenizer(q_ls, max_length=128,
+                       padding="max_length", truncation=True)
     q_ids, q_mask = (
         torch.LongTensor(q_toks["input_ids"]).to(device),
         torch.LongTensor(q_toks["attention_mask"]).to(device),
     )
     with torch.no_grad():
-        q_reps = qa_embedder.embed_questions(q_ids, q_mask).cpu().type(torch.float)
+        q_reps = qa_embedder.embed_questions(
+            q_ids, q_mask).cpu().type(torch.float)
     return q_reps.numpy()
 
 
@@ -597,12 +637,15 @@ def make_qa_dense_index(
     device="cuda:0",
 ):
     st_time = time()
-    fp = np.memmap(index_name, dtype=dtype, mode="w+", shape=(passages_dset.num_rows, 128))
+    fp = np.memmap(index_name, dtype=dtype, mode="w+",
+                   shape=(passages_dset.num_rows, 128))
     n_batches = math.ceil(passages_dset.num_rows / batch_size)
     for i in range(n_batches):
-        passages = [p for p in passages_dset[i * batch_size : (i + 1) * batch_size]["passage_text"]]
-        reps = embed_passages_for_retrieval(passages, tokenizer, qa_embedder, max_length, device)
-        fp[i * batch_size : (i + 1) * batch_size] = reps
+        passages = [p for p in passages_dset[i *
+                                             batch_size: (i + 1) * batch_size]["passage_text"]]
+        reps = embed_passages_for_retrieval(
+            passages, tokenizer, qa_embedder, max_length, device)
+        fp[i * batch_size: (i + 1) * batch_size] = reps
         if i % 50 == 0:
             print(i, time() - st_time)
 
@@ -619,7 +662,8 @@ def evaluate_retriever(qa_list, retriever_func, scoring_func, n_ret=10, verbose=
         if verbose and ((i + 1) % 500 == 0 or i <= 1):
             print(
                 "{:03d}: S-{:.4f} T-{:.4f} | {:.2f}".format(
-                    i + 1, total_retriever_score / (i + 1), total_retriever_time / (i + 1), time() - st_time
+                    i + 1, total_retriever_score /
+                    (i + 1), total_retriever_time / (i + 1), time() - st_time
                 )
             )
     return {"idf_recall": total_retriever_score / (i + 1), "retrieval_time": total_retriever_time / (i + 1)}
@@ -629,12 +673,16 @@ def evaluate_retriever(qa_list, retriever_func, scoring_func, n_ret=10, verbose=
 def query_qa_dense_index(
     question, qa_embedder, tokenizer, wiki_passages, wiki_index, n_results=10, min_length=20, device="cuda:0"
 ):
-    q_rep = embed_questions_for_retrieval([question], tokenizer, qa_embedder, device=device)
+    q_rep = embed_questions_for_retrieval(
+        [question], tokenizer, qa_embedder, device=device)
     D, I = wiki_index.search(q_rep, 2 * n_results)
     res_passages = [wiki_passages[int(i)] for i in I[0]]
-    support_doc = "<P> " + " <P> ".join([p["passage_text"] for p in res_passages])
-    res_list = [dict([(k, p[k]) for k in wiki_passages.column_names]) for p in res_passages]
-    res_list = [res for res in res_list if len(res["passage_text"].split()) > min_length][:n_results]
+    support_doc = "<P> " + \
+        " <P> ".join([p["passage_text"] for p in res_passages])
+    res_list = [dict([(k, p[k]) for k in wiki_passages.column_names])
+                for p in res_passages]
+    res_list = [res for res in res_list if len(
+        res["passage_text"].split()) > min_length][:n_results]
     for r, sc in zip(res_list, D[0]):
         r["score"] = float(sc)
     return support_doc, res_list
@@ -649,7 +697,8 @@ def batch_query_qa_dense_index(questions, qa_embedder, tokenizer, wiki_passages,
     ]
     all_res_lists = []
     for (res_passages, dl) in zip(res_passages_lst, D):
-        res_list = [dict([(k, p[k]) for k in wiki_passages.column_names]) for p in res_passages]
+        res_list = [dict([(k, p[k]) for k in wiki_passages.column_names])
+                    for p in res_passages]
         for r, sc in zip(res_list, dl):
             r["score"] = float(sc)
         all_res_lists += [res_list[:]]
@@ -661,9 +710,12 @@ def query_qa_dense_index_nn(passage, qa_embedder, tokenizer, wiki_passages, wiki
     a_rep = embed_passages_for_retrieval([passage], tokenizer, qa_embedder)
     D, I = wiki_index.search(a_rep, 2 * n_results)
     res_passages = [wiki_passages[int(i)] for i in I[0]]
-    support_doc = "<P> " + " <P> ".join([p["passage_text"] for p in res_passages])
-    res_list = [dict([(k, p[k]) for k in wiki_passages.column_names]) for p in res_passages]
-    res_list = [res for res in res_list if len(res["passage_text"].split()) > min_length][:n_results]
+    support_doc = "<P> " + \
+        " <P> ".join([p["passage_text"] for p in res_passages])
+    res_list = [dict([(k, p[k]) for k in wiki_passages.column_names])
+                for p in res_passages]
+    res_list = [res for res in res_list if len(
+        res["passage_text"].split()) > min_length][:n_results]
     for r, sc, i in zip(res_list, D[0], I[0]):
         r["passage_id"] = int(i)
         r["score"] = float(sc)
@@ -679,7 +731,8 @@ def batch_query_qa_dense_index_nn(passages, qa_embedder, tokenizer, wiki_passage
     ]
     all_res_lists = []
     for (res_passages, dl, il) in zip(res_passages_lst, D, I):
-        res_list = [dict([(k, p[k]) for k in wiki_passages.column_names]) for p in res_passages]
+        res_list = [dict([(k, p[k]) for k in wiki_passages.column_names])
+                    for p in res_passages]
         for r, sc, i in zip(res_list, dl, il):
             r["passage_id"] = int(i)
             r["score"] = float(sc)

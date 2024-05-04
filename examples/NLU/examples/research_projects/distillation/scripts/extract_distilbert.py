@@ -29,7 +29,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("--model_type", default="bert", choices=["bert"])
     parser.add_argument("--model_name", default="bert-base-uncased", type=str)
-    parser.add_argument("--dump_checkpoint", default="serialization_dir/tf_bert-base-uncased_0247911.pth", type=str)
+    parser.add_argument(
+        "--dump_checkpoint", default="serialization_dir/tf_bert-base-uncased_0247911.pth", type=str)
     parser.add_argument("--vocab_transform", action="store_true")
     args = parser.parse_args()
 
@@ -45,7 +46,8 @@ if __name__ == "__main__":
     for w in ["word_embeddings", "position_embeddings"]:
         compressed_sd[f"distilbert.embeddings.{w}.weight"] = state_dict[f"{prefix}.embeddings.{w}.weight"]
     for w in ["weight", "bias"]:
-        compressed_sd[f"distilbert.embeddings.LayerNorm.{w}"] = state_dict[f"{prefix}.embeddings.LayerNorm.{w}"]
+        compressed_sd[f"distilbert.embeddings.LayerNorm.{w}"] = state_dict[
+            f"{prefix}.embeddings.LayerNorm.{w}"]
 
     std_idx = 0
     for teacher_idx in [0, 2, 4, 7, 9, 11]:
@@ -86,7 +88,8 @@ if __name__ == "__main__":
             compressed_sd[f"vocab_layer_norm.{w}"] = state_dict[f"cls.predictions.transform.LayerNorm.{w}"]
 
     print(f"N layers selected for distillation: {std_idx}")
-    print(f"Number of params transferred for distillation: {len(compressed_sd.keys())}")
+    print(
+        f"Number of params transferred for distillation: {len(compressed_sd.keys())}")
 
     print(f"Save transferred checkpoint to {args.dump_checkpoint}.")
     torch.save(compressed_sd, args.dump_checkpoint)

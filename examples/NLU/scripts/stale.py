@@ -55,8 +55,10 @@ def main():
             and (dt.utcnow() - issue.created_at).days >= 30
         ):
             for assignee in issue.assignees:
-                print(f"Issue {issue.number}. Pinging {assignee.name} with message")
-                print(f"Hey @{assignee.login}, could you take a second look at this issue?")
+                print(
+                    f"Issue {issue.number}. Pinging {assignee.name} with message")
+                print(
+                    f"Hey @{assignee.login}, could you take a second look at this issue?")
 
                 # issue.create_comment(
                 #    f"Hey @{assignee.login}, could you take a second look at this issue?"

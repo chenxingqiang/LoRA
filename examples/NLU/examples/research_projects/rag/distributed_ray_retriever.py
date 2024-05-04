@@ -29,7 +29,8 @@ class RayRetriever:
         self.retriever.index.init_index()
 
     def retrieve(self, question_hidden_states, n_docs):
-        doc_ids, retrieved_doc_embeds = self.retriever._main_retrieve(question_hidden_states, n_docs)
+        doc_ids, retrieved_doc_embeds = self.retriever._main_retrieve(
+            question_hidden_states, n_docs)
         return doc_ids, retrieved_doc_embeds
 
 
@@ -80,7 +81,8 @@ class RagRayDistributedRetriever(RagRetriever):
         if len(self.retrieval_workers) > 0:
             ray.get(
                 [
-                    worker.create_rag_retriever.remote(config, question_encoder_tokenizer, generator_tokenizer, index)
+                    worker.create_rag_retriever.remote(
+                        config, question_encoder_tokenizer, generator_tokenizer, index)
                     for worker in self.retrieval_workers
                 ]
             )
@@ -95,7 +97,8 @@ class RagRayDistributedRetriever(RagRetriever):
         logger.info("initializing retrieval")
 
         if len(self.retrieval_workers) > 0:
-            ray.get([worker.init_retrieval.remote() for worker in self.retrieval_workers])
+            ray.get([worker.init_retrieval.remote()
+                     for worker in self.retrieval_workers])
         else:
             # Non-distributed training. Load index into this same process.
             self.index.init_index()
@@ -122,10 +125,13 @@ class RagRayDistributedRetriever(RagRetriever):
         """
         if len(self.retrieval_workers) > 0:
             # Select a random retrieval actor.
-            random_worker = self.retrieval_workers[random.randint(0, len(self.retrieval_workers) - 1)]
-            doc_ids, retrieved_doc_embeds = ray.get(random_worker.retrieve.remote(question_hidden_states, n_docs))
+            random_worker = self.retrieval_workers[random.randint(
+                0, len(self.retrieval_workers) - 1)]
+            doc_ids, retrieved_doc_embeds = ray.get(
+                random_worker.retrieve.remote(question_hidden_states, n_docs))
         else:
-            doc_ids, retrieved_doc_embeds = self._main_retrieve(question_hidden_states, n_docs)
+            doc_ids, retrieved_doc_embeds = self._main_retrieve(
+                question_hidden_states, n_docs)
         return retrieved_doc_embeds, doc_ids, self.index.get_doc_dicts(doc_ids)
 
     @classmethod
@@ -136,13 +142,16 @@ class RagRayDistributedRetriever(RagRetriever):
     def from_pretrained(cls, retriever_name_or_path, actor_handles, indexed_dataset=None, **kwargs):
         requires_datasets(cls)
         requires_faiss(cls)
-        config = kwargs.pop("config", None) or RagConfig.from_pretrained(retriever_name_or_path, **kwargs)
-        rag_tokenizer = RagTokenizer.from_pretrained(retriever_name_or_path, config=config)
+        config = kwargs.pop("config", None) or RagConfig.from_pretrained(
+            retriever_name_or_path, **kwargs)
+        rag_tokenizer = RagTokenizer.from_pretrained(
+            retriever_name_or_path, config=config)
         question_encoder_tokenizer = rag_tokenizer.question_encoder
         generator_tokenizer = rag_tokenizer.generator
         if indexed_dataset is not None:
             config.index_name = "custom"
-            index = CustomHFIndex(config.retrieval_vector_size, indexed_dataset)
+            index = CustomHFIndex(
+                config.retrieval_vector_size, indexed_dataset)
         else:
             index = cls._build_index(config)
         return cls(

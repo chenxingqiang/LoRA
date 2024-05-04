@@ -86,7 +86,8 @@ def _make_causal_mask(input_ids_shape: torch.Size, dtype: torch.dtype, past_key_
     mask = mask.to(dtype)
 
     if past_key_values_length > 0:
-        mask = torch.cat([torch.zeros(tgt_len, past_key_values_length, dtype=dtype), mask], dim=-1)
+        mask = torch.cat(
+            [torch.zeros(tgt_len, past_key_values_length, dtype=dtype), mask], dim=-1)
     return mask[None, None, :, :].expand(bsz, 1, tgt_len, tgt_len + past_key_values_length)
 
 
@@ -97,10 +98,12 @@ def _expand_mask(mask: torch.Tensor, dtype: torch.dtype, tgt_len: Optional[int] 
     bsz, src_len = mask.size()
     tgt_len = tgt_len if tgt_len is not None else src_len
 
-    expanded_mask = mask[:, None, None, :].expand(bsz, 1, tgt_len, src_len).to(dtype)
+    expanded_mask = mask[:, None, None, :].expand(
+        bsz, 1, tgt_len, src_len).to(dtype)
 
     inverted_mask = 1.0 - expanded_mask
-    expanded_attention_mask = inverted_mask.masked_fill(inverted_mask.bool(), torch.finfo(dtype).min)
+    expanded_attention_mask = inverted_mask.masked_fill(
+        inverted_mask.bool(), torch.finfo(dtype).min)
 
     # make sure that global_attn_mask is positive
     expanded_attention_mask = expanded_attention_mask * inverted_mask
@@ -195,15 +198,18 @@ class LEDEncoderSelfAttention(nn.Module):
         # normalize query
         query_vectors /= math.sqrt(self.head_dim)
 
-        query_vectors = query_vectors.view(seq_len, batch_size, self.num_heads, self.head_dim).transpose(0, 1)
-        key_vectors = key_vectors.view(seq_len, batch_size, self.num_heads, self.head_dim).transpose(0, 1)
+        query_vectors = query_vectors.view(
+            seq_len, batch_size, self.num_heads, self.head_dim).transpose(0, 1)
+        key_vectors = key_vectors.view(
+            seq_len, batch_size, self.num_heads, self.head_dim).transpose(0, 1)
 
         attn_scores = self._sliding_chunks_query_key_matmul(
             query_vectors, key_vectors, self.one_sided_attn_window_size
         )
 
         # values to pad for attention probs
-        remove_from_windowed_attention_mask = (attention_mask != 0)[:, :, None, None]
+        remove_from_windowed_attention_mask = (
+            attention_mask != 0)[:, :, None, None]
 
         # cast to fp32/fp16 then replace 1's with -inf
         float_mask = remove_from_windowed_attention_mask.type_as(query_vectors).masked_fill(
@@ -211,7 +217,8 @@ class LEDEncoderSelfAttention(nn.Module):
         )
         # diagonal mask with zeros everywhere and -inf inplace of padding
         diagonal_mask = self._sliding_chunks_query_key_matmul(
-            float_mask.new_ones(size=float_mask.size()), float_mask, self.one_sided_attn_window_size
+            float_mask.new_ones(size=float_mask.size()
+                                ), float_mask, self.one_sided_attn_window_size
         )
 
         # pad local attention probs
@@ -245,12 +252,14 @@ class LEDEncoderSelfAttention(nn.Module):
             )
             # concat to local_attn_probs
             # (batch_size, seq_len, num_heads, extra attention count + 2*window+1)
-            attn_scores = torch.cat((global_key_attn_scores, attn_scores), dim=-1)
+            attn_scores = torch.cat(
+                (global_key_attn_scores, attn_scores), dim=-1)
 
             # free memory
             del global_key_attn_scores
 
-        attn_probs = F.softmax(attn_scores, dim=-1, dtype=torch.float32)  # use fp32 for numerical stability
+        # use fp32 for numerical stability
+        attn_probs = F.softmax(attn_scores, dim=-1, dtype=torch.float32)
 
         if layer_head_mask is not None:
             assert layer_head_mask.size() == (
@@ -259,16 +268,19 @@ class LEDEncoderSelfAttention(nn.Module):
             attn_probs = layer_head_mask.view(1, 1, -1, 1) * attn_probs
 
         # softmax sometimes inserts NaN if all positions are masked, replace them with 0
-        attn_probs = torch.masked_fill(attn_probs, is_index_masked[:, :, None, None], 0.0)
+        attn_probs = torch.masked_fill(
+            attn_probs, is_index_masked[:, :, None, None], 0.0)
         attn_probs = attn_probs.type_as(attn_scores)
 
         # free memory
         del attn_scores
 
         # apply dropout
-        attn_probs = F.dropout(attn_probs, p=self.dropout, training=self.training)
+        attn_probs = F.dropout(
+            attn_probs, p=self.dropout, training=self.training)
 
-        value_vectors = value_vectors.view(seq_len, batch_size, self.num_heads, self.head_dim).transpose(0, 1)
+        value_vectors = value_vectors.view(
+            seq_len, batch_size, self.num_heads, self.head_dim).transpose(0, 1)
 
         # compute local attention output with global attention value and add
         if is_global_attn:
@@ -286,8 +298,10 @@ class LEDEncoderSelfAttention(nn.Module):
                 attn_probs, value_vectors, self.one_sided_attn_window_size
             )
 
-        assert attn_output.size() == (batch_size, seq_len, self.num_heads, self.head_dim), "Unexpected size"
-        attn_output = attn_output.transpose(0, 1).reshape(seq_len, batch_size, embed_dim).contiguous()
+        assert attn_output.size() == (batch_size, seq_len, self.num_heads,
+                                      self.head_dim), "Unexpected size"
+        attn_output = attn_output.transpose(0, 1).reshape(
+            seq_len, batch_size, embed_dim).contiguous()
 
         # compute value for global attention and overwrite to attention output
         # TODO: remove the redundant computation
@@ -390,15 +404,20 @@ class LEDEncoderSelfAttention(nn.Module):
 
     @staticmethod
     def _mask_invalid_locations(input_tensor, affected_seq_len) -> torch.Tensor:
-        beginning_mask_2d = input_tensor.new_ones(affected_seq_len, affected_seq_len + 1).tril().flip(dims=[0])
+        beginning_mask_2d = input_tensor.new_ones(
+            affected_seq_len, affected_seq_len + 1).tril().flip(dims=[0])
         beginning_mask = beginning_mask_2d[None, :, None, :]
         ending_mask = beginning_mask.flip(dims=(1, 3))
-        beginning_input = input_tensor[:, :affected_seq_len, :, : affected_seq_len + 1]
+        beginning_input = input_tensor[:,
+                                       :affected_seq_len, :, : affected_seq_len + 1]
         beginning_mask = beginning_mask.expand(beginning_input.size())
-        beginning_input.masked_fill_(beginning_mask == 1, -float("inf"))  # `== 1` converts to bool or uint8
-        ending_input = input_tensor[:, -affected_seq_len:, :, -(affected_seq_len + 1) :]
+        # `== 1` converts to bool or uint8
+        beginning_input.masked_fill_(beginning_mask == 1, -float("inf"))
+        ending_input = input_tensor[:, -
+                                    affected_seq_len:, :, -(affected_seq_len + 1):]
         ending_mask = ending_mask.expand(ending_input.size())
-        ending_input.masked_fill_(ending_mask == 1, -float("inf"))  # `== 1` converts to bool or uint8
+        # `== 1` converts to bool or uint8
+        ending_input.masked_fill_(ending_mask == 1, -float("inf"))
 
     def _sliding_chunks_query_key_matmul(self, query: torch.Tensor, key: torch.Tensor, window_overlap: int):
         """
@@ -415,8 +434,10 @@ class LEDEncoderSelfAttention(nn.Module):
         chunks_count = seq_len // window_overlap - 1
 
         # group batch_size and num_heads dimensions into one, then chunk seq_len into chunks of size window_overlap * 2
-        query = query.transpose(1, 2).reshape(batch_size * num_heads, seq_len, head_dim)
-        key = key.transpose(1, 2).reshape(batch_size * num_heads, seq_len, head_dim)
+        query = query.transpose(1, 2).reshape(
+            batch_size * num_heads, seq_len, head_dim)
+        key = key.transpose(1, 2).reshape(
+            batch_size * num_heads, seq_len, head_dim)
 
         query = self._chunk(query, window_overlap)
         key = self._chunk(key, window_overlap)
@@ -425,7 +446,8 @@ class LEDEncoderSelfAttention(nn.Module):
         # bcxd: batch_size * num_heads x chunks x 2window_overlap x head_dim
         # bcyd: batch_size * num_heads x chunks x 2window_overlap x head_dim
         # bcxy: batch_size * num_heads x chunks x 2window_overlap x window_overlap
-        diagonal_chunked_attention_scores = torch.einsum("bcxd,bcyd->bcxy", (query, key))  # multiply
+        diagonal_chunked_attention_scores = torch.einsum(
+            "bcxd,bcyd->bcxy", (query, key))  # multiply
 
         # convert diagonals into columns
         diagonal_chunked_attention_scores = self._pad_and_transpose_last_two_dims(
@@ -438,7 +460,8 @@ class LEDEncoderSelfAttention(nn.Module):
         # followed by window_overlap columns for the upper triangle.
 
         diagonal_attention_scores = diagonal_chunked_attention_scores.new_empty(
-            (batch_size * num_heads, chunks_count + 1, window_overlap, window_overlap * 2 + 1)
+            (batch_size * num_heads, chunks_count + 1,
+             window_overlap, window_overlap * 2 + 1)
         )
 
         # copy parts from diagonal_chunked_attention_scores into the combined matrix of attentions
@@ -451,11 +474,11 @@ class LEDEncoderSelfAttention(nn.Module):
         ]
         # - copying the lower triangle
         diagonal_attention_scores[:, 1:, :, :window_overlap] = diagonal_chunked_attention_scores[
-            :, :, -(window_overlap + 1) : -1, window_overlap + 1 :
+            :, :, -(window_overlap + 1): -1, window_overlap + 1:
         ]
 
         diagonal_attention_scores[:, 0, 1:window_overlap, 1:window_overlap] = diagonal_chunked_attention_scores[
-            :, 0, : window_overlap - 1, 1 - window_overlap :
+            :, 0, : window_overlap - 1, 1 - window_overlap:
         ]
 
         # separate batch_size and num_heads dimensions again
@@ -486,13 +509,16 @@ class LEDEncoderSelfAttention(nn.Module):
         )
 
         # group batch_size and num_heads dimensions into one
-        value = value.transpose(1, 2).reshape(batch_size * num_heads, seq_len, head_dim)
+        value = value.transpose(1, 2).reshape(
+            batch_size * num_heads, seq_len, head_dim)
 
         # pad seq_len with w at the beginning of the sequence and another window overlap at the end
-        padded_value = F.pad(value, (0, 0, window_overlap, window_overlap), value=-1)
+        padded_value = F.pad(
+            value, (0, 0, window_overlap, window_overlap), value=-1)
 
         # chunk padded_value into chunks of size 3 window overlap and an overlap of size window overlap
-        chunked_value_size = (batch_size * num_heads, chunks_count + 1, 3 * window_overlap, head_dim)
+        chunked_value_size = (batch_size * num_heads,
+                              chunks_count + 1, 3 * window_overlap, head_dim)
         chunked_value_stride = padded_value.stride()
         chunked_value_stride = (
             chunked_value_stride[0],
@@ -500,11 +526,13 @@ class LEDEncoderSelfAttention(nn.Module):
             chunked_value_stride[1],
             chunked_value_stride[2],
         )
-        chunked_value = padded_value.as_strided(size=chunked_value_size, stride=chunked_value_stride)
+        chunked_value = padded_value.as_strided(
+            size=chunked_value_size, stride=chunked_value_stride)
 
         chunked_attn_probs = self._pad_and_diagonalize(chunked_attn_probs)
 
-        context = torch.einsum("bcwd,bcdh->bcwh", (chunked_attn_probs, chunked_value))
+        context = torch.einsum(
+            "bcwd,bcdh->bcwh", (chunked_attn_probs, chunked_value))
         return context.view(batch_size, num_heads, seq_len, head_dim).transpose(1, 2)
 
     @staticmethod
@@ -517,7 +545,8 @@ class LEDEncoderSelfAttention(nn.Module):
         max_num_global_attn_indices = num_global_attn_indices.max()
 
         # indices of global attn
-        is_index_global_attn_nonzero = is_index_global_attn.nonzero(as_tuple=True)
+        is_index_global_attn_nonzero = is_index_global_attn.nonzero(
+            as_tuple=True)
 
         # helper variable
         is_local_index_global_attn = torch.arange(
@@ -525,10 +554,12 @@ class LEDEncoderSelfAttention(nn.Module):
         ) < num_global_attn_indices.unsqueeze(dim=-1)
 
         # location of the non-padding values within global attention indices
-        is_local_index_global_attn_nonzero = is_local_index_global_attn.nonzero(as_tuple=True)
+        is_local_index_global_attn_nonzero = is_local_index_global_attn.nonzero(
+            as_tuple=True)
 
         # location of the padding values within global attention indices
-        is_local_index_no_global_attn_nonzero = (is_local_index_global_attn == 0).nonzero(as_tuple=True)
+        is_local_index_no_global_attn_nonzero = (
+            is_local_index_global_attn == 0).nonzero(as_tuple=True)
         return (
             max_num_global_attn_indices,
             is_index_global_attn_nonzero,
@@ -555,7 +586,8 @@ class LEDEncoderSelfAttention(nn.Module):
         key_vectors_only_global[is_local_index_global_attn_nonzero] = key_vectors[is_index_global_attn_nonzero]
 
         # (batch_size, seq_len, num_heads, max_num_global_attn_indices)
-        attn_probs_from_global_key = torch.einsum("blhd,bshd->blhs", (query_vectors, key_vectors_only_global))
+        attn_probs_from_global_key = torch.einsum(
+            "blhd,bshd->blhs", (query_vectors, key_vectors_only_global))
 
         attn_probs_from_global_key[
             is_local_index_no_global_attn_nonzero[0], :, :, is_local_index_no_global_attn_nonzero[1]
@@ -574,7 +606,8 @@ class LEDEncoderSelfAttention(nn.Module):
         batch_size = attn_probs.shape[0]
 
         # cut local attn probs to global only
-        attn_probs_only_global = attn_probs.narrow(-1, 0, max_num_global_attn_indices)
+        attn_probs_only_global = attn_probs.narrow(
+            -1, 0, max_num_global_attn_indices)
         # get value vectors for global only
         value_vectors_only_global = value_vectors.new_zeros(
             batch_size, max_num_global_attn_indices, self.num_heads, self.head_dim
@@ -585,7 +618,8 @@ class LEDEncoderSelfAttention(nn.Module):
         # attn = torch.einsum('blhs,bshd->blhd', (selected_attn_probs, selected_v))
         # compute attn output only global
         attn_output_only_global = torch.matmul(
-            attn_probs_only_global.transpose(1, 2), value_vectors_only_global.transpose(1, 2)
+            attn_probs_only_global.transpose(
+                1, 2), value_vectors_only_global.transpose(1, 2)
         ).transpose(1, 2)
 
         # reshape attn probs
@@ -612,13 +646,15 @@ class LEDEncoderSelfAttention(nn.Module):
         seq_len, batch_size = hidden_states.shape[:2]
 
         # prepare global hidden states
-        global_attn_hidden_states = hidden_states.new_zeros(max_num_global_attn_indices, batch_size, self.embed_dim)
+        global_attn_hidden_states = hidden_states.new_zeros(
+            max_num_global_attn_indices, batch_size, self.embed_dim)
         global_attn_hidden_states[is_local_index_global_attn_nonzero[::-1]] = hidden_states[
             is_index_global_attn_nonzero[::-1]
         ]
 
         # global key, query, value
-        global_query_vectors_only_global = self.query_global(global_attn_hidden_states)
+        global_query_vectors_only_global = self.query_global(
+            global_attn_hidden_states)
         global_key_vectors = self.key_global(hidden_states)
         global_value_vectors = self.value_global(hidden_states)
 
@@ -632,14 +668,17 @@ class LEDEncoderSelfAttention(nn.Module):
             .transpose(0, 1)
         )  # (batch_size * self.num_heads, max_num_global_attn_indices, head_dim)
         global_key_vectors = (
-            global_key_vectors.contiguous().view(-1, batch_size * self.num_heads, self.head_dim).transpose(0, 1)
+            global_key_vectors.contiguous().view(-1, batch_size * self.num_heads,
+                                                 self.head_dim).transpose(0, 1)
         )  # batch_size * self.num_heads, seq_len, head_dim)
         global_value_vectors = (
-            global_value_vectors.contiguous().view(-1, batch_size * self.num_heads, self.head_dim).transpose(0, 1)
+            global_value_vectors.contiguous().view(-1, batch_size * self.num_heads,
+                                                   self.head_dim).transpose(0, 1)
         )  # batch_size * self.num_heads, seq_len, head_dim)
 
         # compute attn scores
-        global_attn_scores = torch.bmm(global_query_vectors_only_global, global_key_vectors.transpose(1, 2))
+        global_attn_scores = torch.bmm(
+            global_query_vectors_only_global, global_key_vectors.transpose(1, 2))
 
         assert list(global_attn_scores.size()) == [
             batch_size * self.num_heads,
@@ -647,7 +686,8 @@ class LEDEncoderSelfAttention(nn.Module):
             seq_len,
         ], f"global_attn_scores have the wrong size. Size should be {(batch_size * self.num_heads, max_num_global_attn_indices, seq_len)}, but is {global_attn_scores.size()}."
 
-        global_attn_scores = global_attn_scores.view(batch_size, self.num_heads, max_num_global_attn_indices, seq_len)
+        global_attn_scores = global_attn_scores.view(
+            batch_size, self.num_heads, max_num_global_attn_indices, seq_len)
 
         global_attn_scores[
             is_local_index_no_global_attn_nonzero[0], :, is_local_index_no_global_attn_nonzero[1], :
@@ -658,7 +698,8 @@ class LEDEncoderSelfAttention(nn.Module):
             -10000.0,
         )
 
-        global_attn_scores = global_attn_scores.view(batch_size * self.num_heads, max_num_global_attn_indices, seq_len)
+        global_attn_scores = global_attn_scores.view(
+            batch_size * self.num_heads, max_num_global_attn_indices, seq_len)
 
         # compute global attn probs
         global_attn_probs_float = F.softmax(
@@ -690,7 +731,8 @@ class LEDEncoderSelfAttention(nn.Module):
             self.head_dim,
         ], f"global_attn_output tensor has the wrong size. Size should be {(batch_size * self.num_heads, max_num_global_attn_indices, self.head_dim)}, but is {global_attn_output.size()}."
 
-        global_attn_probs = global_attn_probs.view(batch_size, self.num_heads, max_num_global_attn_indices, seq_len)
+        global_attn_probs = global_attn_probs.view(
+            batch_size, self.num_heads, max_num_global_attn_indices, seq_len)
         global_attn_output = global_attn_output.view(
             batch_size, self.num_heads, max_num_global_attn_indices, self.head_dim
         )
@@ -700,7 +742,8 @@ class LEDEncoderSelfAttention(nn.Module):
 class LEDEncoderAttention(nn.Module):
     def __init__(self, config, layer_id):
         super().__init__()
-        self.longformer_self_attn = LEDEncoderSelfAttention(config, layer_id=layer_id)
+        self.longformer_self_attn = LEDEncoderSelfAttention(
+            config, layer_id=layer_id)
         self.output = nn.Linear(config.d_model, config.d_model)
 
     def forward(
@@ -810,7 +853,8 @@ class LEDDecoderAttention(nn.Module):
             past_key_value = (key_states, value_states)
 
         proj_shape = (bsz * self.num_heads, -1, self.head_dim)
-        query_states = self._shape(query_states, tgt_len, bsz).view(*proj_shape)
+        query_states = self._shape(
+            query_states, tgt_len, bsz).view(*proj_shape)
         key_states = key_states.view(*proj_shape)
         value_states = value_states.view(*proj_shape)
 
@@ -830,28 +874,35 @@ class LEDDecoderAttention(nn.Module):
                 tgt_len,
                 src_len,
             ), f"Attention mask should be of size {(bsz, 1, tgt_len, src_len)}, but is {attention_mask.size()}"
-            attn_weights = attn_weights.view(bsz, self.num_heads, tgt_len, src_len) + attention_mask
-            attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
+            attn_weights = attn_weights.view(
+                bsz, self.num_heads, tgt_len, src_len) + attention_mask
+            attn_weights = attn_weights.view(
+                bsz * self.num_heads, tgt_len, src_len)
 
         attn_weights = F.softmax(attn_weights, dim=-1)
         if layer_head_mask is not None:
             assert layer_head_mask.size() == (
                 self.num_heads,
             ), f"Head mask for a single layer should be of size {(self.num_heads,)}, but is {layer_head_mask.size()}"
-            attn_weights = layer_head_mask.view(1, -1, 1, 1) * attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
-            attn_weights = attn_weights.view(bsz * self.num_heads, tgt_len, src_len)
+            attn_weights = layer_head_mask.view(
+                1, -1, 1, 1) * attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
+            attn_weights = attn_weights.view(
+                bsz * self.num_heads, tgt_len, src_len)
 
         if output_attentions:
             # this operation is a bit akward, but it's required to
             # make sure that attn_weights keeps its gradient.
             # In order to do so, attn_weights have to reshaped
             # twice and have to be reused in the following
-            attn_weights_reshaped = attn_weights.view(bsz, self.num_heads, tgt_len, src_len)
-            attn_weights = attn_weights_reshaped.view(bsz * self.num_heads, tgt_len, src_len)
+            attn_weights_reshaped = attn_weights.view(
+                bsz, self.num_heads, tgt_len, src_len)
+            attn_weights = attn_weights_reshaped.view(
+                bsz * self.num_heads, tgt_len, src_len)
         else:
             attn_weights_reshaped = None
 
-        attn_probs = F.dropout(attn_weights, p=self.dropout, training=self.training)
+        attn_probs = F.dropout(
+            attn_weights, p=self.dropout, training=self.training)
 
         attn_output = torch.bmm(attn_probs, value_states)
 
@@ -914,23 +965,28 @@ class LEDEncoderLayer(nn.Module):
             output_attentions=output_attentions,
         )
         hidden_states = attn_outputs[0]
-        hidden_states = F.dropout(hidden_states, p=self.dropout, training=self.training)
+        hidden_states = F.dropout(
+            hidden_states, p=self.dropout, training=self.training)
         hidden_states = residual + hidden_states
         hidden_states = self.self_attn_layer_norm(hidden_states)
 
         residual = hidden_states
         hidden_states = self.activation_fn(self.fc1(hidden_states))
-        hidden_states = F.dropout(hidden_states, p=self.activation_dropout, training=self.training)
+        hidden_states = F.dropout(
+            hidden_states, p=self.activation_dropout, training=self.training)
         hidden_states = self.fc2(hidden_states)
-        hidden_states = F.dropout(hidden_states, p=self.dropout, training=self.training)
+        hidden_states = F.dropout(
+            hidden_states, p=self.dropout, training=self.training)
         hidden_states = residual + hidden_states
         hidden_states = self.final_layer_norm(hidden_states)
 
         if hidden_states.dtype == torch.float16 and (
-            torch.isinf(hidden_states).any() or torch.isnan(hidden_states).any()
+            torch.isinf(hidden_states).any() or torch.isnan(
+                hidden_states).any()
         ):
             clamp_value = torch.finfo(hidden_states.dtype).max - 1000
-            hidden_states = torch.clamp(hidden_states, min=-clamp_value, max=clamp_value)
+            hidden_states = torch.clamp(
+                hidden_states, min=-clamp_value, max=clamp_value)
         return (hidden_states,) + attn_outputs[1:]
 
 
@@ -993,7 +1049,8 @@ class LEDDecoderLayer(nn.Module):
 
         # Self Attention
         # decoder uni-directional self-attention cached key/values tuple is at positions 1,2
-        self_attn_past_key_value = past_key_value[:2] if past_key_value is not None else None
+        self_attn_past_key_value = past_key_value[:
+                                                  2] if past_key_value is not None else None
         # add present self-attn cache to positions 1,2 of present_key_value tuple
         hidden_states, self_attn_weights, present_key_value = self.self_attn(
             hidden_states=hidden_states,
@@ -1002,7 +1059,8 @@ class LEDDecoderLayer(nn.Module):
             layer_head_mask=layer_head_mask,
             output_attentions=output_attentions,
         )
-        hidden_states = F.dropout(hidden_states, p=self.dropout, training=self.training)
+        hidden_states = F.dropout(
+            hidden_states, p=self.dropout, training=self.training)
         hidden_states = residual + hidden_states
         hidden_states = self.self_attn_layer_norm(hidden_states)
 
@@ -1013,7 +1071,8 @@ class LEDDecoderLayer(nn.Module):
             residual = hidden_states
 
             # cross_attn cached key/values tuple is at positions 3,4 of present_key_value tuple
-            cross_attn_past_key_value = past_key_value[-2:] if past_key_value is not None else None
+            cross_attn_past_key_value = past_key_value[-2:
+                                                       ] if past_key_value is not None else None
             hidden_states, cross_attn_weights, cross_attn_present_key_value = self.encoder_attn(
                 hidden_states=hidden_states,
                 key_value_states=encoder_hidden_states,
@@ -1022,7 +1081,8 @@ class LEDDecoderLayer(nn.Module):
                 past_key_value=cross_attn_past_key_value,
                 output_attentions=output_attentions,
             )
-            hidden_states = F.dropout(hidden_states, p=self.dropout, training=self.training)
+            hidden_states = F.dropout(
+                hidden_states, p=self.dropout, training=self.training)
             hidden_states = residual + hidden_states
             hidden_states = self.encoder_attn_layer_norm(hidden_states)
 
@@ -1032,9 +1092,11 @@ class LEDDecoderLayer(nn.Module):
         # Fully Connected
         residual = hidden_states
         hidden_states = self.activation_fn(self.fc1(hidden_states))
-        hidden_states = F.dropout(hidden_states, p=self.activation_dropout, training=self.training)
+        hidden_states = F.dropout(
+            hidden_states, p=self.activation_dropout, training=self.training)
         hidden_states = self.fc2(hidden_states)
-        hidden_states = F.dropout(hidden_states, p=self.dropout, training=self.training)
+        hidden_states = F.dropout(
+            hidden_states, p=self.dropout, training=self.training)
         hidden_states = residual + hidden_states
         hidden_states = self.final_layer_norm(hidden_states)
 
@@ -1091,7 +1153,8 @@ class LEDPreTrainedModel(PreTrainedModel):
     @property
     def dummy_inputs(self):
         pad_token = self.config.pad_token_id
-        input_ids = torch.tensor([[0, 6, 10, 4, 2], [0, 8, 12, 2, pad_token]], device=self.device)
+        input_ids = torch.tensor(
+            [[0, 6, 10, 4, 2], [0, 8, 12, 2, pad_token]], device=self.device)
         dummy_inputs = {
             "attention_mask": input_ids.ne(pad_token),
             "input_ids": input_ids,
@@ -1618,7 +1681,8 @@ class LEDEncoder(LEDPreTrainedModel):
         if isinstance(config.attention_window, int):
             assert config.attention_window % 2 == 0, "`config.attention_window` has to be an even value"
             assert config.attention_window > 0, "`config.attention_window` has to be positive"
-            config.attention_window = [config.attention_window] * config.num_hidden_layers  # one value per layer
+            config.attention_window = [
+                config.attention_window] * config.num_hidden_layers  # one value per layer
         else:
             assert len(config.attention_window) == config.num_hidden_layers, (
                 "`len(config.attention_window)` should equal `config.num_hidden_layers`. "
@@ -1628,13 +1692,15 @@ class LEDEncoder(LEDPreTrainedModel):
         if embed_tokens is not None:
             self.embed_tokens = embed_tokens
         else:
-            self.embed_tokens = nn.Embedding(config.vocab_size, embed_dim, self.padding_idx)
+            self.embed_tokens = nn.Embedding(
+                config.vocab_size, embed_dim, self.padding_idx)
 
         self.embed_positions = LEDLearnedPositionalEmbedding(
             self.max_source_positions,
             embed_dim,
         )
-        self.layers = nn.ModuleList([LEDEncoderLayer(config, i) for i in range(config.encoder_layers)])
+        self.layers = nn.ModuleList(
+            [LEDEncoderLayer(config, i) for i in range(config.encoder_layers)])
         self.layernorm_embedding = nn.LayerNorm(embed_dim)
 
         self.init_weights()
@@ -1670,7 +1736,8 @@ class LEDEncoder(LEDPreTrainedModel):
         input_shape = input_ids.shape if input_ids is not None else inputs_embeds.shape
         batch_size, seq_len = input_shape[:2]
 
-        padding_len = (attention_window - seq_len % attention_window) % attention_window
+        padding_len = (attention_window - seq_len %
+                       attention_window) % attention_window
         if padding_len > 0:
             logger.info(
                 "Input ids are automatically padded from {} to {} to be a multiple of `config.attention_window`: {}".format(
@@ -1678,7 +1745,8 @@ class LEDEncoder(LEDPreTrainedModel):
                 )
             )
             if input_ids is not None:
-                input_ids = F.pad(input_ids, (0, padding_len), value=pad_token_id)
+                input_ids = F.pad(input_ids, (0, padding_len),
+                                  value=pad_token_id)
             if inputs_embeds is not None:
                 input_ids_padding = inputs_embeds.new_full(
                     (batch_size, padding_len),
@@ -1686,9 +1754,12 @@ class LEDEncoder(LEDPreTrainedModel):
                     dtype=torch.long,
                 )
                 inputs_embeds_padding = self.embed_tokens(input_ids_padding)
-                inputs_embeds = torch.cat([inputs_embeds, inputs_embeds_padding], dim=-2)
+                inputs_embeds = torch.cat(
+                    [inputs_embeds, inputs_embeds_padding], dim=-2)
 
-            attention_mask = F.pad(attention_mask, (0, padding_len), value=False)  # no attention on the padding tokens
+            # no attention on the padding tokens
+            attention_mask = F.pad(
+                attention_mask, (0, padding_len), value=False)
 
         return padding_len, input_ids, attention_mask, inputs_embeds
 
@@ -1757,20 +1828,24 @@ class LEDEncoder(LEDPreTrainedModel):
 
         # check input_ids and inputs_embeds
         if input_ids is not None and inputs_embeds is not None:
-            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both input_ids and inputs_embeds at the same time")
         elif input_ids is None and inputs_embeds is None:
-            raise ValueError("You have to specify either input_ids or inputs_embeds")
+            raise ValueError(
+                "You have to specify either input_ids or inputs_embeds")
 
         if inputs_embeds is None:
             inputs_embeds = self.embed_tokens(input_ids)
 
         # create default attention_mask
         if attention_mask is None:
-            attention_mask = torch.ones(inputs_embeds.size()[:-1], device=inputs_embeds.device, dtype=torch.long)
+            attention_mask = torch.ones(inputs_embeds.size(
+            )[:-1], device=inputs_embeds.device, dtype=torch.long)
 
         # merge `global_attention_mask` and `attention_mask`
         if global_attention_mask is not None:
-            attention_mask = self._merge_to_attention_mask(attention_mask, global_attention_mask)
+            attention_mask = self._merge_to_attention_mask(
+                attention_mask, global_attention_mask)
 
         # pad input if necessary
         padding_len, input_ids, attention_mask, inputs_embeds = self._pad_to_window_size(
@@ -1790,7 +1865,8 @@ class LEDEncoder(LEDPreTrainedModel):
         # convert attention_mask to float
         if attention_mask is not None:
             # [bsz, seq_len] -> [bsz, seq_len]; 1 -> 0.0; 0 -> "-inf"
-            attention_mask = _expand_mask(attention_mask, inputs_embeds.dtype)[:, 0, 0, :]
+            attention_mask = _expand_mask(
+                attention_mask, inputs_embeds.dtype)[:, 0, 0, :]
 
         # get masking tensors
         is_index_masked = attention_mask < 0
@@ -1801,7 +1877,8 @@ class LEDEncoder(LEDPreTrainedModel):
 
         hidden_states = inputs_embeds + embed_pos
         hidden_states = self.layernorm_embedding(hidden_states)
-        hidden_states = F.dropout(hidden_states, p=self.dropout, training=self.training)
+        hidden_states = F.dropout(
+            hidden_states, p=self.dropout, training=self.training)
 
         encoder_states = () if output_hidden_states else None
         all_attentions = () if output_attentions else None
@@ -1841,7 +1918,8 @@ class LEDEncoder(LEDPreTrainedModel):
                     layer_outputs = encoder_layer(
                         hidden_states,
                         attention_mask=attention_mask,
-                        layer_head_mask=(head_mask[idx] if head_mask is not None else None),
+                        layer_head_mask=(
+                            head_mask[idx] if head_mask is not None else None),
                         is_index_masked=is_index_masked,
                         is_index_global_attn=is_index_global_attn,
                         is_global_attn=is_global_attn,
@@ -1851,11 +1929,13 @@ class LEDEncoder(LEDPreTrainedModel):
 
             if output_attentions:
                 # bzs x seq_len x num_attn_heads x (num_global_attn + attention_window_len + 1) => bzs x num_attn_heads x seq_len x (num_global_attn + attention_window_len + 1)
-                all_attentions = all_attentions + (layer_outputs[1].transpose(1, 2),)
+                all_attentions = all_attentions + \
+                    (layer_outputs[1].transpose(1, 2),)
 
                 if is_global_attn:
                     # bzs x num_attn_heads x num_global_attn x seq_len => bzs x num_attn_heads x seq_len x num_global_attn
-                    all_global_attentions = all_global_attentions + (layer_outputs[2].transpose(2, 3),)
+                    all_global_attentions = all_global_attentions + \
+                        (layer_outputs[2].transpose(2, 3),)
 
         if output_hidden_states:
             encoder_states = encoder_states + (hidden_states,)
@@ -1896,13 +1976,15 @@ class LEDDecoder(LEDPreTrainedModel):
         if embed_tokens is not None:
             self.embed_tokens = embed_tokens
         else:
-            self.embed_tokens = nn.Embedding(config.vocab_size, config.d_model, self.padding_idx)
+            self.embed_tokens = nn.Embedding(
+                config.vocab_size, config.d_model, self.padding_idx)
 
         self.embed_positions = LEDLearnedPositionalEmbedding(
             self.max_target_positions,
             config.d_model,
         )
-        self.layers = nn.ModuleList([LEDDecoderLayer(config) for _ in range(config.decoder_layers)])
+        self.layers = nn.ModuleList(
+            [LEDDecoderLayer(config) for _ in range(config.decoder_layers)])
         self.layernorm_embedding = nn.LayerNorm(config.d_model)
 
         self.init_weights()
@@ -2005,14 +2087,16 @@ class LEDDecoder(LEDPreTrainedModel):
 
         # retrieve input_ids and inputs_embeds
         if input_ids is not None and inputs_embeds is not None:
-            raise ValueError("You cannot specify both decoder_input_ids and decoder_inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both decoder_input_ids and decoder_inputs_embeds at the same time")
         elif input_ids is not None:
             input_shape = input_ids.size()
             input_ids = input_ids.view(-1, input_shape[-1])
         elif inputs_embeds is not None:
             input_shape = inputs_embeds.size()[:-1]
         else:
-            raise ValueError("You have to specify either decoder_input_ids or decoder_inputs_embeds")
+            raise ValueError(
+                "You have to specify either decoder_input_ids or decoder_inputs_embeds")
 
         # past_key_values_length
         past_key_values_length = past_key_values[0][0].shape[2] if past_key_values is not None else 0
@@ -2037,7 +2121,8 @@ class LEDDecoder(LEDPreTrainedModel):
         # expand encoder attention mask
         if encoder_hidden_states is not None and encoder_attention_mask is not None:
             # [bsz, seq_len] -> [bsz, 1, tgt_seq_len, src_seq_len]
-            encoder_attention_mask = _expand_mask(encoder_attention_mask, inputs_embeds.dtype, tgt_len=input_shape[-1])
+            encoder_attention_mask = _expand_mask(
+                encoder_attention_mask, inputs_embeds.dtype, tgt_len=input_shape[-1])
 
         # embed positions
         positions = self.embed_positions(input_shape, past_key_values_length)
@@ -2045,7 +2130,8 @@ class LEDDecoder(LEDPreTrainedModel):
         hidden_states = inputs_embeds + positions
         hidden_states = self.layernorm_embedding(hidden_states)
 
-        hidden_states = F.dropout(hidden_states, p=self.dropout, training=self.training)
+        hidden_states = F.dropout(
+            hidden_states, p=self.dropout, training=self.training)
 
         # decoder layers
         all_hidden_states = () if output_hidden_states else None
@@ -2100,8 +2186,10 @@ class LEDDecoder(LEDPreTrainedModel):
                     attention_mask=combined_attention_mask,
                     encoder_hidden_states=encoder_hidden_states,
                     encoder_attention_mask=encoder_attention_mask,
-                    layer_head_mask=(head_mask[idx] if head_mask is not None else None),
-                    encoder_layer_head_mask=(encoder_head_mask[idx] if encoder_head_mask is not None else None),
+                    layer_head_mask=(
+                        head_mask[idx] if head_mask is not None else None),
+                    encoder_layer_head_mask=(
+                        encoder_head_mask[idx] if encoder_head_mask is not None else None),
                     past_key_value=past_key_value,
                     output_attentions=output_attentions,
                     use_cache=use_cache,
@@ -2110,7 +2198,8 @@ class LEDDecoder(LEDPreTrainedModel):
             hidden_states = layer_outputs[0]
 
             if use_cache:
-                next_decoder_cache += (layer_outputs[3 if output_attentions else 1],)
+                next_decoder_cache += (
+                    layer_outputs[3 if output_attentions else 1],)
 
             if output_attentions:
                 all_self_attns += (layer_outputs[1],)
@@ -2213,9 +2302,12 @@ class LEDModel(LEDPreTrainedModel):
         elif return_dict and not isinstance(encoder_outputs, LEDEncoderBaseModelOutput):
             encoder_outputs = LEDEncoderBaseModelOutput(
                 last_hidden_state=encoder_outputs[0],
-                hidden_states=encoder_outputs[1] if len(encoder_outputs) > 1 else None,
-                attentions=encoder_outputs[2] if len(encoder_outputs) > 2 else None,
-                global_attentions=encoder_outputs[3] if len(encoder_outputs) > 3 else None,
+                hidden_states=encoder_outputs[1] if len(
+                    encoder_outputs) > 1 else None,
+                attentions=encoder_outputs[2] if len(
+                    encoder_outputs) > 2 else None,
+                global_attentions=encoder_outputs[3] if len(
+                    encoder_outputs) > 3 else None,
             )
 
         # decoder outputs consists of (dec_features, past_key_value, dec_hidden, dec_attn)
@@ -2265,8 +2357,10 @@ class LEDForConditionalGeneration(LEDPreTrainedModel):
     def __init__(self, config: LEDConfig):
         super().__init__(config)
         self.led = LEDModel(config)
-        self.register_buffer("final_logits_bias", torch.zeros((1, self.led.shared.num_embeddings)))
-        self.lm_head = nn.Linear(config.d_model, self.led.shared.num_embeddings, bias=False)
+        self.register_buffer("final_logits_bias", torch.zeros(
+            (1, self.led.shared.num_embeddings)))
+        self.lm_head = nn.Linear(
+            config.d_model, self.led.shared.num_embeddings, bias=False)
 
         self.init_weights()
 
@@ -2286,7 +2380,8 @@ class LEDForConditionalGeneration(LEDPreTrainedModel):
         if new_num_tokens <= old_num_tokens:
             new_bias = self.final_logits_bias[:, :new_num_tokens]
         else:
-            extra_bias = torch.zeros((1, new_num_tokens - old_num_tokens), device=self.final_logits_bias.device)
+            extra_bias = torch.zeros(
+                (1, new_num_tokens - old_num_tokens), device=self.final_logits_bias.device)
             new_bias = torch.cat([self.final_logits_bias, extra_bias], dim=1)
         self.register_buffer("final_logits_bias", new_bias)
 
@@ -2372,7 +2467,8 @@ class LEDForConditionalGeneration(LEDPreTrainedModel):
         masked_lm_loss = None
         if labels is not None:
             loss_fct = CrossEntropyLoss()
-            masked_lm_loss = loss_fct(lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
+            masked_lm_loss = loss_fct(
+                lm_logits.view(-1, self.config.vocab_size), labels.view(-1))
 
         if not return_dict:
             output = (lm_logits,) + outputs[1:]
@@ -2412,7 +2508,8 @@ class LEDForConditionalGeneration(LEDPreTrainedModel):
             "decoder_input_ids": decoder_input_ids,
             "attention_mask": attention_mask,
             "head_mask": head_mask,
-            "use_cache": use_cache,  # change this to avoid caching (presumably for debugging)
+            # change this to avoid caching (presumably for debugging)
+            "use_cache": use_cache,
         }
 
     def prepare_decoder_input_ids_from_labels(self, labels: torch.Tensor):
@@ -2424,7 +2521,8 @@ class LEDForConditionalGeneration(LEDPreTrainedModel):
         for layer_past in past:
             # cached cross_attention states don't have to be reordered -> they are always the same
             reordered_past += (
-                tuple(past_state.index_select(0, beam_idx) for past_state in layer_past[:2]) + layer_past[2:],
+                tuple(past_state.index_select(0, beam_idx)
+                      for past_state in layer_past[:2]) + layer_past[2:],
             )
         return reordered_past
 
@@ -2509,7 +2607,8 @@ class LEDForSequenceClassification(LEDPreTrainedModel):
         eos_mask = input_ids.eq(self.config.eos_token_id)
 
         if len(torch.unique(eos_mask.sum(1))) > 1:
-            raise ValueError("All examples must have the same number of <eos> tokens.")
+            raise ValueError(
+                "All examples must have the same number of <eos> tokens.")
         sentence_representation = hidden_states[eos_mask, :].view(hidden_states.size(0), -1, hidden_states.size(-1))[
             :, -1, :
         ]
@@ -2518,7 +2617,8 @@ class LEDForSequenceClassification(LEDPreTrainedModel):
         loss = None
         if labels is not None:
             loss_fct = CrossEntropyLoss()
-            loss = loss_fct(logits.view(-1, self.config.num_labels), labels.view(-1))
+            loss = loss_fct(
+                logits.view(-1, self.config.num_labels), labels.view(-1))
 
         if not return_dict:
             output = (logits,) + outputs[1:]

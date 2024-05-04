@@ -11,7 +11,8 @@ if __name__ == "__main__":
 
     lora = OrderedDict()
     for name, value in model.items():
-        new_name = name.replace('self.query_lora_a.weight', 'self.query_proj.lora_A').replace('self.query_lora_b.weight', 'self.query_proj.lora_B').replace('self.value_lora_a.weight', 'self.value_proj.lora_A').replace('self.value_lora_b.weight', 'self.value_proj.lora_B')
+        new_name = name.replace('self.query_lora_a.weight', 'self.query_proj.lora_A').replace('self.query_lora_b.weight', 'self.query_proj.lora_B').replace(
+            'self.value_lora_a.weight', 'self.value_proj.lora_A').replace('self.value_lora_b.weight', 'self.value_proj.lora_B')
         lora[new_name] = value
     print("Save:")
     print(lora.keys())

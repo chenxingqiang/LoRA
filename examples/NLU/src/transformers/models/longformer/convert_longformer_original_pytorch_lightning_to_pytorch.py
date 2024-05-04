@@ -28,7 +28,8 @@ class LightningModel(pl.LightningModule):
         super().__init__()
         self.model = model
         self.num_labels = 2
-        self.qa_outputs = torch.nn.Linear(self.model.config.hidden_size, self.num_labels)
+        self.qa_outputs = torch.nn.Linear(
+            self.model.config.hidden_size, self.num_labels)
 
     # implement only because lightning requires to do so
     def forward(self):
@@ -43,21 +44,26 @@ def convert_longformer_qa_checkpoint_to_pytorch(
     longformer = LongformerModel.from_pretrained(longformer_model)
     lightning_model = LightningModel(longformer)
 
-    ckpt = torch.load(longformer_question_answering_ckpt_path, map_location=torch.device("cpu"))
+    ckpt = torch.load(longformer_question_answering_ckpt_path,
+                      map_location=torch.device("cpu"))
     lightning_model.load_state_dict(ckpt["state_dict"])
 
     # init longformer question answering model
-    longformer_for_qa = LongformerForQuestionAnswering.from_pretrained(longformer_model)
+    longformer_for_qa = LongformerForQuestionAnswering.from_pretrained(
+        longformer_model)
 
     # transfer weights
-    longformer_for_qa.longformer.load_state_dict(lightning_model.model.state_dict())
-    longformer_for_qa.qa_outputs.load_state_dict(lightning_model.qa_outputs.state_dict())
+    longformer_for_qa.longformer.load_state_dict(
+        lightning_model.model.state_dict())
+    longformer_for_qa.qa_outputs.load_state_dict(
+        lightning_model.qa_outputs.state_dict())
     longformer_for_qa.eval()
 
     # save model
     longformer_for_qa.save_pretrained(pytorch_dump_folder_path)
 
-    print("Conversion successful. Model saved under {}".format(pytorch_dump_folder_path))
+    print("Conversion successful. Model saved under {}".format(
+        pytorch_dump_folder_path))
 
 
 if __name__ == "__main__":

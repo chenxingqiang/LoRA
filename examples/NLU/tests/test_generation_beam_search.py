@@ -63,15 +63,21 @@ class BeamSearchTester:
             num_beams=kwargs.get("num_beams", self.num_beams),
             device=torch_device,
             length_penalty=kwargs.get("length_penalty", self.length_penalty),
-            do_early_stopping=kwargs.get("do_early_stopping", self.do_early_stopping),
-            num_beam_hyps_to_keep=kwargs.get("num_beam_hyps_to_keep", self.num_beam_hyps_to_keep),
+            do_early_stopping=kwargs.get(
+                "do_early_stopping", self.do_early_stopping),
+            num_beam_hyps_to_keep=kwargs.get(
+                "num_beam_hyps_to_keep", self.num_beam_hyps_to_keep),
         )
 
     def prepare_inputs(self):
-        input_ids = ids_tensor((self.batch_size * self.num_beams, self.sequence_length), self.vocab_size)
-        next_tokens = ids_tensor((self.batch_size, 2 * self.num_beams), self.vocab_size).to(torch_device)
-        next_indices = ids_tensor((self.batch_size, 2 * self.num_beams), self.num_beams).to(torch_device)
-        next_scores, _ = (-floats_tensor((self.batch_size, 2 * self.num_beams)).to(torch_device)).sort(descending=True)
+        input_ids = ids_tensor(
+            (self.batch_size * self.num_beams, self.sequence_length), self.vocab_size)
+        next_tokens = ids_tensor(
+            (self.batch_size, 2 * self.num_beams), self.vocab_size).to(torch_device)
+        next_indices = ids_tensor(
+            (self.batch_size, 2 * self.num_beams), self.num_beams).to(torch_device)
+        next_scores, _ = (-floats_tensor((self.batch_size, 2 *
+                          self.num_beams)).to(torch_device)).sort(descending=True)
         return (input_ids, next_tokens, next_indices, next_scores)
 
     def check_beam_hypotheses(self, input_ids, *args):
@@ -103,7 +109,8 @@ class BeamSearchTester:
             beam_hyp.add(input_ids[beam_idx], -10.0 + float(beam_idx))
 
         # -10.0 is removed => -9.0 is worst score
-        self.parent.assertAlmostEqual(beam_hyp.worst_score, -9.0 / (self.sequence_length ** beam_hyp.length_penalty))
+        self.parent.assertAlmostEqual(
+            beam_hyp.worst_score, -9.0 / (self.sequence_length ** beam_hyp.length_penalty))
 
         # -5.0 is better than worst score => should not be finished
         self.parent.assertFalse(beam_hyp.is_done(-5.0, self.sequence_length))
@@ -119,14 +126,16 @@ class BeamSearchTester:
         tokens[0, :] = self.eos_token_id
 
         with self.parent.assertRaises(ValueError):
-            beam_scorer.process(input_ids, next_scores, tokens, next_indices, eos_token_id=self.eos_token_id)
+            beam_scorer.process(input_ids, next_scores, tokens,
+                                next_indices, eos_token_id=self.eos_token_id)
 
         # check all batches are done
         beam_scorer = self.prepare_beam_scorer()
 
         tokens = next_tokens.clone()
         tokens[:, : self.num_beams] = self.eos_token_id
-        beam_scorer.process(input_ids, next_scores, tokens, next_indices, eos_token_id=self.eos_token_id)
+        beam_scorer.process(input_ids, next_scores, tokens,
+                            next_indices, eos_token_id=self.eos_token_id)
         # beam scorer should be done
         self.parent.assertTrue(beam_scorer.is_done)
 
@@ -143,7 +152,7 @@ class BeamSearchTester:
         output_indices = beam_outputs["next_beam_indices"]
 
         def cut_expected_tensor(tensor):
-            return torch.cat([tensor[:, :1], tensor[:, 2 : self.num_beams + 1]], dim=1).flatten()
+            return torch.cat([tensor[:, :1], tensor[:, 2: self.num_beams + 1]], dim=1).flatten()
 
         # check all outptus
         # cut out id of eos token and take best `num_beams` outputs
@@ -153,18 +162,24 @@ class BeamSearchTester:
         # add num_beams * batch_idx
         expected_output_indices = (
             cut_expected_tensor(next_indices)
-            + (torch.arange(self.num_beams * self.batch_size, device=torch_device) // self.num_beams) * self.num_beams
+            + (torch.arange(self.num_beams * self.batch_size,
+               device=torch_device) // self.num_beams) * self.num_beams
         )
 
-        self.parent.assertListEqual(expected_output_tokens.tolist(), output_tokens.tolist())
-        self.parent.assertListEqual(expected_output_indices.tolist(), output_indices.tolist())
-        self.parent.assertTrue(torch.allclose(expected_output_scores, output_scores, atol=1e-3))
+        self.parent.assertListEqual(
+            expected_output_tokens.tolist(), output_tokens.tolist())
+        self.parent.assertListEqual(
+            expected_output_indices.tolist(), output_indices.tolist())
+        self.parent.assertTrue(torch.allclose(
+            expected_output_scores, output_scores, atol=1e-3))
 
         # make sure ids of eos token are correctly saved in beam_hyps of beam scorer
         for batch_idx in range(self.batch_size):
-            correct_idx = batch_idx * self.num_beams + next_indices[batch_idx, 1]
+            correct_idx = batch_idx * self.num_beams + \
+                next_indices[batch_idx, 1]
             self.parent.assertListEqual(
-                input_ids[correct_idx].tolist(), beam_scorer._beam_hyps[batch_idx].beams[0][-1].tolist()
+                input_ids[correct_idx].tolist(
+                ), beam_scorer._beam_hyps[batch_idx].beams[0][-1].tolist()
             )
 
     def check_beam_scores_finalize(self, input_ids, next_tokens, next_indices, next_scores):
@@ -187,7 +202,8 @@ class BeamSearchTester:
         output_tokens = beam_outputs["next_beam_tokens"]
         output_indices = beam_outputs["next_beam_indices"]
 
-        input_ids = torch.cat([input_ids[output_indices, :], output_tokens.unsqueeze(-1)], dim=-1)
+        input_ids = torch.cat(
+            [input_ids[output_indices, :], output_tokens.unsqueeze(-1)], dim=-1)
 
         # finalize
         sequence_output = beam_scorer.finalize(
@@ -203,8 +219,10 @@ class BeamSearchTester:
         sequence_scores = sequence_output["sequence_scores"]
 
         # since `num_beam_hyps_to_keep` = 1 => only return `batch_size` x `max_length`
-        self.parent.assertListEqual(list(sequences.shape), [self.batch_size, max_length])
-        self.parent.assertListEqual(list(sequence_scores.shape), [self.batch_size])
+        self.parent.assertListEqual(list(sequences.shape), [
+                                    self.batch_size, max_length])
+        self.parent.assertListEqual(
+            list(sequence_scores.shape), [self.batch_size])
 
         # check sequence_scores
         self.parent.assertFalse((sequence_scores > 0).any().item())
@@ -229,8 +247,10 @@ class BeamSearchTester:
         sequences = sequence_output["sequences"]
         sequence_scores = sequence_output["sequence_scores"]
 
-        self.parent.assertListEqual(list(sequences.shape), [self.num_beams * self.batch_size, max_length])
-        self.parent.assertListEqual(list(sequence_scores.shape), [self.num_beams * self.batch_size])
+        self.parent.assertListEqual(list(sequences.shape), [
+                                    self.num_beams * self.batch_size, max_length])
+        self.parent.assertListEqual(list(sequence_scores.shape), [
+                                    self.num_beams * self.batch_size])
 
 
 @require_torch

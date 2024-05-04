@@ -44,9 +44,9 @@ def check_LTR_mark(line, idx, fast):
     enc = fast.encode_plus(line)[0]
     offsets = enc.offsets
     curr, prev = offsets[idx], offsets[idx - 1]
-    if curr is not None and line[curr[0] : curr[1]] == "\u200f":
+    if curr is not None and line[curr[0]: curr[1]] == "\u200f":
         return True
-    if prev is not None and line[prev[0] : prev[1]] == "\u200f":
+    if prev is not None and line[prev[0]: prev[1]] == "\u200f":
         return True
 
 
@@ -76,20 +76,21 @@ def check_details(line, spm_ids, tok_ids, slow, fast):
         spms = Counter(spm_ids[first:last])
         toks = Counter(tok_ids[first:last])
 
-        removable_tokens = {spm_ for (spm_, si) in spms.items() if toks.get(spm_, 0) == si}
+        removable_tokens = {
+            spm_ for (spm_, si) in spms.items() if toks.get(spm_, 0) == si}
         min_width = 3
         for i in range(last - first - min_width):
             if all(spm_ids[first + i + j] in removable_tokens for j in range(min_width)):
                 possible_matches = [
                     k
                     for k in range(last - first - min_width)
-                    if tok_ids[first + k : first + k + min_width] == spm_ids[first + i : first + i + min_width]
+                    if tok_ids[first + k: first + k + min_width] == spm_ids[first + i: first + i + min_width]
                 ]
                 for j in possible_matches:
-                    if check_diff(spm_ids[first : first + i], tok_ids[first : first + j], sp, tok) and check_details(
+                    if check_diff(spm_ids[first: first + i], tok_ids[first: first + j], sp, tok) and check_details(
                         line,
-                        spm_ids[first + i : last],
-                        tok_ids[first + j : last],
+                        spm_ids[first + i: last],
+                        tok_ids[first + j: last],
                         slow,
                         fast,
                     ):
@@ -131,7 +132,8 @@ def test_string(slow, fast, text):
         perfect += 1
 
     if total % 10000 == 0:
-        print(f"({perfect} / {imperfect} / {wrong} ----- {perfect + imperfect + wrong})")
+        print(
+            f"({perfect} / {imperfect} / {wrong} ----- {perfect + imperfect + wrong})")
 
     if skip_assert:
         return
@@ -162,7 +164,8 @@ if __name__ == "__main__":
             wrong = 0
             total = 0
 
-            print(f"========================== Checking {name}: {checkpoint} ==========================")
+            print(
+                f"========================== Checking {name}: {checkpoint} ==========================")
             slow = slow_class.from_pretrained(checkpoint, force_download=True)
             fast = fast_class.from_pretrained(checkpoint, force_download=True)
             test_tokenizer(slow, fast)

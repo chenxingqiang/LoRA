@@ -64,7 +64,8 @@ def text_standardize(text):
     text = text.replace("―", "-")
     text = text.replace("…", "...")
     text = text.replace("´", "'")
-    text = re.sub(r"""(-+|~+|!+|"+|;+|\?+|\++|,+|\)+|\(+|\\+|\/+|\*+|\[+|\]+|}+|{+|\|+|_+)""", r" \1 ", text)
+    text = re.sub(
+        r"""(-+|~+|!+|"+|;+|\?+|\++|,+|\)+|\(+|\\+|\/+|\*+|\[+|\]+|}+|{+|\|+|_+)""", r" \1 ", text)
     text = re.sub(r"\s*\n\s*", " \n ", text)
     text = re.sub(r"[^\S\n]+", " ", text)
     return text.strip()
@@ -107,7 +108,8 @@ class OpenAIGPTTokenizer(PreTrainedTokenizer):
             self.nlp = _nlp.Defaults.create_tokenizer(_nlp)
             self.fix_text = ftfy.fix_text
         except ImportError:
-            logger.warning("ftfy or spacy is not installed using BERT BasicTokenizer instead of SpaCy & ftfy.")
+            logger.warning(
+                "ftfy or spacy is not installed using BERT BasicTokenizer instead of SpaCy & ftfy.")
             self.nlp = BasicTokenizer(do_lower_case=True)
             self.fix_text = None
 
@@ -141,7 +143,8 @@ class OpenAIGPTTokenizer(PreTrainedTokenizer):
             return token + "</w>"
 
         while True:
-            bigram = min(pairs, key=lambda pair: self.bpe_ranks.get(pair, float("inf")))
+            bigram = min(pairs, key=lambda pair: self.bpe_ranks.get(
+                pair, float("inf")))
             if bigram not in self.bpe_ranks:
                 break
             first, second = bigram
@@ -187,7 +190,8 @@ class OpenAIGPTTokenizer(PreTrainedTokenizer):
             # Using SpaCy & ftfy (original tokenization process of OpenAI GPT)
             text = self.nlp(text_standardize(self.fix_text(text)))
             for token in text:
-                split_tokens.extend([t for t in self.bpe(token.text.lower()).split(" ")])
+                split_tokens.extend(
+                    [t for t in self.bpe(token.text.lower()).split(" ")])
         return split_tokens
 
     def _convert_token_to_id(self, token):
@@ -205,13 +209,16 @@ class OpenAIGPTTokenizer(PreTrainedTokenizer):
 
     def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
         if not os.path.isdir(save_directory):
-            logger.error("Vocabulary path ({}) should be a directory".format(save_directory))
+            logger.error(
+                "Vocabulary path ({}) should be a directory".format(save_directory))
             return
         vocab_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["vocab_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["vocab_file"]
         )
         merge_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["merges_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["merges_file"]
         )
 
         with open(vocab_file, "w", encoding="utf-8") as f:
@@ -224,7 +231,8 @@ class OpenAIGPTTokenizer(PreTrainedTokenizer):
                 if index != token_index:
                     logger.warning(
                         "Saving vocabulary to {}: BPE merge indices are not consecutive."
-                        " Please check that the tokenizer is not corrupted!".format(merge_file)
+                        " Please check that the tokenizer is not corrupted!".format(
+                            merge_file)
                     )
                     index = token_index
                 writer.write(" ".join(bpe_tokens) + "\n")

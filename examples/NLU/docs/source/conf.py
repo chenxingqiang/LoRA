@@ -29,9 +29,9 @@ version = u''
 release = u'4.4.2'
 
 
-
 # Prefix link to point to master, comment this during version release and uncomment below line
-extlinks = {'prefix_link': ('https://github.com/huggingface/transformers/blob/master/%s', '')}
+extlinks = {'prefix_link': (
+    'https://github.com/huggingface/transformers/blob/master/%s', '')}
 # Prefix link to always point to corresponding version, uncomment this during version release
 # extlinks = {'prefix_link': ('https://github.com/huggingface/transformers/blob/v'+ release + '/%s', '')}
 
@@ -117,9 +117,9 @@ html_static_path = ['_static']
 #
 # html_sidebars = {}
 
-# This must be the name of an image file (path relative to the configuration 
-# directory) that is the favicon of the docs. Modern browsers use this as 
-# the icon for tabs, windows and bookmarks. It should be a Windows-style 
+# This must be the name of an image file (path relative to the configuration
+# directory) that is the favicon of the docs. Modern browsers use this as
+# the icon for tabs, windows and bookmarks. It should be a Windows-style
 # icon file (.ico).
 html_favicon = 'favicon.ico'
 
@@ -197,6 +197,7 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
+
 
 def setup(app):
     app.add_css_file('css/huggingface.css')

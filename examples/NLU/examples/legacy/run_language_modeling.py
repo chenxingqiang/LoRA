@@ -73,7 +73,8 @@ class ModelArguments:
     )
     model_type: Optional[str] = field(
         default=None,
-        metadata={"help": "If training from scratch, pass a model type from the list: " + ", ".join(MODEL_TYPES)},
+        metadata={
+            "help": "If training from scratch, pass a model type from the list: " + ", ".join(MODEL_TYPES)},
     )
     config_name: Optional[str] = field(
         default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
@@ -83,7 +84,8 @@ class ModelArguments:
     )
     cache_dir: Optional[str] = field(
         default=None,
-        metadata={"help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
+        metadata={
+            "help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
     )
 
 
@@ -105,25 +107,30 @@ class DataTrainingArguments:
     )
     eval_data_file: Optional[str] = field(
         default=None,
-        metadata={"help": "An optional input evaluation data file to evaluate the perplexity on (a text file)."},
+        metadata={
+            "help": "An optional input evaluation data file to evaluate the perplexity on (a text file)."},
     )
     train_ref_file: Optional[str] = field(
         default=None,
-        metadata={"help": "An optional input train ref data file for whole word mask in Chinese."},
+        metadata={
+            "help": "An optional input train ref data file for whole word mask in Chinese."},
     )
     eval_ref_file: Optional[str] = field(
         default=None,
-        metadata={"help": "An optional input eval ref data file for whole word mask in Chinese."},
+        metadata={
+            "help": "An optional input eval ref data file for whole word mask in Chinese."},
     )
     line_by_line: bool = field(
         default=False,
-        metadata={"help": "Whether distinct lines of text in the dataset are to be handled as distinct sequences."},
+        metadata={
+            "help": "Whether distinct lines of text in the dataset are to be handled as distinct sequences."},
     )
 
     mlm: bool = field(
         default=False, metadata={"help": "Train with masked-language modeling loss instead of language modeling."}
     )
-    whole_word_mask: bool = field(default=False, metadata={"help": "Whether ot not to use whole word mask."})
+    whole_word_mask: bool = field(default=False, metadata={
+                                  "help": "Whether ot not to use whole word mask."})
     mlm_probability: float = field(
         default=0.15, metadata={"help": "Ratio of tokens to mask for masked language modeling loss"}
     )
@@ -160,7 +167,8 @@ def get_dataset(
         if args.line_by_line:
             if ref_path is not None:
                 if not args.whole_word_mask or not args.mlm:
-                    raise ValueError("You need to set world whole masking and mlm to True for Chinese Whole Word Mask")
+                    raise ValueError(
+                        "You need to set world whole masking and mlm to True for Chinese Whole Word Mask")
                 return LineByLineWithRefDataset(
                     tokenizer=tokenizer,
                     file_path=file_path,
@@ -191,7 +199,8 @@ def main():
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+    parser = HfArgumentParser(
+        (ModelArguments, DataTrainingArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
     if data_args.eval_data_file is None and training_args.do_eval:
@@ -213,7 +222,8 @@ def main():
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
-        level=logging.INFO if training_args.local_rank in [-1, 0] else logging.WARN,
+        level=logging.INFO if training_args.local_rank in [
+            -1, 0] else logging.WARN,
     )
     logger.warning(
         "Process rank: %s, device: %s, n_gpu: %s, distributed training: %s, 16-bits training: %s",
@@ -240,17 +250,22 @@ def main():
     # download model & vocab.
 
     if model_args.config_name:
-        config = AutoConfig.from_pretrained(model_args.config_name, cache_dir=model_args.cache_dir)
+        config = AutoConfig.from_pretrained(
+            model_args.config_name, cache_dir=model_args.cache_dir)
     elif model_args.model_name_or_path:
-        config = AutoConfig.from_pretrained(model_args.model_name_or_path, cache_dir=model_args.cache_dir)
+        config = AutoConfig.from_pretrained(
+            model_args.model_name_or_path, cache_dir=model_args.cache_dir)
     else:
         config = CONFIG_MAPPING[model_args.model_type]()
-        logger.warning("You are instantiating a new config instance from scratch.")
+        logger.warning(
+            "You are instantiating a new config instance from scratch.")
 
     if model_args.tokenizer_name:
-        tokenizer = AutoTokenizer.from_pretrained(model_args.tokenizer_name, cache_dir=model_args.cache_dir)
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_args.tokenizer_name, cache_dir=model_args.cache_dir)
     elif model_args.model_name_or_path:
-        tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, cache_dir=model_args.cache_dir)
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_args.model_name_or_path, cache_dir=model_args.cache_dir)
     else:
         raise ValueError(
             "You are instantiating a new tokenizer from scratch. This is not supported, but you can do it from another script, save it,"
@@ -285,10 +300,12 @@ def main():
     # Get datasets
 
     train_dataset = (
-        get_dataset(data_args, tokenizer=tokenizer, cache_dir=model_args.cache_dir) if training_args.do_train else None
+        get_dataset(data_args, tokenizer=tokenizer,
+                    cache_dir=model_args.cache_dir) if training_args.do_train else None
     )
     eval_dataset = (
-        get_dataset(data_args, tokenizer=tokenizer, evaluate=True, cache_dir=model_args.cache_dir)
+        get_dataset(data_args, tokenizer=tokenizer,
+                    evaluate=True, cache_dir=model_args.cache_dir)
         if training_args.do_eval
         else None
     )
@@ -342,7 +359,8 @@ def main():
         perplexity = math.exp(eval_output["eval_loss"])
         result = {"perplexity": perplexity}
 
-        output_eval_file = os.path.join(training_args.output_dir, "eval_results_lm.txt")
+        output_eval_file = os.path.join(
+            training_args.output_dir, "eval_results_lm.txt")
         if trainer.is_world_master():
             with open(output_eval_file, "w") as writer:
                 logger.info("***** Eval results *****")

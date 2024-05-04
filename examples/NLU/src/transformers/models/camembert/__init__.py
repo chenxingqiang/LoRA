@@ -35,7 +35,8 @@ if is_sentencepiece_available():
     _import_structure["tokenization_camembert"] = ["CamembertTokenizer"]
 
 if is_tokenizers_available():
-    _import_structure["tokenization_camembert_fast"] = ["CamembertTokenizerFast"]
+    _import_structure["tokenization_camembert_fast"] = [
+        "CamembertTokenizerFast"]
 
 if is_torch_available():
     _import_structure["modeling_camembert"] = [

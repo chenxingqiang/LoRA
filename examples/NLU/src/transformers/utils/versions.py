@@ -79,7 +79,8 @@ def require_version(requirement: str, hint: Optional[str] = None) -> None:
     try:
         got_ver = pkg_resources.get_distribution(pkg).version
     except pkg_resources.DistributionNotFound:
-        raise pkg_resources.DistributionNotFound(requirement, ["this application", hint])
+        raise pkg_resources.DistributionNotFound(
+            requirement, ["this application", hint])
 
     # check that the right version is installed if version number was provided
     if want_ver is not None and not ops[op](version.parse(got_ver), version.parse(want_ver)):

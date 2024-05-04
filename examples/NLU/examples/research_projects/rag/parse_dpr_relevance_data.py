@@ -38,7 +38,8 @@ def main():
         dpr_records = json.load(src_file)
         for dpr_record in tqdm(dpr_records):
             question = dpr_record["question"]
-            contexts = [context["title"] for context in dpr_record["positive_ctxs"]]
+            contexts = [context["title"]
+                        for context in dpr_record["positive_ctxs"]]
             eval_file.write(question + "\n")
             gold_file.write("\t".join(contexts) + "\n")
 

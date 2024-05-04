@@ -25,7 +25,8 @@ import urllib.request
 import zipfile
 
 
-TASKS = ["CoLA", "SST", "MRPC", "QQP", "STS", "MNLI", "SNLI", "QNLI", "RTE", "WNLI", "diagnostic"]
+TASKS = ["CoLA", "SST", "MRPC", "QQP", "STS", "MNLI",
+         "SNLI", "QNLI", "RTE", "WNLI", "diagnostic"]
 TASK2PATH = {
     "CoLA": "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com/o/data%2FCoLA.zip?alt=media&token=46d5e637-3411-4188-bc44-5809b5bfb5f4",
     "SST": "https://firebasestorage.googleapis.com/v0/b/mtl-sentence-representations.appspot.com/o/data%2FSST-2.zip?alt=media&token=aabc5f6b-e466-44a2-b9b4-cf6337f84ac8",
@@ -60,7 +61,8 @@ def format_mrpc(data_dir, path_to_data):
     if not os.path.isdir(mrpc_dir):
         os.mkdir(mrpc_dir)
     if path_to_data:
-        mrpc_train_file = os.path.join(path_to_data, "msr_paraphrase_train.txt")
+        mrpc_train_file = os.path.join(
+            path_to_data, "msr_paraphrase_train.txt")
         mrpc_test_file = os.path.join(path_to_data, "msr_paraphrase_test.txt")
     else:
         print("Local MRPC data not specified, downloading data from %s" % MRPC_TRAIN)
@@ -68,9 +70,12 @@ def format_mrpc(data_dir, path_to_data):
         mrpc_test_file = os.path.join(mrpc_dir, "msr_paraphrase_test.txt")
         urllib.request.urlretrieve(MRPC_TRAIN, mrpc_train_file)
         urllib.request.urlretrieve(MRPC_TEST, mrpc_test_file)
-    assert os.path.isfile(mrpc_train_file), "Train data not found at %s" % mrpc_train_file
-    assert os.path.isfile(mrpc_test_file), "Test data not found at %s" % mrpc_test_file
-    urllib.request.urlretrieve(TASK2PATH["MRPC"], os.path.join(mrpc_dir, "dev_ids.tsv"))
+    assert os.path.isfile(
+        mrpc_train_file), "Train data not found at %s" % mrpc_train_file
+    assert os.path.isfile(
+        mrpc_test_file), "Test data not found at %s" % mrpc_test_file
+    urllib.request.urlretrieve(
+        TASK2PATH["MRPC"], os.path.join(mrpc_dir, "dev_ids.tsv"))
 
     dev_ids = []
     with open(os.path.join(mrpc_dir, "dev_ids.tsv"), encoding="utf8") as ids_fh:
@@ -86,9 +91,11 @@ def format_mrpc(data_dir, path_to_data):
         for row in data_fh:
             label, id1, id2, s1, s2 = row.strip().split("\t")
             if [id1, id2] in dev_ids:
-                dev_fh.write("%s\t%s\t%s\t%s\t%s\n" % (label, id1, id2, s1, s2))
+                dev_fh.write("%s\t%s\t%s\t%s\t%s\n" %
+                             (label, id1, id2, s1, s2))
             else:
-                train_fh.write("%s\t%s\t%s\t%s\t%s\n" % (label, id1, id2, s1, s2))
+                train_fh.write("%s\t%s\t%s\t%s\t%s\n" %
+                               (label, id1, id2, s1, s2))
 
     with open(mrpc_test_file, encoding="utf8") as data_fh, open(
         os.path.join(mrpc_dir, "test.tsv"), "w", encoding="utf8"
@@ -125,7 +132,8 @@ def get_tasks(task_names):
 
 def main(arguments):
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data_dir", help="directory to save data to", type=str, default="glue_data")
+    parser.add_argument(
+        "--data_dir", help="directory to save data to", type=str, default="glue_data")
     parser.add_argument(
         "--tasks", help="tasks to download data for as a comma separated string", type=str, default="all"
     )

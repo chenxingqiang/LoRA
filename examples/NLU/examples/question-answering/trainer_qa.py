@@ -56,10 +56,12 @@ class QuestionAnsweringTrainer(Trainer):
 
         # We might have removed columns from the dataset so we put them back.
         if isinstance(eval_dataset, datasets.Dataset):
-            eval_dataset.set_format(type=eval_dataset.format["type"], columns=list(eval_dataset.features.keys()))
+            eval_dataset.set_format(
+                type=eval_dataset.format["type"], columns=list(eval_dataset.features.keys()))
 
         if self.post_process_function is not None and self.compute_metrics is not None:
-            eval_preds = self.post_process_function(eval_examples, eval_dataset, output.predictions)
+            eval_preds = self.post_process_function(
+                eval_examples, eval_dataset, output.predictions)
             metrics = self.compute_metrics(eval_preds)
 
             self.log(metrics)
@@ -70,7 +72,8 @@ class QuestionAnsweringTrainer(Trainer):
             # tpu-comment: Logging debug metrics for PyTorch/XLA (compile, execute times, ops, etc.)
             xm.master_print(met.metrics_report())
 
-        self.control = self.callback_handler.on_evaluate(self.args, self.state, self.control, metrics)
+        self.control = self.callback_handler.on_evaluate(
+            self.args, self.state, self.control, metrics)
         return metrics
 
     def predict(self, test_dataset, test_examples, ignore_keys=None):
@@ -96,9 +99,11 @@ class QuestionAnsweringTrainer(Trainer):
 
         # We might have removed columns from the dataset so we put them back.
         if isinstance(test_dataset, datasets.Dataset):
-            test_dataset.set_format(type=test_dataset.format["type"], columns=list(test_dataset.features.keys()))
+            test_dataset.set_format(
+                type=test_dataset.format["type"], columns=list(test_dataset.features.keys()))
 
-        eval_preds = self.post_process_function(test_examples, test_dataset, output.predictions)
+        eval_preds = self.post_process_function(
+            test_examples, test_dataset, output.predictions)
         metrics = self.compute_metrics(eval_preds)
 
         return PredictionOutput(predictions=eval_preds.predictions, label_ids=eval_preds.label_ids, metrics=metrics)

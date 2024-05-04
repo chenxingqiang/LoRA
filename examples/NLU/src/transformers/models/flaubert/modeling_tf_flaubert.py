@@ -187,7 +187,8 @@ def get_masks(slen, lengths, causal, padding_mask=None):
     # attention mask is the same as mask, or triangular inferior attention (causal)
     if causal:
         attn_mask = tf.less_equal(
-            tf.tile(tf.reshape(alen, (1, 1, slen)), (bs, slen, 1)), tf.reshape(alen, (1, slen, 1))
+            tf.tile(tf.reshape(alen, (1, 1, slen)), (bs, slen, 1)
+                    ), tf.reshape(alen, (1, slen, 1))
         )
     else:
         attn_mask = mask
@@ -213,8 +214,10 @@ class TFFlaubertPreTrainedModel(TFPreTrainedModel):
     @property
     def dummy_inputs(self):
         # Sometimes XLM has language embeddings so don't forget to build them as well if needed
-        inputs_list = tf.constant([[7, 6, 0, 0, 1], [1, 2, 3, 0, 0], [0, 0, 0, 4, 5]])
-        attns_list = tf.constant([[1, 1, 0, 0, 1], [1, 1, 1, 0, 0], [1, 0, 0, 1, 1]])
+        inputs_list = tf.constant(
+            [[7, 6, 0, 0, 1], [1, 2, 3, 0, 0], [0, 0, 0, 4, 5]])
+        attns_list = tf.constant(
+            [[1, 1, 0, 0, 1], [1, 1, 1, 0, 0], [1, 0, 0, 1, 1]])
         if self.config.use_lang_emb and self.config.n_langs > 1:
             return {
                 "input_ids": inputs_list,
@@ -296,8 +299,10 @@ class TFFlaubertModel(TFFlaubertPreTrainedModel):
 
     # Copied from transformers.models.distilbert.modeling_tf_distilbert.TFDistilBertModel.serving_output
     def serving_output(self, output):
-        hs = tf.convert_to_tensor(output.hidden_states) if self.config.output_hidden_states else None
-        attns = tf.convert_to_tensor(output.attentions) if self.config.output_attentions else None
+        hs = tf.convert_to_tensor(
+            output.hidden_states) if self.config.output_hidden_states else None
+        attns = tf.convert_to_tensor(
+            output.attentions) if self.config.output_attentions else None
 
         return TFBaseModelOutput(last_hidden_state=output.last_hidden_state, hidden_states=hs, attentions=attns)
 
@@ -314,10 +319,14 @@ class TFFlaubertMultiHeadAttention(tf.keras.layers.Layer):
         self.output_attentions = config.output_attentions
         assert self.dim % self.n_heads == 0
 
-        self.q_lin = tf.keras.layers.Dense(dim, kernel_initializer=get_initializer(config.init_std), name="q_lin")
-        self.k_lin = tf.keras.layers.Dense(dim, kernel_initializer=get_initializer(config.init_std), name="k_lin")
-        self.v_lin = tf.keras.layers.Dense(dim, kernel_initializer=get_initializer(config.init_std), name="v_lin")
-        self.out_lin = tf.keras.layers.Dense(dim, kernel_initializer=get_initializer(config.init_std), name="out_lin")
+        self.q_lin = tf.keras.layers.Dense(
+            dim, kernel_initializer=get_initializer(config.init_std), name="q_lin")
+        self.k_lin = tf.keras.layers.Dense(
+            dim, kernel_initializer=get_initializer(config.init_std), name="k_lin")
+        self.v_lin = tf.keras.layers.Dense(
+            dim, kernel_initializer=get_initializer(config.init_std), name="v_lin")
+        self.out_lin = tf.keras.layers.Dense(
+            dim, kernel_initializer=get_initializer(config.init_std), name="out_lin")
         self.dropout = tf.keras.layers.Dropout(config.attention_dropout)
         self.pruned_heads = set()
 
@@ -339,7 +348,8 @@ class TFFlaubertMultiHeadAttention(tf.keras.layers.Layer):
 
         # assert dim == self.dim, 'Dimensions do not match: %s input vs %s configured' % (dim, self.dim)
         dim_per_head = self.dim // self.n_heads
-        mask_reshape = (bs, 1, qlen, klen) if len(shape_list(mask)) == 3 else (bs, 1, 1, klen)
+        mask_reshape = (bs, 1, qlen, klen) if len(
+            shape_list(mask)) == 3 else (bs, 1, 1, klen)
 
         def shape(x):
             """  projection """
@@ -363,15 +373,18 @@ class TFFlaubertMultiHeadAttention(tf.keras.layers.Layer):
             if self.layer_id in cache:
                 if kv is None:
                     k_, v_ = cache[self.layer_id]
-                    k = tf.concat([k_, k], axis=2)  # (bs, n_heads, klen, dim_per_head)
-                    v = tf.concat([v_, v], axis=2)  # (bs, n_heads, klen, dim_per_head)
+                    # (bs, n_heads, klen, dim_per_head)
+                    k = tf.concat([k_, k], axis=2)
+                    # (bs, n_heads, klen, dim_per_head)
+                    v = tf.concat([v_, v], axis=2)
                 else:
                     k, v = cache[self.layer_id]
 
             cache[self.layer_id] = (k, v)
 
         f_dim_per_head = tf.cast(dim_per_head, dtype=q.dtype)
-        q = tf.multiply(q, tf.math.rsqrt(f_dim_per_head))  # (bs, n_heads, qlen, dim_per_head)
+        # (bs, n_heads, qlen, dim_per_head)
+        q = tf.multiply(q, tf.math.rsqrt(f_dim_per_head))
         k = tf.cast(k, dtype=q.dtype)
         scores = tf.matmul(q, k, transpose_b=True)  # (bs, n_heads, qlen, klen)
         mask = tf.reshape(mask, mask_reshape)  # (bs, n_heads, qlen, klen)
@@ -379,7 +392,8 @@ class TFFlaubertMultiHeadAttention(tf.keras.layers.Layer):
         mask = tf.cast(mask, dtype=scores.dtype)
         scores = scores - 1e30 * (1.0 - mask)
         weights = tf.nn.softmax(scores, axis=-1)  # (bs, n_heads, qlen, klen)
-        weights = self.dropout(weights, training=training)  # (bs, n_heads, qlen, klen)
+        # (bs, n_heads, qlen, klen)
+        weights = self.dropout(weights, training=training)
 
         # Mask heads if we want to
         if head_mask is not None:
@@ -400,9 +414,12 @@ class TFFlaubertTransformerFFN(tf.keras.layers.Layer):
     def __init__(self, in_dim, dim_hidden, out_dim, config, **kwargs):
         super().__init__(**kwargs)
 
-        self.lin1 = tf.keras.layers.Dense(dim_hidden, kernel_initializer=get_initializer(config.init_std), name="lin1")
-        self.lin2 = tf.keras.layers.Dense(out_dim, kernel_initializer=get_initializer(config.init_std), name="lin2")
-        self.act = get_tf_activation("gelu") if config.gelu_activation else get_tf_activation("relu")
+        self.lin1 = tf.keras.layers.Dense(
+            dim_hidden, kernel_initializer=get_initializer(config.init_std), name="lin1")
+        self.lin2 = tf.keras.layers.Dense(
+            out_dim, kernel_initializer=get_initializer(config.init_std), name="lin2")
+        self.act = get_tf_activation(
+            "gelu") if config.gelu_activation else get_tf_activation("relu")
         self.dropout = tf.keras.layers.Dropout(config.dropout)
 
     def call(self, input, training=False):
@@ -442,7 +459,8 @@ class TFFlaubertMainLayer(tf.keras.layers.Layer):
         self.embeddings = TFSharedEmbeddings(
             self.n_words, self.dim, initializer_range=config.embed_init_std, name="embeddings"
         )
-        self.layer_norm_emb = tf.keras.layers.LayerNormalization(epsilon=config.layer_norm_eps, name="layer_norm_emb")
+        self.layer_norm_emb = tf.keras.layers.LayerNormalization(
+            epsilon=config.layer_norm_eps, name="layer_norm_emb")
         self.attentions = []
         self.layer_norm1 = []
         self.ffns = []
@@ -450,21 +468,25 @@ class TFFlaubertMainLayer(tf.keras.layers.Layer):
 
         for i in range(self.n_layers):
             self.attentions.append(
-                TFFlaubertMultiHeadAttention(self.n_heads, self.dim, config=config, name="attentions_._{}".format(i))
+                TFFlaubertMultiHeadAttention(
+                    self.n_heads, self.dim, config=config, name="attentions_._{}".format(i))
             )
             self.layer_norm1.append(
-                tf.keras.layers.LayerNormalization(epsilon=config.layer_norm_eps, name="layer_norm1_._{}".format(i))
+                tf.keras.layers.LayerNormalization(
+                    epsilon=config.layer_norm_eps, name="layer_norm1_._{}".format(i))
             )
             # if self.is_decoder:
             #     self.layer_norm15.append(nn.LayerNorm(self.dim, eps=config.layer_norm_eps))
             #     self.encoder_attn.append(MultiHeadAttention(self.n_heads, self.dim, dropout=self.attention_dropout))
             self.ffns.append(
                 TFFlaubertTransformerFFN(
-                    self.dim, self.hidden_dim, self.dim, config=config, name="ffns_._{}".format(i)
+                    self.dim, self.hidden_dim, self.dim, config=config, name="ffns_._{}".format(
+                        i)
                 )
             )
             self.layer_norm2.append(
-                tf.keras.layers.LayerNormalization(epsilon=config.layer_norm_eps, name="layer_norm2_._{}".format(i))
+                tf.keras.layers.LayerNormalization(
+                    epsilon=config.layer_norm_eps, name="layer_norm2_._{}".format(i))
             )
 
     def build(self, input_shape):
@@ -530,13 +552,15 @@ class TFFlaubertMainLayer(tf.keras.layers.Layer):
         )
 
         if inputs["input_ids"] is not None and inputs["inputs_embeds"] is not None:
-            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both input_ids and inputs_embeds at the same time")
         elif inputs["input_ids"] is not None:
             bs, slen = shape_list(inputs["input_ids"])
         elif inputs["inputs_embeds"] is not None:
             bs, slen = shape_list(inputs["inputs_embeds"])[:2]
         else:
-            raise ValueError("You have to specify either input_ids or inputs_embeds")
+            raise ValueError(
+                "You have to specify either input_ids or inputs_embeds")
 
         if inputs["lengths"] is None:
             if inputs["input_ids"] is not None:
@@ -561,7 +585,8 @@ class TFFlaubertMainLayer(tf.keras.layers.Layer):
         #     assert src_enc.size(0) == bs
 
         # generate masks
-        mask, attn_mask = get_masks(slen, inputs["lengths"], self.causal, padding_mask=inputs["attention_mask"])
+        mask, attn_mask = get_masks(
+            slen, inputs["lengths"], self.causal, padding_mask=inputs["attention_mask"])
         # if self.is_decoder and src_enc is not None:
         #     src_mask = torch.arange(src_len.max(), dtype=torch.long, device=lengths.device) < src_len[:, None]
 
@@ -609,7 +634,8 @@ class TFFlaubertMainLayer(tf.keras.layers.Layer):
         if inputs["inputs_embeds"] is None:
             inputs["inputs_embeds"] = self.embeddings(inputs["input_ids"])
 
-        tensor = inputs["inputs_embeds"] + tf.gather(self.position_embeddings, inputs["position_ids"])
+        tensor = inputs["inputs_embeds"] + \
+            tf.gather(self.position_embeddings, inputs["position_ids"])
 
         if inputs["langs"] is not None and self.use_lang_emb:
             tensor = tensor + tf.gather(self.lang_embeddings, inputs["langs"])
@@ -735,7 +761,8 @@ class TFFlaubertPredLayer(tf.keras.layers.Layer):
 
     def build(self, input_shape):
         # The output weights are the same as the input embeddings, but there is an output-only bias for each token.
-        self.bias = self.add_weight(shape=(self.n_words,), initializer="zeros", trainable=True, name="bias")
+        self.bias = self.add_weight(
+            shape=(self.n_words,), initializer="zeros", trainable=True, name="bias")
 
         super().build(input_shape)
 
@@ -797,13 +824,15 @@ class TFFlaubertWithLMHeadModel(TFFlaubertPreTrainedModel):
     def __init__(self, config, *inputs, **kwargs):
         super().__init__(config, *inputs, **kwargs)
         self.transformer = TFFlaubertMainLayer(config, name="transformer")
-        self.pred_layer = TFFlaubertPredLayer(config, self.transformer.embeddings, name="pred_layer_._proj")
+        self.pred_layer = TFFlaubertPredLayer(
+            config, self.transformer.embeddings, name="pred_layer_._proj")
 
     def get_lm_head(self):
         return self.pred_layer
 
     def get_prefix_bias_name(self):
-        warnings.warn("The method get_prefix_bias_name is deprecated. Please use `get_bias` instead.", FutureWarning)
+        warnings.warn(
+            "The method get_prefix_bias_name is deprecated. Please use `get_bias` instead.", FutureWarning)
         return self.name + "/" + self.pred_layer.name
 
     def prepare_inputs_for_generation(self, inputs, **kwargs):
@@ -888,8 +917,10 @@ class TFFlaubertWithLMHeadModel(TFFlaubertPreTrainedModel):
         )
 
     def serving_output(self, output):
-        hs = tf.convert_to_tensor(output.hidden_states) if self.config.output_hidden_states else None
-        attns = tf.convert_to_tensor(output.attentions) if self.config.output_attentions else None
+        hs = tf.convert_to_tensor(
+            output.hidden_states) if self.config.output_hidden_states else None
+        attns = tf.convert_to_tensor(
+            output.attentions) if self.config.output_attentions else None
 
         return TFFlaubertWithLMHeadModelOutput(logits=output.logits, hidden_states=hs, attentions=attns)
 

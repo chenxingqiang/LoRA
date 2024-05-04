@@ -27,7 +27,8 @@ _import_structure = {
 }
 
 if is_tokenizers_available():
-    _import_structure["tokenization_distilbert_fast"] = ["DistilBertTokenizerFast"]
+    _import_structure["tokenization_distilbert_fast"] = [
+        "DistilBertTokenizerFast"]
 
 if is_torch_available():
     _import_structure["modeling_distilbert"] = [

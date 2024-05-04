@@ -54,7 +54,8 @@ IGNORE_NON_TESTED = [
     "T5Stack",  # Building part of bigger (tested) model.
     "TFDPREncoder",  # Building part of bigger (tested) model.
     "TFDPRSpanPredictor",  # Building part of bigger (tested) model.
-    "TFElectraMainLayer",  # Building part of bigger (tested) model (should it be a TFPreTrainedModel ?)
+    # Building part of bigger (tested) model (should it be a TFPreTrainedModel ?)
+    "TFElectraMainLayer",
     "TFRobertaForMultipleChoice",  # TODO: fix
     "SeparableConv1D",  # Building part of bigger (tested) model.
 ]
@@ -183,7 +184,8 @@ def get_model_modules():
 def get_models(module):
     """ Get the objects in module that are models."""
     models = []
-    model_classes = (transformers.PreTrainedModel, transformers.TFPreTrainedModel)
+    model_classes = (transformers.PreTrainedModel,
+                     transformers.TFPreTrainedModel)
     for attr_name in dir(module):
         if "Pretrained" in attr_name or "PreTrained" in attr_name:
             continue
@@ -221,7 +223,8 @@ def find_tested_models(test_file):
     # This is a bit hacky but I didn't find a way to import the test_file as a module and read inside the class
     with open(os.path.join(PATH_TO_TESTS, test_file), "r", encoding="utf-8", newline="\n") as f:
         content = f.read()
-    all_models = re.findall(r"all_model_classes\s+=\s+\(\s*\(([^\)]*)\)", content)
+    all_models = re.findall(
+        r"all_model_classes\s+=\s+\(\s*\(([^\)]*)\)", content)
     # Check with one less parenthesis as well
     all_models += re.findall(r"all_model_classes\s+=\s+\(([^\)]*)\)", content)
     if len(all_models) > 0:
@@ -266,12 +269,14 @@ def check_all_models_are_tested():
     for module in modules:
         test_file = f"test_{module.__name__.split('.')[-1]}.py"
         if test_file not in test_files:
-            failures.append(f"{module.__name__} does not have its corresponding test file {test_file}.")
+            failures.append(
+                f"{module.__name__} does not have its corresponding test file {test_file}.")
         new_failures = check_models_are_tested(module, test_file)
         if new_failures is not None:
             failures += new_failures
     if len(failures) > 0:
-        raise Exception(f"There were {len(failures)} failures:\n" + "\n".join(failures))
+        raise Exception(
+            f"There were {len(failures)} failures:\n" + "\n".join(failures))
 
 
 def get_all_auto_configured_models():
@@ -279,10 +284,12 @@ def get_all_auto_configured_models():
     result = set()  # To avoid duplicates we concatenate all model classes in a set.
     for attr_name in dir(transformers.models.auto.modeling_auto):
         if attr_name.startswith("MODEL_") and attr_name.endswith("MAPPING"):
-            result = result | set(getattr(transformers.models.auto.modeling_auto, attr_name).values())
+            result = result | set(
+                getattr(transformers.models.auto.modeling_auto, attr_name).values())
     for attr_name in dir(transformers.models.auto.modeling_tf_auto):
         if attr_name.startswith("TF_MODEL_") and attr_name.endswith("MAPPING"):
-            result = result | set(getattr(transformers.models.auto.modeling_tf_auto, attr_name).values())
+            result = result | set(
+                getattr(transformers.models.auto.modeling_tf_auto, attr_name).values())
     return [cls.__name__ for cls in result]
 
 
@@ -306,11 +313,13 @@ def check_all_models_are_auto_configured():
     all_auto_models = get_all_auto_configured_models()
     failures = []
     for module in modules:
-        new_failures = check_models_are_auto_configured(module, all_auto_models)
+        new_failures = check_models_are_auto_configured(
+            module, all_auto_models)
         if new_failures is not None:
             failures += new_failures
     if len(failures) > 0:
-        raise Exception(f"There were {len(failures)} failures:\n" + "\n".join(failures))
+        raise Exception(
+            f"There were {len(failures)} failures:\n" + "\n".join(failures))
 
 
 _re_decorator = re.compile(r"^\s*@(\S+)\s+$")
@@ -355,7 +364,8 @@ def find_all_documented_objects():
     for doc_file in Path(PATH_TO_DOC).glob("**/*.rst"):
         with open(doc_file, "r", encoding="utf-8", newline="\n") as f:
             content = f.read()
-        raw_doc_objs = re.findall(r"(?:autoclass|autofunction):: transformers.(\S+)\s+", content)
+        raw_doc_objs = re.findall(
+            r"(?:autoclass|autofunction):: transformers.(\S+)\s+", content)
         documented_obj += [obj.split(".")[-1] for obj in raw_doc_objs]
     return documented_obj
 
@@ -403,15 +413,18 @@ UNDOCUMENTED_OBJECTS = [
     "BasicTokenizer",  # Internal, should never have been in the main init.
     "DPRPretrainedReader",  # Like an Encoder.
     "ModelCard",  # Internal type.
-    "SqueezeBertModule",  # Internal building block (should have been called SqueezeBertLayer)
+    # Internal building block (should have been called SqueezeBertLayer)
+    "SqueezeBertModule",
     "TFDPRPretrainedReader",  # Like an Encoder.
     "TransfoXLCorpus",  # Internal type.
     "WordpieceTokenizer",  # Internal, should never have been in the main init.
     "absl",  # External module
     "add_end_docstrings",  # Internal, should never have been in the main init.
-    "add_start_docstrings",  # Internal, should never have been in the main init.
+    # Internal, should never have been in the main init.
+    "add_start_docstrings",
     "cached_path",  # Internal used for downloading models.
-    "convert_tf_weight_name_to_pt_weight_name",  # Internal used to convert model weights
+    # Internal used to convert model weights
+    "convert_tf_weight_name_to_pt_weight_name",
     "logger",  # Internal logger
     "logging",  # External module
 ]
@@ -477,8 +490,10 @@ def check_all_objects_are_documented():
     """ Check all models are properly documented."""
     documented_objs = find_all_documented_objects()
     modules = transformers._modules
-    objects = [c for c in dir(transformers) if c not in modules and not c.startswith("_")]
-    undocumented_objs = [c for c in objects if c not in documented_objs and not ignore_undocumented(c)]
+    objects = [c for c in dir(transformers)
+               if c not in modules and not c.startswith("_")]
+    undocumented_objs = [
+        c for c in objects if c not in documented_objs and not ignore_undocumented(c)]
     if len(undocumented_objs) > 0:
         raise Exception(
             "The following objects are in the public init so should be documented:\n - "

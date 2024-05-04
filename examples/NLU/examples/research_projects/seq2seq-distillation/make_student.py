@@ -14,7 +14,8 @@ logger = logging.get_logger(__name__)
 
 def copy_layers(src_layers: nn.ModuleList, dest_layers: nn.ModuleList, layers_to_copy: List[int]) -> None:
     layers_to_copy = nn.ModuleList([src_layers[i] for i in layers_to_copy])
-    assert len(dest_layers) == len(layers_to_copy), f"{len(dest_layers)} != {len(layers_to_copy)}"
+    assert len(dest_layers) == len(
+        layers_to_copy), f"{len(dest_layers)} != {len(layers_to_copy)}"
     dest_layers.load_state_dict(layers_to_copy.state_dict())
 
 
@@ -66,7 +67,8 @@ def pick_layers_to_copy(n_student, n_teacher):
 def get_layers_to_supervise(n_student, n_teacher) -> List[int]:
     """Used or the --supervise_forward kwarg"""
     if n_student > n_teacher:
-        raise ValueError(f"Cannot perform intermediate supervision for student {n_student} > teacher {n_teacher}")
+        raise ValueError(
+            f"Cannot perform intermediate supervision for student {n_student} > teacher {n_teacher}")
     elif n_teacher == n_student:
         return list(range(n_teacher))
     elif n_student == 1:
@@ -103,11 +105,13 @@ def create_student_by_copying_alternating_layers(
     _msg = "encoder_layers and decoder_layers cannot be both None-- you would just have an identical teacher."
     assert (e is not None) or (d is not None), _msg
     if isinstance(teacher, str):
-        AutoTokenizer.from_pretrained(teacher).save_pretrained(save_path)  # purely for convenience
+        AutoTokenizer.from_pretrained(teacher).save_pretrained(
+            save_path)  # purely for convenience
         teacher = AutoModelForSeq2SeqLM.from_pretrained(teacher).eval()
     else:
 
-        assert isinstance(teacher, PreTrainedModel), f"teacher must be a model or string got type {type(teacher)}"
+        assert isinstance(
+            teacher, PreTrainedModel), f"teacher must be a model or string got type {type(teacher)}"
     init_kwargs = teacher.config.to_diff_dict()
 
     try:
@@ -133,7 +137,8 @@ def create_student_by_copying_alternating_layers(
     student = AutoModelForSeq2SeqLM.from_config(student_cfg)
     # Start by copying the full teacher state dict this will copy the first N teacher layers to the student.
     info = student.load_state_dict(teacher.state_dict(), strict=False)
-    assert info.missing_keys == [], info.missing_keys  # every student key should have a teacher keys.
+    # every student key should have a teacher keys.
+    assert info.missing_keys == [], info.missing_keys
 
     if copy_first_teacher_layers:  # Our copying is done. We just log and save
         e_layers_to_copy, d_layers_to_copy = list(range(e)), list(range(d))
@@ -150,11 +155,15 @@ def create_student_by_copying_alternating_layers(
         d_layers_to_copy: List[int] = pick_layers_to_copy(d, teacher_d)
 
     try:
-        copy_layers(teacher.model.encoder.layers, student.model.encoder.layers, e_layers_to_copy)
-        copy_layers(teacher.model.decoder.layers, student.model.decoder.layers, d_layers_to_copy)
+        copy_layers(teacher.model.encoder.layers,
+                    student.model.encoder.layers, e_layers_to_copy)
+        copy_layers(teacher.model.decoder.layers,
+                    student.model.decoder.layers, d_layers_to_copy)
     except AttributeError:  # For t5, student.model.encoder.layers is called student.encoder.block
-        copy_layers(teacher.encoder.block, student.encoder.block, e_layers_to_copy)
-        copy_layers(teacher.decoder.block, student.decoder.block, d_layers_to_copy)
+        copy_layers(teacher.encoder.block,
+                    student.encoder.block, e_layers_to_copy)
+        copy_layers(teacher.decoder.block,
+                    student.decoder.block, d_layers_to_copy)
     logger.info(
         f"Copied encoder layers {e_layers_to_copy} and decoder layers {d_layers_to_copy}. Saving them to {save_path}"
     )

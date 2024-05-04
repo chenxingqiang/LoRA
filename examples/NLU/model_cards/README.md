@@ -1,15 +1,16 @@
 ## 🔥 Model cards now live inside each huggingface.co model repo 🔥
 
-
 For consistency, ease of use and scalability, `README.md` model cards now live directly inside each model repo on the HuggingFace model hub.
 
 ### How to update a model card
 
 You can directly update a model card inside any model repo you have **write access** to, i.e.:
+
 - a model under your username namespace
 - a model under any organization you are a part of.
 
 You can either:
+
 - update it, commit and push using your usual git workflow (command line, GUI, etc.)
 - or edit it directly from the website's UI.
 

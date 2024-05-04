@@ -74,7 +74,8 @@ class SimpleConversationPipelineTests(unittest.TestCase):
 
         # real_tokenizer._tokenizer.save("dummy.json")
         # Special tokens are automatically added at load time.
-        tokenizer = AutoTokenizer.from_pretrained("Narsil/small_conversational_test")
+        tokenizer = AutoTokenizer.from_pretrained(
+            "Narsil/small_conversational_test")
         conversation_agent = pipeline(
             task="conversational", device=DEFAULT_DEVICE_NUM, model=model, tokenizer=tokenizer
         )
@@ -83,12 +84,14 @@ class SimpleConversationPipelineTests(unittest.TestCase):
     @require_torch
     def test_integration_torch_conversation(self):
         conversation_agent = self.get_pipeline()
-        conversation_1 = Conversation("Going to the movies tonight - any suggestions?")
+        conversation_1 = Conversation(
+            "Going to the movies tonight - any suggestions?")
         conversation_2 = Conversation("What's the last book you have read?")
         self.assertEqual(len(conversation_1.past_user_inputs), 0)
         self.assertEqual(len(conversation_2.past_user_inputs), 0)
 
-        result = conversation_agent([conversation_1, conversation_2], max_length=48)
+        result = conversation_agent(
+            [conversation_1, conversation_2], max_length=48)
 
         # Two conversations in one pass
         self.assertEqual(result, [conversation_1, conversation_2])
@@ -97,7 +100,8 @@ class SimpleConversationPipelineTests(unittest.TestCase):
             [
                 Conversation(
                     None,
-                    past_user_inputs=["Going to the movies tonight - any suggestions?"],
+                    past_user_inputs=[
+                        "Going to the movies tonight - any suggestions?"],
                     generated_responses=["L"],
                 ),
                 Conversation(
@@ -115,7 +119,8 @@ class SimpleConversationPipelineTests(unittest.TestCase):
             result,
             Conversation(
                 None,
-                past_user_inputs=["What's the last book you have read?", "Why do you recommend it?"],
+                past_user_inputs=[
+                    "What's the last book you have read?", "Why do you recommend it?"],
                 generated_responses=["L", "L"],
             ),
         )
@@ -124,7 +129,8 @@ class SimpleConversationPipelineTests(unittest.TestCase):
 class ConversationalPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCase):
     pipeline_task = "conversational"
     small_models = []  # Models tested without the @slow decorator
-    large_models = ["microsoft/DialoGPT-medium"]  # Models tested with the @slow decorator
+    # Models tested with the @slow decorator
+    large_models = ["microsoft/DialoGPT-medium"]
     invalid_inputs = ["Hi there!", Conversation()]
 
     def _test_pipeline(
@@ -138,7 +144,8 @@ class ConversationalPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCas
         mono_result = nlp(conversation)
         self.assertIsInstance(mono_result, Conversation)
 
-        conversations = [Conversation("Hi there!"), Conversation("How are you?")]
+        conversations = [Conversation(
+            "Hi there!"), Conversation("How are you?")]
         multi_result = nlp(conversations)
         self.assertIsInstance(multi_result, list)
         self.assertIsInstance(multi_result[0], Conversation)
@@ -156,22 +163,26 @@ class ConversationalPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCas
     def test_integration_torch_conversation(self):
         # When
         nlp = pipeline(task="conversational", device=DEFAULT_DEVICE_NUM)
-        conversation_1 = Conversation("Going to the movies tonight - any suggestions?")
+        conversation_1 = Conversation(
+            "Going to the movies tonight - any suggestions?")
         conversation_2 = Conversation("What's the last book you have read?")
         # Then
         self.assertEqual(len(conversation_1.past_user_inputs), 0)
         self.assertEqual(len(conversation_2.past_user_inputs), 0)
         # When
-        result = nlp([conversation_1, conversation_2], do_sample=False, max_length=1000)
+        result = nlp([conversation_1, conversation_2],
+                     do_sample=False, max_length=1000)
         # Then
         self.assertEqual(result, [conversation_1, conversation_2])
         self.assertEqual(len(result[0].past_user_inputs), 1)
         self.assertEqual(len(result[1].past_user_inputs), 1)
         self.assertEqual(len(result[0].generated_responses), 1)
         self.assertEqual(len(result[1].generated_responses), 1)
-        self.assertEqual(result[0].past_user_inputs[0], "Going to the movies tonight - any suggestions?")
+        self.assertEqual(result[0].past_user_inputs[0],
+                         "Going to the movies tonight - any suggestions?")
         self.assertEqual(result[0].generated_responses[0], "The Big Lebowski")
-        self.assertEqual(result[1].past_user_inputs[0], "What's the last book you have read?")
+        self.assertEqual(result[1].past_user_inputs[0],
+                         "What's the last book you have read?")
         self.assertEqual(result[1].generated_responses[0], "The Last Question")
         # When
         conversation_2.add_user_input("Why do you recommend it?")
@@ -180,15 +191,18 @@ class ConversationalPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCas
         self.assertEqual(result, conversation_2)
         self.assertEqual(len(result.past_user_inputs), 2)
         self.assertEqual(len(result.generated_responses), 2)
-        self.assertEqual(result.past_user_inputs[1], "Why do you recommend it?")
+        self.assertEqual(
+            result.past_user_inputs[1], "Why do you recommend it?")
         self.assertEqual(result.generated_responses[1], "It's a good book.")
 
     @require_torch
     @slow
     def test_integration_torch_conversation_truncated_history(self):
         # When
-        nlp = pipeline(task="conversational", min_length_for_response=24, device=DEFAULT_DEVICE_NUM)
-        conversation_1 = Conversation("Going to the movies tonight - any suggestions?")
+        nlp = pipeline(task="conversational",
+                       min_length_for_response=24, device=DEFAULT_DEVICE_NUM)
+        conversation_1 = Conversation(
+            "Going to the movies tonight - any suggestions?")
         # Then
         self.assertEqual(len(conversation_1.past_user_inputs), 0)
         # When
@@ -197,7 +211,8 @@ class ConversationalPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCas
         self.assertEqual(result, conversation_1)
         self.assertEqual(len(result.past_user_inputs), 1)
         self.assertEqual(len(result.generated_responses), 1)
-        self.assertEqual(result.past_user_inputs[0], "Going to the movies tonight - any suggestions?")
+        self.assertEqual(
+            result.past_user_inputs[0], "Going to the movies tonight - any suggestions?")
         self.assertEqual(result.generated_responses[0], "The Big Lebowski")
         # When
         conversation_1.add_user_input("Is it an action movie?")
@@ -213,24 +228,28 @@ class ConversationalPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCas
     @slow
     def test_integration_torch_conversation_dialogpt_input_ids(self):
         tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-small")
-        model = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-small")
+        model = AutoModelForCausalLM.from_pretrained(
+            "microsoft/DialoGPT-small")
         nlp = ConversationalPipeline(model=model, tokenizer=tokenizer)
 
         conversation_1 = Conversation("hello")
         inputs = nlp._parse_and_tokenize([conversation_1])
         self.assertEqual(inputs["input_ids"].tolist(), [[31373, 50256]])
 
-        conversation_2 = Conversation("how are you ?", past_user_inputs=["hello"], generated_responses=["Hi there!"])
+        conversation_2 = Conversation("how are you ?", past_user_inputs=[
+                                      "hello"], generated_responses=["Hi there!"])
         inputs = nlp._parse_and_tokenize([conversation_2])
         self.assertEqual(
-            inputs["input_ids"].tolist(), [[31373, 50256, 17250, 612, 0, 50256, 4919, 389, 345, 5633, 50256]]
+            inputs["input_ids"].tolist(), [[31373, 50256, 17250, 612, 0,
+                                            50256, 4919, 389, 345, 5633, 50256]]
         )
 
         inputs = nlp._parse_and_tokenize([conversation_1, conversation_2])
         self.assertEqual(
             inputs["input_ids"].tolist(),
             [
-                [31373, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256, 50256],
+                [31373, 50256, 50256, 50256, 50256, 50256,
+                    50256, 50256, 50256, 50256, 50256],
                 [31373, 50256, 17250, 612, 0, 50256, 4919, 389, 345, 5633, 50256],
             ],
         )
@@ -238,8 +257,10 @@ class ConversationalPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCas
     @require_torch
     @slow
     def test_integration_torch_conversation_blenderbot_400M_input_ids(self):
-        tokenizer = AutoTokenizer.from_pretrained("facebook/blenderbot-400M-distill")
-        model = AutoModelForSeq2SeqLM.from_pretrained("facebook/blenderbot-400M-distill")
+        tokenizer = AutoTokenizer.from_pretrained(
+            "facebook/blenderbot-400M-distill")
+        model = AutoModelForSeq2SeqLM.from_pretrained(
+            "facebook/blenderbot-400M-distill")
         nlp = ConversationalPipeline(model=model, tokenizer=tokenizer)
 
         # test1
@@ -308,8 +329,10 @@ class ConversationalPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCas
     @require_torch
     @slow
     def test_integration_torch_conversation_blenderbot_400M(self):
-        tokenizer = AutoTokenizer.from_pretrained("facebook/blenderbot-400M-distill")
-        model = AutoModelForSeq2SeqLM.from_pretrained("facebook/blenderbot-400M-distill")
+        tokenizer = AutoTokenizer.from_pretrained(
+            "facebook/blenderbot-400M-distill")
+        model = AutoModelForSeq2SeqLM.from_pretrained(
+            "facebook/blenderbot-400M-distill")
         nlp = ConversationalPipeline(model=model, tokenizer=tokenizer)
 
         conversation_1 = Conversation("hello")
@@ -347,24 +370,30 @@ class ConversationalPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCas
     @slow
     def test_integration_torch_conversation_encoder_decoder(self):
         # When
-        tokenizer = AutoTokenizer.from_pretrained("facebook/blenderbot_small-90M")
-        model = AutoModelForSeq2SeqLM.from_pretrained("facebook/blenderbot_small-90M")
-        nlp = ConversationalPipeline(model=model, tokenizer=tokenizer, device=DEFAULT_DEVICE_NUM)
+        tokenizer = AutoTokenizer.from_pretrained(
+            "facebook/blenderbot_small-90M")
+        model = AutoModelForSeq2SeqLM.from_pretrained(
+            "facebook/blenderbot_small-90M")
+        nlp = ConversationalPipeline(
+            model=model, tokenizer=tokenizer, device=DEFAULT_DEVICE_NUM)
 
         conversation_1 = Conversation("My name is Sarah and I live in London")
-        conversation_2 = Conversation("Going to the movies tonight, What movie would you recommend? ")
+        conversation_2 = Conversation(
+            "Going to the movies tonight, What movie would you recommend? ")
         # Then
         self.assertEqual(len(conversation_1.past_user_inputs), 0)
         self.assertEqual(len(conversation_2.past_user_inputs), 0)
         # When
-        result = nlp([conversation_1, conversation_2], do_sample=False, max_length=1000)
+        result = nlp([conversation_1, conversation_2],
+                     do_sample=False, max_length=1000)
         # Then
         self.assertEqual(result, [conversation_1, conversation_2])
         self.assertEqual(len(result[0].past_user_inputs), 1)
         self.assertEqual(len(result[1].past_user_inputs), 1)
         self.assertEqual(len(result[0].generated_responses), 1)
         self.assertEqual(len(result[1].generated_responses), 1)
-        self.assertEqual(result[0].past_user_inputs[0], "My name is Sarah and I live in London")
+        self.assertEqual(result[0].past_user_inputs[0],
+                         "My name is Sarah and I live in London")
         self.assertEqual(
             result[0].generated_responses[0],
             "hi sarah, i live in london as well. do you have any plans for the weekend?",
@@ -378,14 +407,18 @@ class ConversationalPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCas
         # When
         conversation_1.add_user_input("Not yet, what about you?")
         conversation_2.add_user_input("What's your name?")
-        result = nlp([conversation_1, conversation_2], do_sample=False, max_length=1000)
+        result = nlp([conversation_1, conversation_2],
+                     do_sample=False, max_length=1000)
         # Then
         self.assertEqual(result, [conversation_1, conversation_2])
         self.assertEqual(len(result[0].past_user_inputs), 2)
         self.assertEqual(len(result[1].past_user_inputs), 2)
         self.assertEqual(len(result[0].generated_responses), 2)
         self.assertEqual(len(result[1].generated_responses), 2)
-        self.assertEqual(result[0].past_user_inputs[1], "Not yet, what about you?")
-        self.assertEqual(result[0].generated_responses[1], "i don't have any plans yet. i'm not sure what to do yet.")
+        self.assertEqual(result[0].past_user_inputs[1],
+                         "Not yet, what about you?")
+        self.assertEqual(result[0].generated_responses[1],
+                         "i don't have any plans yet. i'm not sure what to do yet.")
         self.assertEqual(result[1].past_user_inputs[1], "What's your name?")
-        self.assertEqual(result[1].generated_responses[1], "i don't have a name, but i'm going to see a horror movie.")
+        self.assertEqual(result[1].generated_responses[1],
+                         "i don't have a name, but i'm going to see a horror movie.")

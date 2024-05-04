@@ -25,7 +25,8 @@ class StoppingCriteriaTestCase(unittest.TestCase):
         vocab_size = 250
 
         input_ids = ids_tensor((batch_size, length), vocab_size)
-        scores = torch.ones((batch_size, length), device=torch_device, dtype=torch.float) / length
+        scores = torch.ones((batch_size, length),
+                            device=torch_device, dtype=torch.float) / length
         return input_ids, scores
 
     def test_list_criteria(self):
@@ -64,14 +65,17 @@ class StoppingCriteriaTestCase(unittest.TestCase):
         criteria = MaxTimeCriteria(max_time=0.1)
         self.assertFalse(criteria(input_ids, scores))
 
-        criteria = MaxTimeCriteria(max_time=0.1, initial_timestamp=time.time() - 0.2)
+        criteria = MaxTimeCriteria(
+            max_time=0.1, initial_timestamp=time.time() - 0.2)
         self.assertTrue(criteria(input_ids, scores))
 
     def test_validate_stopping_criteria(self):
-        validate_stopping_criteria(StoppingCriteriaList([MaxLengthCriteria(10)]), 10)
+        validate_stopping_criteria(
+            StoppingCriteriaList([MaxLengthCriteria(10)]), 10)
 
         with self.assertWarns(UserWarning):
-            validate_stopping_criteria(StoppingCriteriaList([MaxLengthCriteria(10)]), 11)
+            validate_stopping_criteria(
+                StoppingCriteriaList([MaxLengthCriteria(10)]), 11)
 
         stopping_criteria = StoppingCriteriaList()
         validate_stopping_criteria(stopping_criteria, 11)

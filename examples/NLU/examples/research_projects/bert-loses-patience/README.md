@@ -9,6 +9,7 @@ Learn more in the paper ["BERT Loses Patience: Fast and Robust Inference with Ea
 ## Training
 
 You can fine-tune a pretrained language model (you can choose from BERT and ALBERT) and train the internal classifiers by:
+
 ```bash
 export GLUE_DIR=/path/to/glue_data
 export TASK_NAME=MRPC
@@ -35,6 +36,7 @@ python ./run_glue_with_pabee.py \
 ## Inference
 
 You can inference with different patience settings by:
+
 ```bash
 export GLUE_DIR=/path/to/glue_data
 export TASK_NAME=MRPC
@@ -55,11 +57,13 @@ python ./run_glue_with_pabee.py \
   --eval_all_checkpoints \
   --patience 3,4,5,6,7,8
 ```
+
 where `patience` can be a list of patience settings, separated by a comma. It will help determine which patience works best.
 
 When evaluating on a regression task (STS-B), you may add `--regression_threshold 0.1` to define the regression threshold.
 
 ## Results
+
 On the GLUE dev set:
 
 | Model        | \#Param | Speed  | CoLA  | MNLI  | MRPC  | QNLI  | QQP   | RTE   | SST\-2 | STS\-B |
@@ -74,9 +78,10 @@ On the GLUE dev set:
 | ALBERT\-large | 18M     |           | 86\.4 | 94\.9  | 90\.4  |
 | \+PABEE       | 18M     | 2\.42x    | 86\.8 | 95\.2  | 90\.6  |
 
-
 ## Citation
+
 If you find this resource useful, please consider citing the following paper:
+
 ```bibtex
 @misc{zhou2020bert,
     title={BERT Loses Patience: Fast and Robust Inference with Early Exit},

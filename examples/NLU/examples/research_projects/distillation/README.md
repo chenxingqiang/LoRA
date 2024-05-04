@@ -16,12 +16,12 @@ This folder contains the original code used to train Distil* as well as examples
 
 **September 19, 2019 - Update:** We fixed bugs in the code and released an updated version of the weights trained with a modification of the distillation loss. DistilBERT now reaches 99% of `BERT-base`'s performance on GLUE, and 86.9 F1 score on SQuAD v1.1 dev set (compared to 88.5 for `BERT-base`). We will publish a formal write-up of our approach in the near future!
 
-
 ## What is Distil*
 
 Distil* is a class of compressed models that started with DistilBERT. DistilBERT stands for Distilled-BERT. DistilBERT is a small, fast, cheap and light Transformer model based on Bert architecture. It has 40% less parameters than `bert-base-uncased`, runs 60% faster while preserving 97% of BERT's performances as measured on the GLUE language understanding benchmark. DistilBERT is trained using knowledge distillation, a technique to compress a large model called the teacher into a smaller model called the student. By distillating Bert, we obtain a smaller Transformer model that bears a lot of similarities with the original BERT model while being lighter, smaller and faster to run. DistilBERT is thus an interesting option to put large-scaled trained Transformer model into production.
 
 We have applied the same method to other Transformer architectures and released the weights:
+
 - GPT2: on the [WikiText-103](https://blog.einstein.ai/the-wikitext-long-term-dependency-language-modeling-dataset/) benchmark, GPT2 reaches a perplexity on the test set of 16.3 compared to 21.1 for **DistilGPT2** (after fine-tuning on the train set).
 - RoBERTa: **DistilRoBERTa** reaches 95% of `RoBERTa-base`'s performance on GLUE while being twice faster and 35% smaller.
 - German BERT: **German DistilBERT** reaches 99% of `bert-base-german-dbmdz-cased`'s performance on German NER (CoNLL-2003).
@@ -61,7 +61,6 @@ This part of the library has only be tested with Python3.6+. There are few speci
 
 **Important note:** The training scripts have been updated to support PyTorch v1.2.0 (there are breaking changes compared to v1.1.0).
 
-
 ## How to use DistilBERT
 
 Transformers includes five pre-trained Distil* models, currently only provided for English and German (we are investigating the possibility to train and release a multilingual version of DistilBERT):
@@ -87,11 +86,11 @@ last_hidden_states = outputs[0]  # The last hidden-state is the first element of
 ```
 
 Similarly, using the other Distil* models simply consists in calling the base classes with a different pretrained checkpoint:
+
 - DistilBERT uncased: `model = DistilBertModel.from_pretrained('distilbert-base-uncased')`
 - DistilGPT2: `model = GPT2Model.from_pretrained('distilgpt2')`
 - DistilRoBERTa: `model = RobertaModel.from_pretrained('distilroberta-base')`
 - DistilmBERT: `model = DistilBertModel.from_pretrained('distilbert-base-multilingual-cased')`
-
 
 ## How to train Distil*
 

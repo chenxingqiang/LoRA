@@ -37,7 +37,8 @@ if is_torch_available():
 
 
 if is_tf_available():
-    _import_structure["modeling_tf_blenderbot"] = ["TFBlenderbotForConditionalGeneration", "TFBlenderbotModel"]
+    _import_structure["modeling_tf_blenderbot"] = [
+        "TFBlenderbotForConditionalGeneration", "TFBlenderbotModel"]
 
 
 if TYPE_CHECKING:

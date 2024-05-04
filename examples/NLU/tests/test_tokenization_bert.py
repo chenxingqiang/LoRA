@@ -61,7 +61,8 @@ class BertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
             "low",
             "lowest",
         ]
-        self.vocab_file = os.path.join(self.tmpdirname, VOCAB_FILES_NAMES["vocab_file"])
+        self.vocab_file = os.path.join(
+            self.tmpdirname, VOCAB_FILES_NAMES["vocab_file"])
         with open(self.vocab_file, "w", encoding="utf-8") as vocab_writer:
             vocab_writer.write("".join([x + "\n" for x in vocab_tokens]))
 
@@ -74,8 +75,10 @@ class BertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         tokenizer = self.tokenizer_class(self.vocab_file)
 
         tokens = tokenizer.tokenize("UNwant\u00E9d,running")
-        self.assertListEqual(tokens, ["un", "##want", "##ed", ",", "runn", "##ing"])
-        self.assertListEqual(tokenizer.convert_tokens_to_ids(tokens), [9, 6, 7, 12, 10, 11])
+        self.assertListEqual(
+            tokens, ["un", "##want", "##ed", ",", "runn", "##ing"])
+        self.assertListEqual(tokenizer.convert_tokens_to_ids(
+            tokens), [9, 6, 7, 12, 10, 11])
 
     def test_rust_and_python_full_tokenizers(self):
         if not self.test_rust_tokenizer:
@@ -121,13 +124,15 @@ class BertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
     def test_chinese(self):
         tokenizer = BasicTokenizer()
 
-        self.assertListEqual(tokenizer.tokenize("ah\u535A\u63A8zz"), ["ah", "\u535A", "\u63A8", "zz"])
+        self.assertListEqual(tokenizer.tokenize("ah\u535A\u63A8zz"), [
+                             "ah", "\u535A", "\u63A8", "zz"])
 
     def test_basic_tokenizer_lower(self):
         tokenizer = BasicTokenizer(do_lower_case=True)
 
         self.assertListEqual(
-            tokenizer.tokenize(" \tHeLLo!how  \n Are yoU?  "), ["hello", "!", "how", "are", "you", "?"]
+            tokenizer.tokenize(" \tHeLLo!how  \n Are yoU?  "), [
+                "hello", "!", "how", "are", "you", "?"]
         )
         self.assertListEqual(tokenizer.tokenize("H\u00E9llo"), ["hello"])
 
@@ -135,7 +140,8 @@ class BertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         tokenizer = BasicTokenizer(do_lower_case=True, strip_accents=False)
 
         self.assertListEqual(
-            tokenizer.tokenize(" \tHäLLo!how  \n Are yoU?  "), ["hällo", "!", "how", "are", "you", "?"]
+            tokenizer.tokenize(" \tHäLLo!how  \n Are yoU?  "), [
+                "hällo", "!", "how", "are", "you", "?"]
         )
         self.assertListEqual(tokenizer.tokenize("H\u00E9llo"), ["h\u00E9llo"])
 
@@ -143,7 +149,8 @@ class BertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         tokenizer = BasicTokenizer(do_lower_case=True, strip_accents=True)
 
         self.assertListEqual(
-            tokenizer.tokenize(" \tHäLLo!how  \n Are yoU?  "), ["hallo", "!", "how", "are", "you", "?"]
+            tokenizer.tokenize(" \tHäLLo!how  \n Are yoU?  "), [
+                "hallo", "!", "how", "are", "you", "?"]
         )
         self.assertListEqual(tokenizer.tokenize("H\u00E9llo"), ["hello"])
 
@@ -151,7 +158,8 @@ class BertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         tokenizer = BasicTokenizer(do_lower_case=True)
 
         self.assertListEqual(
-            tokenizer.tokenize(" \tHäLLo!how  \n Are yoU?  "), ["hallo", "!", "how", "are", "you", "?"]
+            tokenizer.tokenize(" \tHäLLo!how  \n Are yoU?  "), [
+                "hallo", "!", "how", "are", "you", "?"]
         )
         self.assertListEqual(tokenizer.tokenize("H\u00E9llo"), ["hello"])
 
@@ -159,32 +167,37 @@ class BertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         tokenizer = BasicTokenizer(do_lower_case=False)
 
         self.assertListEqual(
-            tokenizer.tokenize(" \tHeLLo!how  \n Are yoU?  "), ["HeLLo", "!", "how", "Are", "yoU", "?"]
+            tokenizer.tokenize(" \tHeLLo!how  \n Are yoU?  "), [
+                "HeLLo", "!", "how", "Are", "yoU", "?"]
         )
 
     def test_basic_tokenizer_no_lower_strip_accents_false(self):
         tokenizer = BasicTokenizer(do_lower_case=False, strip_accents=False)
 
         self.assertListEqual(
-            tokenizer.tokenize(" \tHäLLo!how  \n Are yoU?  "), ["HäLLo", "!", "how", "Are", "yoU", "?"]
+            tokenizer.tokenize(" \tHäLLo!how  \n Are yoU?  "), [
+                "HäLLo", "!", "how", "Are", "yoU", "?"]
         )
 
     def test_basic_tokenizer_no_lower_strip_accents_true(self):
         tokenizer = BasicTokenizer(do_lower_case=False, strip_accents=True)
 
         self.assertListEqual(
-            tokenizer.tokenize(" \tHäLLo!how  \n Are yoU?  "), ["HaLLo", "!", "how", "Are", "yoU", "?"]
+            tokenizer.tokenize(" \tHäLLo!how  \n Are yoU?  "), [
+                "HaLLo", "!", "how", "Are", "yoU", "?"]
         )
 
     def test_basic_tokenizer_respects_never_split_tokens(self):
         tokenizer = BasicTokenizer(do_lower_case=False, never_split=["[UNK]"])
 
         self.assertListEqual(
-            tokenizer.tokenize(" \tHeLLo!how  \n Are yoU? [UNK]"), ["HeLLo", "!", "how", "Are", "yoU", "?", "[UNK]"]
+            tokenizer.tokenize(" \tHeLLo!how  \n Are yoU? [UNK]"), [
+                "HeLLo", "!", "how", "Are", "yoU", "?", "[UNK]"]
         )
 
     def test_wordpiece_tokenizer(self):
-        vocab_tokens = ["[UNK]", "[CLS]", "[SEP]", "want", "##want", "##ed", "wa", "un", "runn", "##ing"]
+        vocab_tokens = ["[UNK]", "[CLS]", "[SEP]", "want",
+                        "##want", "##ed", "wa", "un", "runn", "##ing"]
 
         vocab = {}
         for (i, token) in enumerate(vocab_tokens):
@@ -193,9 +206,11 @@ class BertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 
         self.assertListEqual(tokenizer.tokenize(""), [])
 
-        self.assertListEqual(tokenizer.tokenize("unwanted running"), ["un", "##want", "##ed", "runn", "##ing"])
+        self.assertListEqual(tokenizer.tokenize("unwanted running"), [
+                             "un", "##want", "##ed", "runn", "##ing"])
 
-        self.assertListEqual(tokenizer.tokenize("unwantedX running"), ["[UNK]", "runn", "##ing"])
+        self.assertListEqual(tokenizer.tokenize(
+            "unwantedX running"), ["[UNK]", "runn", "##ing"])
 
     def test_is_whitespace(self):
         self.assertTrue(_is_whitespace(" "))
@@ -229,10 +244,12 @@ class BertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         rust_tokenizer = self.get_rust_tokenizer()
 
         # Example taken from the issue https://github.com/huggingface/tokenizers/issues/340
-        self.assertListEqual([tokenizer.tokenize(t) for t in ["Test", "\xad", "test"]], [["[UNK]"], [], ["[UNK]"]])
+        self.assertListEqual([tokenizer.tokenize(t) for t in [
+                             "Test", "\xad", "test"]], [["[UNK]"], [], ["[UNK]"]])
 
         self.assertListEqual(
-            [rust_tokenizer.tokenize(t) for t in ["Test", "\xad", "test"]], [["[UNK]"], [], ["[UNK]"]]
+            [rust_tokenizer.tokenize(t) for t in ["Test", "\xad", "test"]], [
+                ["[UNK]"], [], ["[UNK]"]]
         )
 
     @slow
@@ -240,7 +257,8 @@ class BertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         tokenizer = self.tokenizer_class.from_pretrained("bert-base-uncased")
 
         text = tokenizer.encode("sequence builders", add_special_tokens=False)
-        text_2 = tokenizer.encode("multi-sequence build", add_special_tokens=False)
+        text_2 = tokenizer.encode(
+            "multi-sequence build", add_special_tokens=False)
 
         encoded_sentence = tokenizer.build_inputs_with_special_tokens(text)
         encoded_pair = tokenizer.build_inputs_with_special_tokens(text, text_2)
@@ -251,7 +269,8 @@ class BertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
     def test_offsets_with_special_characters(self):
         for tokenizer, pretrained_name, kwargs in self.tokenizers_list:
             with self.subTest("{} ({})".format(tokenizer.__class__.__name__, pretrained_name)):
-                tokenizer_r = self.rust_tokenizer_class.from_pretrained(pretrained_name, **kwargs)
+                tokenizer_r = self.rust_tokenizer_class.from_pretrained(
+                    pretrained_name, **kwargs)
 
                 sentence = f"A, naïve {tokenizer_r.mask_token} AllenNLP sentence."
                 tokens = tokenizer_r.encode_plus(
@@ -262,7 +281,8 @@ class BertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
                     add_special_tokens=True,
                 )
 
-                do_lower_case = tokenizer_r.do_lower_case if hasattr(tokenizer_r, "do_lower_case") else False
+                do_lower_case = tokenizer_r.do_lower_case if hasattr(
+                    tokenizer_r, "do_lower_case") else False
                 expected_results = (
                     [
                         ((0, 0), tokenizer_r.cls_token),
@@ -296,6 +316,8 @@ class BertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
                 )
 
                 self.assertEqual(
-                    [e[1] for e in expected_results], tokenizer_r.convert_ids_to_tokens(tokens["input_ids"])
+                    [e[1] for e in expected_results], tokenizer_r.convert_ids_to_tokens(
+                        tokens["input_ids"])
                 )
-                self.assertEqual([e[0] for e in expected_results], tokens["offset_mapping"])
+                self.assertEqual(
+                    [e[0] for e in expected_results], tokens["offset_mapping"])

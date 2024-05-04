@@ -27,7 +27,8 @@ class NER(TokenClassificationTask):
             for line in f:
                 if line.startswith("-DOCSTART-") or line == "" or line == "\n":
                     if words:
-                        examples.append(InputExample(guid=f"{mode}-{guid_index}", words=words, labels=labels))
+                        examples.append(InputExample(
+                            guid=f"{mode}-{guid_index}", words=words, labels=labels))
                         guid_index += 1
                         words = []
                         labels = []
@@ -40,7 +41,8 @@ class NER(TokenClassificationTask):
                         # Examples could have no label for mode = "test"
                         labels.append("O")
             if words:
-                examples.append(InputExample(guid=f"{mode}-{guid_index}", words=words, labels=labels))
+                examples.append(InputExample(
+                    guid=f"{mode}-{guid_index}", words=words, labels=labels))
         return examples
 
     def write_predictions_to_file(self, writer: TextIO, test_input_reader: TextIO, preds_list: List):
@@ -51,10 +53,12 @@ class NER(TokenClassificationTask):
                 if not preds_list[example_id]:
                     example_id += 1
             elif preds_list[example_id]:
-                output_line = line.split()[0] + " " + preds_list[example_id].pop(0) + "\n"
+                output_line = line.split()[0] + " " + \
+                    preds_list[example_id].pop(0) + "\n"
                 writer.write(output_line)
             else:
-                logger.warning("Maximum sequence length exceeded: No prediction for '%s'.", line.split()[0])
+                logger.warning(
+                    "Maximum sequence length exceeded: No prediction for '%s'.", line.split()[0])
 
     def get_labels(self, path: str) -> List[str]:
         if path:
@@ -122,7 +126,8 @@ class POS(TokenClassificationTask):
                     labels.append(token["upos"])
                 assert len(words) == len(labels)
                 if words:
-                    examples.append(InputExample(guid=f"{mode}-{guid_index}", words=words, labels=labels))
+                    examples.append(InputExample(
+                        guid=f"{mode}-{guid_index}", words=words, labels=labels))
                     guid_index += 1
         return examples
 

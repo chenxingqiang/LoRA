@@ -22,8 +22,10 @@ from .test_pipelines_common import MonoInputPipelineCommonMixin
 
 EXPECTED_FILL_MASK_RESULT = [
     [
-        {"sequence": "My name is John", "score": 0.00782308354973793, "token": 610, "token_str": " John"},
-        {"sequence": "My name is Chris", "score": 0.007475061342120171, "token": 1573, "token_str": " Chris"},
+        {"sequence": "My name is John", "score": 0.00782308354973793,
+            "token": 610, "token_str": " John"},
+        {"sequence": "My name is Chris", "score": 0.007475061342120171,
+            "token": 1573, "token_str": " Chris"},
     ],
     [
         {
@@ -47,8 +49,10 @@ EXPECTED_FILL_MASK_TARGET_RESULT = [EXPECTED_FILL_MASK_RESULT[0]]
 class FillMaskPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCase):
     pipeline_task = "fill-mask"
     pipeline_loading_kwargs = {"top_k": 2}
-    small_models = ["sshleifer/tiny-distilroberta-base"]  # Models tested without the @slow decorator
-    large_models = ["distilroberta-base"]  # Models tested with the @slow decorator
+    # Models tested without the @slow decorator
+    small_models = ["sshleifer/tiny-distilroberta-base"]
+    # Models tested with the @slow decorator
+    large_models = ["distilroberta-base"]
     mandatory_keys = {"sequence", "score", "token"}
     valid_inputs = [
         "My name is <mask>",
@@ -81,13 +85,15 @@ class FillMaskPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCase):
         valid_targets = [[" Teven", " Patrick", " Clara"], [" Sam"]]
         invalid_targets = [[], [""], ""]
         for model_name in self.small_models:
-            nlp = pipeline(task="fill-mask", model=model_name, tokenizer=model_name, framework="pt")
+            nlp = pipeline(task="fill-mask", model=model_name,
+                           tokenizer=model_name, framework="pt")
             for targets in valid_targets:
                 outputs = nlp(valid_inputs, targets=targets)
                 self.assertIsInstance(outputs, list)
                 self.assertEqual(len(outputs), len(targets))
             for targets in invalid_targets:
-                self.assertRaises(ValueError, nlp, valid_inputs, targets=targets)
+                self.assertRaises(
+                    ValueError, nlp, valid_inputs, targets=targets)
 
     @require_tf
     def test_tf_fill_mask_with_targets(self):
@@ -95,13 +101,15 @@ class FillMaskPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCase):
         valid_targets = [[" Teven", " Patrick", " Clara"], [" Sam"]]
         invalid_targets = [[], [""], ""]
         for model_name in self.small_models:
-            nlp = pipeline(task="fill-mask", model=model_name, tokenizer=model_name, framework="tf")
+            nlp = pipeline(task="fill-mask", model=model_name,
+                           tokenizer=model_name, framework="tf")
             for targets in valid_targets:
                 outputs = nlp(valid_inputs, targets=targets)
                 self.assertIsInstance(outputs, list)
                 self.assertEqual(len(outputs), len(targets))
             for targets in invalid_targets:
-                self.assertRaises(ValueError, nlp, valid_inputs, targets=targets)
+                self.assertRaises(
+                    ValueError, nlp, valid_inputs, targets=targets)
 
     @require_torch
     @slow
@@ -186,7 +194,8 @@ class FillMaskPipelineTests(MonoInputPipelineCommonMixin, unittest.TestCase):
         ]
         valid_targets = [" Patrick", " Clara"]
         for model_name in self.large_models:
-            nlp = pipeline(task="fill-mask", model=model_name, tokenizer=model_name, framework="tf", top_k=2)
+            nlp = pipeline(task="fill-mask", model=model_name,
+                           tokenizer=model_name, framework="tf", top_k=2)
 
             mono_result = nlp(valid_inputs[0], targets=valid_targets)
             self.assertIsInstance(mono_result, list)

@@ -237,7 +237,8 @@ def measure_peak_memory_cpu(function: Callable[[], None], interval=0.5, device_i
         """
         process = psutil.Process(process_id)
         try:
-            meminfo_attr = "memory_info" if hasattr(process, "memory_info") else "get_memory_info"
+            meminfo_attr = "memory_info" if hasattr(
+                process, "memory_info") else "get_memory_info"
             memory = getattr(process, meminfo_attr)()[0]
         except psutil.AccessDenied:
             raise ValueError("Error with Psutil.")
@@ -270,7 +271,8 @@ def measure_peak_memory_cpu(function: Callable[[], None], interval=0.5, device_i
                 self.connection.send(0)
                 stop = False
                 while True:
-                    self.mem_usage = max(self.mem_usage, get_cpu_memory(self.process_id))
+                    self.mem_usage = max(
+                        self.mem_usage, get_cpu_memory(self.process_id))
                     self.num_measurements += 1
 
                     if stop:
@@ -287,7 +289,8 @@ def measure_peak_memory_cpu(function: Callable[[], None], interval=0.5, device_i
             child_connection, parent_connection = Pipe()
 
             # instantiate process
-            mem_process = MemoryMeasureProcess(os.getpid(), child_connection, interval)
+            mem_process = MemoryMeasureProcess(
+                os.getpid(), child_connection, interval)
             mem_process.start()
 
             # wait until we get memory
@@ -376,10 +379,12 @@ def start_memory_tracing(
     if is_py3nvml_available():
         try:
             nvml.nvmlInit()
-            devices = list(range(nvml.nvmlDeviceGetCount())) if gpus_to_trace is None else gpus_to_trace
+            devices = list(range(nvml.nvmlDeviceGetCount())
+                           ) if gpus_to_trace is None else gpus_to_trace
             nvml.nvmlShutdown()
         except (OSError, nvml.NVMLError):
-            logger.warning("Error while initializing communication with GPU. " "We won't perform GPU memory tracing.")
+            logger.warning(
+                "Error while initializing communication with GPU. " "We won't perform GPU memory tracing.")
             log_gpu = False
         else:
             log_gpu = is_torch_available() or is_tf_available()
@@ -451,7 +456,8 @@ def start_memory_tracing(
             if is_torch_available():
                 torch_empty_cache()
             if is_tf_available():
-                tf_context.context()._clear_caches()  # See https://github.com/tensorflow/tensorflow/issues/20218#issuecomment-416771802
+                # See https://github.com/tensorflow/tensorflow/issues/20218#issuecomment-416771802
+                tf_context.context()._clear_caches()
 
             # Sum used memory for all GPUs
             nvml.nvmlInit()
@@ -574,12 +580,15 @@ def stop_memory_tracing(
             for frame, (cpu_mem_inc, gpu_mem_inc, cpu_gpu_mem_inc) in cumulative_memory
         )
 
-        memory_curr_trace = sorted(memory_curr_trace, key=lambda x: x.cpu_gpu.bytes, reverse=True)
+        memory_curr_trace = sorted(
+            memory_curr_trace, key=lambda x: x.cpu_gpu.bytes, reverse=True)
 
         if ignore_released_memory:
-            total_memory = sum(max(0, step_trace.cpu_gpu.bytes) for step_trace in memory_diff_trace)
+            total_memory = sum(max(0, step_trace.cpu_gpu.bytes)
+                               for step_trace in memory_diff_trace)
         else:
-            total_memory = sum(step_trace.cpu_gpu.bytes for step_trace in memory_diff_trace)
+            total_memory = sum(
+                step_trace.cpu_gpu.bytes for step_trace in memory_diff_trace)
 
         total_memory = Memory(total_memory)
 
@@ -615,7 +624,8 @@ class Benchmark(ABC):
                 model_name: AutoConfig.from_pretrained(model_name) for model_name in self.args.model_names
             }
         else:
-            self.config_dict = {model_name: config for model_name, config in zip(self.args.model_names, configs)}
+            self.config_dict = {model_name: config for model_name,
+                                config in zip(self.args.model_names, configs)}
 
         if self.args.memory and os.getenv("TRANSFORMERS_USE_MULTIPROCESSING") == 0:
             logger.warning(
@@ -704,62 +714,81 @@ class Benchmark(ABC):
                 for sequence_length in self.args.sequence_lengths:
                     if self.args.inference:
                         if self.args.memory:
-                            memory, inference_summary = self.inference_memory(model_name, batch_size, sequence_length)
+                            memory, inference_summary = self.inference_memory(
+                                model_name, batch_size, sequence_length)
                             inference_result_memory[model_name]["result"][batch_size][sequence_length] = memory
                         if self.args.speed:
-                            time = self.inference_speed(model_name, batch_size, sequence_length)
+                            time = self.inference_speed(
+                                model_name, batch_size, sequence_length)
                             inference_result_time[model_name]["result"][batch_size][sequence_length] = time
 
                     if self.args.training:
                         if self.args.memory:
-                            memory, train_summary = self.train_memory(model_name, batch_size, sequence_length)
+                            memory, train_summary = self.train_memory(
+                                model_name, batch_size, sequence_length)
                             train_result_memory[model_name]["result"][batch_size][sequence_length] = memory
                         if self.args.speed:
-                            time = self.train_speed(model_name, batch_size, sequence_length)
+                            time = self.train_speed(
+                                model_name, batch_size, sequence_length)
                             train_result_time[model_name]["result"][batch_size][sequence_length] = time
 
         if self.args.inference:
             if self.args.speed:
-                self.print_fn("\n" + 20 * "=" + ("INFERENCE - SPEED - RESULT").center(40) + 20 * "=")
-                self.print_results(inference_result_time, type_label="Time in s")
-                self.save_to_csv(inference_result_time, self.args.inference_time_csv_file)
+                self.print_fn(
+                    "\n" + 20 * "=" + ("INFERENCE - SPEED - RESULT").center(40) + 20 * "=")
+                self.print_results(inference_result_time,
+                                   type_label="Time in s")
+                self.save_to_csv(inference_result_time,
+                                 self.args.inference_time_csv_file)
                 if self.args.is_tpu:
                     self.print_fn(
                         "TPU was used for inference. Note that the time after compilation stabilized (after ~10 inferences model.forward(..) calls) was measured."
                     )
 
             if self.args.memory:
-                self.print_fn("\n" + 20 * "=" + ("INFERENCE - MEMORY - RESULT").center(40) + 20 * "=")
-                self.print_results(inference_result_memory, type_label="Memory in MB")
-                self.save_to_csv(inference_result_memory, self.args.inference_memory_csv_file)
+                self.print_fn(
+                    "\n" + 20 * "=" + ("INFERENCE - MEMORY - RESULT").center(40) + 20 * "=")
+                self.print_results(inference_result_memory,
+                                   type_label="Memory in MB")
+                self.save_to_csv(inference_result_memory,
+                                 self.args.inference_memory_csv_file)
 
             if self.args.trace_memory_line_by_line:
-                self.print_fn("\n" + 20 * "=" + ("INFERENCE - MEMOMRY - LINE BY LINE - SUMMARY").center(40) + 20 * "=")
+                self.print_fn(
+                    "\n" + 20 * "=" + ("INFERENCE - MEMOMRY - LINE BY LINE - SUMMARY").center(40) + 20 * "=")
                 self.print_memory_trace_statistics(inference_summary)
 
         if self.args.training:
             if self.args.speed:
-                self.print_fn("\n" + 20 * "=" + ("TRAIN - SPEED - RESULTS").center(40) + 20 * "=")
+                self.print_fn("\n" + 20 * "=" +
+                              ("TRAIN - SPEED - RESULTS").center(40) + 20 * "=")
                 self.print_results(train_result_time, "Time in s")
-                self.save_to_csv(train_result_time, self.args.train_time_csv_file)
+                self.save_to_csv(train_result_time,
+                                 self.args.train_time_csv_file)
                 if self.args.is_tpu:
                     self.print_fn(
                         "TPU was used for training. Note that the time after compilation stabilized (after ~10 train loss=model.forward(...) + loss.backward() calls) was measured."
                     )
 
             if self.args.memory:
-                self.print_fn("\n" + 20 * "=" + ("TRAIN - MEMORY - RESULTS").center(40) + 20 * "=")
-                self.print_results(train_result_memory, type_label="Memory in MB")
-                self.save_to_csv(train_result_memory, self.args.train_memory_csv_file)
+                self.print_fn(
+                    "\n" + 20 * "=" + ("TRAIN - MEMORY - RESULTS").center(40) + 20 * "=")
+                self.print_results(train_result_memory,
+                                   type_label="Memory in MB")
+                self.save_to_csv(train_result_memory,
+                                 self.args.train_memory_csv_file)
 
             if self.args.trace_memory_line_by_line:
-                self.print_fn("\n" + 20 * "=" + ("TRAIN - MEMOMRY - LINE BY LINE - SUMMARY").center(40) + 20 * "=")
+                self.print_fn(
+                    "\n" + 20 * "=" + ("TRAIN - MEMOMRY - LINE BY LINE - SUMMARY").center(40) + 20 * "=")
                 self.print_memory_trace_statistics(train_summary)
 
         if self.args.env_print:
-            self.print_fn("\n" + 20 * "=" + ("ENVIRONMENT INFORMATION").center(40) + 20 * "=")
+            self.print_fn("\n" + 20 * "=" +
+                          ("ENVIRONMENT INFORMATION").center(40) + 20 * "=")
             self.print_fn(
-                "\n".join(["- {}: {}".format(prop, val) for prop, val in self.environment_info.items()]) + "\n"
+                "\n".join(["- {}: {}".format(prop, val)
+                          for prop, val in self.environment_info.items()]) + "\n"
             )
 
         if self.args.save_to_csv:
@@ -800,7 +829,8 @@ class Benchmark(ABC):
             info["only_pretrain_model"] = self.args.only_pretrain_model
 
             if is_psutil_available():
-                info["cpu_ram_mb"] = bytes_to_mega_bytes(psutil.virtual_memory().total)
+                info["cpu_ram_mb"] = bytes_to_mega_bytes(
+                    psutil.virtual_memory().total)
             else:
                 logger.warning(
                     "Psutil not installed, we won't log available CPU memory."
@@ -810,14 +840,19 @@ class Benchmark(ABC):
 
             info["use_gpu"] = self.args.is_gpu
             if self.args.is_gpu:
-                info["num_gpus"] = 1  # TODO(PVP) Currently only single GPU is supported
+                # TODO(PVP) Currently only single GPU is supported
+                info["num_gpus"] = 1
                 if is_py3nvml_available():
                     nvml.nvmlInit()
-                    handle = nvml.nvmlDeviceGetHandleByIndex(self.args.device_idx)
+                    handle = nvml.nvmlDeviceGetHandleByIndex(
+                        self.args.device_idx)
                     info["gpu"] = nvml.nvmlDeviceGetName(handle)
-                    info["gpu_ram_mb"] = bytes_to_mega_bytes(nvml.nvmlDeviceGetMemoryInfo(handle).total)
-                    info["gpu_power_watts"] = nvml.nvmlDeviceGetPowerManagementLimit(handle) / 1000
-                    info["gpu_performance_state"] = nvml.nvmlDeviceGetPerformanceState(handle)
+                    info["gpu_ram_mb"] = bytes_to_mega_bytes(
+                        nvml.nvmlDeviceGetMemoryInfo(handle).total)
+                    info["gpu_power_watts"] = nvml.nvmlDeviceGetPowerManagementLimit(
+                        handle) / 1000
+                    info["gpu_performance_state"] = nvml.nvmlDeviceGetPerformanceState(
+                        handle)
                     nvml.nvmlShutdown()
                 else:
                     logger.warning(
@@ -839,7 +874,8 @@ class Benchmark(ABC):
     def print_results(self, result_dict, type_label):
         self.print_fn(80 * "-")
         self.print_fn(
-            "Model Name".center(30) + "Batch Size".center(15) + "Seq Length".center(15) + type_label.center(15)
+            "Model Name".center(30) + "Batch Size".center(15) +
+            "Seq Length".center(15) + type_label.center(15)
         )
         self.print_fn(80 * "-")
         for model_name in self.args.model_names:
@@ -852,7 +888,8 @@ class Benchmark(ABC):
                     else:
                         result = str(result)
                     self.print_fn(
-                        model_name[:30].center(30) + str(batch_size).center(15),
+                        model_name[:30].center(
+                            30) + str(batch_size).center(15),
                         str(sequence_length).center(15),
                         result.center(15),
                     )
@@ -893,7 +930,8 @@ class Benchmark(ABC):
             )
 
             fieldnames = ["model", "batch_size", "sequence_length"]
-            writer = csv.DictWriter(csv_file, fieldnames=fieldnames + ["result"])
+            writer = csv.DictWriter(
+                csv_file, fieldnames=fieldnames + ["result"])
             writer.writeheader()
 
             for model_name in self.args.model_names:

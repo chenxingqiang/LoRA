@@ -98,8 +98,10 @@ class DataTrainingArguments:
             "value if set."
         },
     )
-    server_ip: Optional[str] = field(default=None, metadata={"help": "For distant debugging."})
-    server_port: Optional[str] = field(default=None, metadata={"help": "For distant debugging."})
+    server_ip: Optional[str] = field(
+        default=None, metadata={"help": "For distant debugging."})
+    server_port: Optional[str] = field(
+        default=None, metadata={"help": "For distant debugging."})
 
 
 @dataclass
@@ -125,19 +127,23 @@ class ModelArguments:
     )
     cache_dir: Optional[str] = field(
         default=None,
-        metadata={"help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
+        metadata={
+            "help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
     )
     do_lower_case: Optional[bool] = field(
         default=False,
-        metadata={"help": "arg to indicate if tokenizer should do lower case in AutoTokenizer.from_pretrained()"},
+        metadata={
+            "help": "arg to indicate if tokenizer should do lower case in AutoTokenizer.from_pretrained()"},
     )
     use_fast_tokenizer: bool = field(
         default=True,
-        metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
+        metadata={
+            "help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
     )
     model_revision: str = field(
         default="main",
-        metadata={"help": "The specific model version to use (can be a branch name, tag name or commit id)."},
+        metadata={
+            "help": "The specific model version to use (can be a branch name, tag name or commit id)."},
     )
     use_auth_token: bool = field(
         default=False,
@@ -153,7 +159,8 @@ def main():
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+    parser = HfArgumentParser(
+        (ModelArguments, DataTrainingArguments, TrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
     # Detecting last checkpoint.
@@ -177,7 +184,8 @@ def main():
         import ptvsd
 
         print("Waiting for debugger attach")
-        ptvsd.enable_attach(address=(data_args.server_ip, data_args.server_port), redirect_output=True)
+        ptvsd.enable_attach(address=(data_args.server_ip,
+                                     data_args.server_port), redirect_output=True)
         ptvsd.wait_for_attach()
 
     # Setup logging
@@ -186,7 +194,8 @@ def main():
         datefmt="%m/%d/%Y %H:%M:%S",
         handlers=[logging.StreamHandler(sys.stdout)],
     )
-    logger.setLevel(logging.INFO if is_main_process(training_args.local_rank) else logging.WARN)
+    logger.setLevel(logging.INFO if is_main_process(
+        training_args.local_rank) else logging.WARN)
 
     # Log on each process the small summary:
     logger.warning(
@@ -208,11 +217,14 @@ def main():
     # download the dataset.
     # Downloading and loading xnli dataset from the hub.
     if model_args.train_language is None:
-        train_dataset = load_dataset("xnli", model_args.language, split="train")
+        train_dataset = load_dataset(
+            "xnli", model_args.language, split="train")
     else:
-        train_dataset = load_dataset("xnli", model_args.train_language, split="train")
+        train_dataset = load_dataset(
+            "xnli", model_args.train_language, split="train")
 
-    eval_dataset = load_dataset("xnli", model_args.language, split="validation")
+    eval_dataset = load_dataset(
+        "xnli", model_args.language, split="validation")
     # Labels
     label_list = train_dataset.features["label"].names
     num_labels = len(label_list)
@@ -265,7 +277,8 @@ def main():
 
     if training_args.do_train:
         if data_args.max_train_samples is not None:
-            train_dataset = train_dataset.select(range(data_args.max_train_samples))
+            train_dataset = train_dataset.select(
+                range(data_args.max_train_samples))
         train_dataset = train_dataset.map(
             preprocess_function,
             batched=True,
@@ -274,7 +287,8 @@ def main():
 
     if training_args.do_eval:
         if data_args.max_val_samples is not None:
-            eval_dataset = eval_dataset.select(range(data_args.max_val_samples))
+            eval_dataset = eval_dataset.select(
+                range(data_args.max_val_samples))
         eval_dataset = eval_dataset.map(
             preprocess_function,
             batched=True,
@@ -283,7 +297,8 @@ def main():
 
     # Log a few random samples from the training set:
     for index in random.sample(range(len(train_dataset)), 3):
-        logger.info(f"Sample {index} of the training set: {train_dataset[index]}.")
+        logger.info(
+            f"Sample {index} of the training set: {train_dataset[index]}.")
 
     # Get the metric function
     metric = load_metric("xnli")
@@ -291,7 +306,8 @@ def main():
     # You can define your custom compute_metrics function. It takes an `EvalPrediction` object (a namedtuple with a
     # predictions and label_ids field) and has to return a dictionary string to float.
     def compute_metrics(p: EvalPrediction):
-        preds = p.predictions[0] if isinstance(p.predictions, tuple) else p.predictions
+        preds = p.predictions[0] if isinstance(
+            p.predictions, tuple) else p.predictions
         preds = np.argmax(preds, axis=1)
         return metric.compute(predictions=preds, references=p.label_ids)
 
@@ -299,7 +315,8 @@ def main():
     if data_args.pad_to_max_length:
         data_collator = default_data_collator
     elif training_args.fp16:
-        data_collator = DataCollatorWithPadding(tokenizer, pad_to_multiple_of=8)
+        data_collator = DataCollatorWithPadding(
+            tokenizer, pad_to_multiple_of=8)
     else:
         data_collator = None
 
@@ -325,7 +342,8 @@ def main():
         train_result = trainer.train(model_path=model_path)
         metrics = train_result.metrics
         max_train_samples = (
-            data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
+            data_args.max_train_samples if data_args.max_train_samples is not None else len(
+                train_dataset)
         )
         metrics["train_samples"] = min(max_train_samples, len(train_dataset))
 
@@ -340,7 +358,8 @@ def main():
         logger.info("*** Evaluate ***")
         metrics = trainer.evaluate(eval_dataset=eval_dataset)
 
-        max_val_samples = data_args.max_val_samples if data_args.max_val_samples is not None else len(eval_dataset)
+        max_val_samples = data_args.max_val_samples if data_args.max_val_samples is not None else len(
+            eval_dataset)
         metrics["eval_samples"] = min(max_val_samples, len(eval_dataset))
 
         trainer.log_metrics("eval", metrics)

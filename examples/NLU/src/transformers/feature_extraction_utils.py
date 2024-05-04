@@ -80,7 +80,8 @@ class BatchFeature(UserDict):
         if isinstance(item, str):
             return self.data[item]
         else:
-            raise KeyError("Indexing with integers is not available when using Python based feature extractors")
+            raise KeyError(
+                "Indexing with integers is not available when using Python based feature extractors")
 
     def __getattr__(self, item: str):
         try:
@@ -135,14 +136,16 @@ class BatchFeature(UserDict):
             is_tensor = tf.is_tensor
         elif tensor_type == TensorType.PYTORCH:
             if not is_torch_available():
-                raise ImportError("Unable to convert output to PyTorch tensors format, PyTorch is not installed.")
+                raise ImportError(
+                    "Unable to convert output to PyTorch tensors format, PyTorch is not installed.")
             import torch
 
             as_tensor = torch.tensor
             is_tensor = torch.is_tensor
         elif tensor_type == TensorType.JAX:
             if not is_flax_available():
-                raise ImportError("Unable to convert output to JAX tensors format, JAX is not installed.")
+                raise ImportError(
+                    "Unable to convert output to JAX tensors format, JAX is not installed.")
             import jax.numpy as jnp  # noqa: F811
 
             as_tensor = jnp.array
@@ -160,7 +163,8 @@ class BatchFeature(UserDict):
                     self[key] = tensor
             except:  # noqa E722
                 if key == "overflowing_values":
-                    raise ValueError("Unable to create tensor returning overflowing values of different lengths. ")
+                    raise ValueError(
+                        "Unable to create tensor returning overflowing values of different lengths. ")
                 raise ValueError(
                     "Unable to create tensor, you should probably activate padding "
                     "with 'padding=True' to have batched tensors with the same length."
@@ -187,7 +191,8 @@ class BatchFeature(UserDict):
         if isinstance(device, str) or _is_torch_device(device) or isinstance(device, int):
             self.data = {k: v.to(device=device) for k, v in self.data.items()}
         else:
-            logger.warning(f"Attempting to cast a BatchFeature to type {str(device)}. This is not supported.")
+            logger.warning(
+                f"Attempting to cast a BatchFeature to type {str(device)}. This is not supported.")
         return self
 
 
@@ -268,7 +273,8 @@ class FeatureExtractionMixin:
             assert feature_extractor.return_attention_mask is False
             assert unused_kwargs == {'foo': False}
         """
-        feature_extractor_dict, kwargs = cls.get_feature_extractor_dict(pretrained_model_name_or_path, **kwargs)
+        feature_extractor_dict, kwargs = cls.get_feature_extractor_dict(
+            pretrained_model_name_or_path, **kwargs)
 
         return cls.from_dict(feature_extractor_dict, **kwargs)
 
@@ -282,10 +288,12 @@ class FeatureExtractionMixin:
                 Directory where the feature extractor JSON file will be saved (will be created if it does not exist).
         """
         if os.path.isfile(save_directory):
-            raise AssertionError(f"Provided path ({save_directory}) should be a directory, not a file")
+            raise AssertionError(
+                f"Provided path ({save_directory}) should be a directory, not a file")
         os.makedirs(save_directory, exist_ok=True)
         # If we save using the predefined names, we can load using `from_pretrained`
-        output_feature_extractor_file = os.path.join(save_directory, FEATURE_EXTRACTOR_NAME)
+        output_feature_extractor_file = os.path.join(
+            save_directory, FEATURE_EXTRACTOR_NAME)
 
         self.to_json_file(output_feature_extractor_file)
         logger.info(f"Configuration saved in {output_feature_extractor_file}")
@@ -321,7 +329,8 @@ class FeatureExtractionMixin:
 
         pretrained_model_name_or_path = str(pretrained_model_name_or_path)
         if os.path.isdir(pretrained_model_name_or_path):
-            feature_extractor_file = os.path.join(pretrained_model_name_or_path, FEATURE_EXTRACTOR_NAME)
+            feature_extractor_file = os.path.join(
+                pretrained_model_name_or_path, FEATURE_EXTRACTOR_NAME)
         elif os.path.isfile(pretrained_model_name_or_path) or is_remote_url(pretrained_model_name_or_path):
             feature_extractor_file = pretrained_model_name_or_path
         else:
@@ -363,7 +372,8 @@ class FeatureExtractionMixin:
             raise EnvironmentError(msg)
 
         if resolved_feature_extractor_file == feature_extractor_file:
-            logger.info(f"loading feature extractor configuration file {feature_extractor_file}")
+            logger.info(
+                f"loading feature extractor configuration file {feature_extractor_file}")
         else:
             logger.info(
                 f"loading feature extractor configuration file {feature_extractor_file} from cache at {resolved_feature_extractor_file}"

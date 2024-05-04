@@ -14,9 +14,10 @@ Paper authors: Krzysztof Choromanski, Valerii Likhosherstov, David Dohan, Xingyo
 `full_script.sh` will launch performer fine-tuning from the bert-large-cased checkpoint on the English Wikipedia dataset from `datasets`.
 
 Here are a few key arguments:
+
 - Remove the `--performer` argument to use a standard Bert model.
   
-- Add `--reinitialize` to start from a blank model rather than a Bert checkpoint. 
+- Add `--reinitialize` to start from a blank model rather than a Bert checkpoint.
   
 - You may change the Bert size by passing a different [checkpoint](https://huggingface.co/transformers/pretrained_models.html) to the `--model_name_or_path` argument.
 

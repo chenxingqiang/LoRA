@@ -47,7 +47,7 @@ from transformers.trainer_utils import get_last_checkpoint, is_main_process
 logger = logging.getLogger(__name__)
 
 
-{%- if cookiecutter.can_train_from_scratch == "True" %}
+{%- if cookiecutter.can_train_from_scratch == "True" % }
 # You should update this to your particular problem to have better documentation of `model_type`
 MODEL_CONFIG_CLASSES = list(MODEL_MAPPING.keys())
 MODEL_TYPES = tuple(conf.model_type for conf in MODEL_CONFIG_CLASSES)
@@ -68,7 +68,8 @@ class ModelArguments:
     )
     model_type: Optional[str] = field(
         default=None,
-        metadata={"help": "If training from scratch, pass a model type from the list: " + ", ".join(MODEL_TYPES)},
+        metadata={
+            "help": "If training from scratch, pass a model type from the list: " + ", ".join(MODEL_TYPES)},
     )
     config_name: Optional[str] = field(
         default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
@@ -81,9 +82,14 @@ class ModelArguments:
     )
     use_fast_tokenizer: bool = field(
         default=True,
-        metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
+        metadata={
+            "help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
     )
-{%- elif cookiecutter.can_train_from_scratch == "False" %}
+
+
+{%- elif cookiecutter.can_train_from_scratch == "False" % }
+
+
 @dataclass
 class ModelArguments:
     """
@@ -91,7 +97,8 @@ class ModelArguments:
     """
 
     model_name_or_path: str = field(
-        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
+        metadata={
+            "help": "Path to pretrained model or model identifier from huggingface.co/models"}
     )
     config_name: Optional[str] = field(
         default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
@@ -104,11 +111,13 @@ class ModelArguments:
     )
     use_fast_tokenizer: bool = field(
         default=True,
-        metadata={"help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
+        metadata={
+            "help": "Whether to use one of the fast tokenizer (backed by the tokenizers library) or not."},
     )
     model_revision: str = field(
         default="main",
-        metadata={"help": "The specific model version to use (can be a branch name, tag name or commit id)."},
+        metadata={
+            "help": "The specific model version to use (can be a branch name, tag name or commit id)."},
     )
     use_auth_token: bool = field(
         default=False,
@@ -117,7 +126,7 @@ class ModelArguments:
             "with private models)."
         },
     )
-{% endif %}
+{% endif % }
 
 
 @dataclass
@@ -132,10 +141,12 @@ class DataTrainingArguments:
     dataset_config_name: Optional[str] = field(
         default=None, metadata={"help": "The configuration name of the dataset to use (via the datasets library)."}
     )
-    train_file: Optional[str] = field(default=None, metadata={"help": "The input training data file (a text file)."})
+    train_file: Optional[str] = field(
+        default=None, metadata={"help": "The input training data file (a text file)."})
     validation_file: Optional[str] = field(
         default=None,
-        metadata={"help": "An optional input evaluation data file to evaluate the perplexity on (a text file)."},
+        metadata={
+            "help": "An optional input evaluation data file to evaluate the perplexity on (a text file)."},
     )
     overwrite_cache: bool = field(
         default=False, metadata={"help": "Overwrite the cached training and evaluation sets"}
@@ -161,14 +172,17 @@ class DataTrainingArguments:
 
     def __post_init__(self):
         if self.dataset_name is None and self.train_file is None and self.validation_file is None:
-            raise ValueError("Need either a dataset name or a training/validation file.")
+            raise ValueError(
+                "Need either a dataset name or a training/validation file.")
         else:
             if self.train_file is not None:
                 extension = self.train_file.split(".")[-1]
-                assert extension in ["csv", "json", "txt"], "`train_file` should be a csv, a json or a txt file."
+                assert extension in [
+                    "csv", "json", "txt"], "`train_file` should be a csv, a json or a txt file."
             if self.validation_file is not None:
                 extension = self.validation_file.split(".")[-1]
-                assert extension in ["csv", "json", "txt"], "`validation_file` should be a csv, a json or a txt file."
+                assert extension in [
+                    "csv", "json", "txt"], "`validation_file` should be a csv, a json or a txt file."
 
 
 def main():
@@ -176,11 +190,13 @@ def main():
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
 
-    parser = HfArgumentParser((ModelArguments, DataTrainingArguments, TrainingArguments))
+    parser = HfArgumentParser(
+        (ModelArguments, DataTrainingArguments, TrainingArguments))
     if len(sys.argv) == 2 and sys.argv[1].endswith(".json"):
         # If we pass only one argument to the script and it's the path to a json file,
         # let's parse it to get our arguments.
-        model_args, data_args, training_args = parser.parse_json_file(json_file=os.path.abspath(sys.argv[1]))
+        model_args, data_args, training_args = parser.parse_json_file(
+            json_file=os.path.abspath(sys.argv[1]))
     else:
         model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
@@ -205,7 +221,8 @@ def main():
         datefmt="%m/%d/%Y %H:%M:%S",
         handlers=[logging.StreamHandler(sys.stdout)],
     )
-    logger.setLevel(logging.INFO if is_main_process(training_args.local_rank) else logging.WARN)
+    logger.setLevel(logging.INFO if is_main_process(
+        training_args.local_rank) else logging.WARN)
 
     # Log on each process the small summary:
     logger.warning(
@@ -231,7 +248,8 @@ def main():
     # download the dataset.
     if data_args.dataset_name is not None:
         # Downloading and loading a dataset from the hub.
-        datasets = load_dataset(data_args.dataset_name, data_args.dataset_config_name)
+        datasets = load_dataset(data_args.dataset_name,
+                               data_args.dataset_config_name)
     else:
         data_files = {}
         if data_args.train_file is not None:
@@ -250,19 +268,22 @@ def main():
     # Distributed training:
     # The .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
-{%- if cookiecutter.can_train_from_scratch == "True" %}
+{%- if cookiecutter.can_train_from_scratch == "True" % }
     config_kwargs = {
         "cache_dir": model_args.cache_dir,
         "revision": model_args.model_revision,
         "use_auth_token": True if model_args.use_auth_token else None,
     }
     if model_args.config_name:
-        config = AutoConfig.from_pretrained(model_args.config_name, **config_kwargs)
+        config = AutoConfig.from_pretrained(
+            model_args.config_name, **config_kwargs)
     elif model_args.model_name_or_path:
-        config = AutoConfig.from_pretrained(model_args.model_name_or_path, **config_kwargs)
+        config = AutoConfig.from_pretrained(
+            model_args.model_name_or_path, **config_kwargs)
     else:
         config = CONFIG_MAPPING[model_args.model_type]()
-        logger.warning("You are instantiating a new config instance from scratch.")
+        logger.warning(
+            "You are instantiating a new config instance from scratch.")
 
     tokenizer_kwargs = {
         "cache_dir": model_args.cache_dir,
@@ -271,9 +292,11 @@ def main():
         "use_auth_token": True if model_args.use_auth_token else None,
     }
     if model_args.tokenizer_name:
-        tokenizer = AutoTokenizer.from_pretrained(model_args.tokenizer_name, **tokenizer_kwargs)
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_args.tokenizer_name, **tokenizer_kwargs)
     elif model_args.model_name_or_path:
-        tokenizer = AutoTokenizer.from_pretrained(model_args.model_name_or_path, **tokenizer_kwargs)
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_args.model_name_or_path, **tokenizer_kwargs)
     else:
         raise ValueError(
             "You are instantiating a new tokenizer from scratch. This is not supported by this script."
@@ -294,7 +317,7 @@ def main():
         model = {{cookiecutter.model_class}}.from_config(config)
 
     model.resize_token_embeddings(len(tokenizer))
-{%- elif cookiecutter.can_train_from_scratch == "False" %}
+{%- elif cookiecutter.can_train_from_scratch == "False" % }
     config = AutoConfig.from_pretrained(
         model_args.config_name if model_args.config_name else model_args.model_name_or_path,
         num_labels=num_labels,
@@ -318,7 +341,7 @@ def main():
         revision=model_args.model_revision,
         use_auth_token=True if model_args.use_auth_token else None,
     )
-{% endif %}
+{% endif % }
 
     # Preprocessing the datasets.
     # First we tokenize all the texts.
@@ -337,7 +360,8 @@ def main():
         train_dataset = datasets["train"]
         if data_args.max_train_samples is not None:
             # Select Sample from Dataset
-            train_dataset = train_dataset.select(range(data_args.max_train_samples))
+            train_dataset = train_dataset.select(
+                range(data_args.max_train_samples))
         # tokenize train dataset in batch
         train_dataset = train_dataset.map(
             tokenize_function,
@@ -353,7 +377,8 @@ def main():
         eval_dataset = datasets["validation"]
         # Selecting samples from dataset
         if data_args.max_val_samples is not None:
-            eval_dataset = eval_dataset.select(range(data_args.max_val_samples))
+            eval_dataset = eval_dataset.select(
+                range(data_args.max_val_samples))
         # tokenize validation dataset
         eval_dataset = eval_dataset.map(
             tokenize_function,
@@ -364,7 +389,8 @@ def main():
         )
 
     # Data collator
-    data_collator=default_data_collator if not training_args.fp16 else DataCollatorWithPadding(tokenizer, pad_to_multiple_of=8)
+    data_collator = default_data_collator if not training_args.fp16 else DataCollatorWithPadding(
+        tokenizer, pad_to_multiple_of=8)
 
     # Initialize our Trainer
     trainer = Trainer(
@@ -378,27 +404,28 @@ def main():
 
     # Training
     if training_args.do_train:
-{%- if cookiecutter.can_train_from_scratch == "False" %}
+{%- if cookiecutter.can_train_from_scratch == "False" % }
         if last_checkpoint is not None:
             checkpoint = last_checkpoint
         elif os.path.isdir(model_args.model_name_or_path):
             checkpoint = model_args.model_name_or_path
         else:
             checkpoint = None
-{%- elif cookiecutter.can_train_from_scratch == "True" %}
+{%- elif cookiecutter.can_train_from_scratch == "True" % }
         if last_checkpoint is not None:
             checkpoint = last_checkpoint
         elif model_args.model_name_or_path is not None and os.path.isdir(model_args.model_name_or_path):
             checkpoint = model_args.model_name_or_path
         else:
             checkpoint = None
-{% endif %}
+{% endif % }
         train_result = trainer.train(resume_from_checkpoint=checkpoint)
         trainer.save_model()  # Saves the tokenizer too for easy upload
 
         metrics = train_result.metrics
         max_train_samples = (
-            data_args.max_train_samples if data_args.max_train_samples is not None else len(train_dataset)
+            data_args.max_train_samples if data_args.max_train_samples is not None else len(
+                train_dataset)
         )
         metrics["train_samples"] = min(max_train_samples, len(train_dataset))
 

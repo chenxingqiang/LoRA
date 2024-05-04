@@ -51,8 +51,10 @@ PRETRAINED_VOCAB_FILES_MAP = {
         "funnel-transformer/xlarge-base": "https://huggingface.co/funnel-transformer/xlarge-base/resolve/main/vocab.txt",
     }
 }
-PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {f"funnel-transformer/{name}": 512 for name in _model_names}
-PRETRAINED_INIT_CONFIGURATION = {f"funnel-transformer/{name}": {"do_lower_case": True} for name in _model_names}
+PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
+    f"funnel-transformer/{name}": 512 for name in _model_names}
+PRETRAINED_INIT_CONFIGURATION = {
+    f"funnel-transformer/{name}": {"do_lower_case": True} for name in _model_names}
 
 
 class FunnelTokenizer(BertTokenizer):

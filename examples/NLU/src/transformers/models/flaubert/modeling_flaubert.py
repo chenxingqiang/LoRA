@@ -194,7 +194,8 @@ class FlaubertModel(XLMModel):
         #     assert src_enc.size(0) == bs
 
         # generate masks
-        mask, attn_mask = get_masks(slen, lengths, self.causal, padding_mask=attention_mask)
+        mask, attn_mask = get_masks(
+            slen, lengths, self.causal, padding_mask=attention_mask)
         # if self.is_decoder and src_enc is not None:
         #     src_mask = torch.arange(src_len.max(), dtype=torch.long, device=lengths.device) < src_len[:, None]
 
@@ -228,7 +229,8 @@ class FlaubertModel(XLMModel):
         if inputs_embeds is None:
             inputs_embeds = self.embeddings(input_ids)
 
-        tensor = inputs_embeds + self.position_embeddings(position_ids).expand_as(inputs_embeds)
+        tensor = inputs_embeds + \
+            self.position_embeddings(position_ids).expand_as(inputs_embeds)
         if langs is not None and self.use_lang_emb and self.config.n_langs > 1:
             tensor = tensor + self.lang_embeddings(langs)
         if token_type_ids is not None:
@@ -266,7 +268,8 @@ class FlaubertModel(XLMModel):
                 tensor = self.layer_norm1[i](tensor)
             else:
                 tensor_normalized = self.layer_norm1[i](tensor)
-                attn_outputs = self.attentions[i](tensor_normalized, attn_mask, cache=cache, head_mask=head_mask[i])
+                attn_outputs = self.attentions[i](
+                    tensor_normalized, attn_mask, cache=cache, head_mask=head_mask[i])
                 attn = attn_outputs[0]
                 if output_attentions:
                     attentions = attentions + (attn_outputs[1],)

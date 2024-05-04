@@ -26,7 +26,8 @@ _import_structure = {
 }
 
 if is_torch_available():
-    _import_structure["modeling_mmbt"] = ["MMBTForClassification", "MMBTModel", "ModalEmbeddings"]
+    _import_structure["modeling_mmbt"] = [
+        "MMBTForClassification", "MMBTModel", "ModalEmbeddings"]
 
 
 if TYPE_CHECKING:

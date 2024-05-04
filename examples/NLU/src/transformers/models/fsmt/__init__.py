@@ -27,7 +27,8 @@ _import_structure = {
 }
 
 if is_torch_available():
-    _import_structure["modeling_fsmt"] = ["FSMTForConditionalGeneration", "FSMTModel", "PretrainedFSMTModel"]
+    _import_structure["modeling_fsmt"] = [
+        "FSMTForConditionalGeneration", "FSMTModel", "PretrainedFSMTModel"]
 
 
 if TYPE_CHECKING:

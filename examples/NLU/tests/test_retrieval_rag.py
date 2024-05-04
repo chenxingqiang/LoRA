@@ -72,7 +72,8 @@ class RagRetrieverTest(TestCase):
         ]
         dpr_tokenizer_path = os.path.join(self.tmpdirname, "dpr_tokenizer")
         os.makedirs(dpr_tokenizer_path, exist_ok=True)
-        self.vocab_file = os.path.join(dpr_tokenizer_path, DPR_VOCAB_FILES_NAMES["vocab_file"])
+        self.vocab_file = os.path.join(
+            dpr_tokenizer_path, DPR_VOCAB_FILES_NAMES["vocab_file"])
         with open(self.vocab_file, "w", encoding="utf-8") as vocab_writer:
             vocab_writer.write("".join([x + "\n" for x in vocab_tokens]))
 
@@ -100,13 +101,16 @@ class RagRetrieverTest(TestCase):
             "<unk>",
         ]
         vocab_tokens = dict(zip(vocab, range(len(vocab))))
-        merges = ["#version: 0.2", "\u0120 l", "\u0120l o", "\u0120lo w", "e r", ""]
+        merges = ["#version: 0.2", "\u0120 l",
+                  "\u0120l o", "\u0120lo w", "e r", ""]
         self.special_tokens_map = {"unk_token": "<unk>"}
 
         bart_tokenizer_path = os.path.join(self.tmpdirname, "bart_tokenizer")
         os.makedirs(bart_tokenizer_path, exist_ok=True)
-        self.vocab_file = os.path.join(bart_tokenizer_path, BART_VOCAB_FILES_NAMES["vocab_file"])
-        self.merges_file = os.path.join(bart_tokenizer_path, BART_VOCAB_FILES_NAMES["merges_file"])
+        self.vocab_file = os.path.join(
+            bart_tokenizer_path, BART_VOCAB_FILES_NAMES["vocab_file"])
+        self.merges_file = os.path.join(
+            bart_tokenizer_path, BART_VOCAB_FILES_NAMES["merges_file"])
         with open(self.vocab_file, "w", encoding="utf-8") as fp:
             fp.write(json.dumps(vocab_tokens) + "\n")
         with open(self.merges_file, "w", encoding="utf-8") as fp:
@@ -130,7 +134,8 @@ class RagRetrieverTest(TestCase):
                 "embeddings": [np.ones(self.retrieval_vector_size), 2 * np.ones(self.retrieval_vector_size)],
             }
         )
-        dataset.add_faiss_index("embeddings", string_factory="Flat", metric_type=faiss.METRIC_INNER_PRODUCT)
+        dataset.add_faiss_index(
+            "embeddings", string_factory="Flat", metric_type=faiss.METRIC_INNER_PRODUCT)
         return dataset
 
     def get_dummy_canonical_hf_index_retriever(self):
@@ -160,7 +165,8 @@ class RagRetrieverTest(TestCase):
         if from_disk:
             config.passages_path = os.path.join(self.tmpdirname, "dataset")
             config.index_path = os.path.join(self.tmpdirname, "index.faiss")
-            dataset.get_index("embeddings").save(os.path.join(self.tmpdirname, "index.faiss"))
+            dataset.get_index("embeddings").save(
+                os.path.join(self.tmpdirname, "index.faiss"))
             dataset.drop_index("embeddings")
             dataset.save_to_disk(os.path.join(self.tmpdirname, "dataset"))
             del dataset
@@ -187,14 +193,18 @@ class RagRetrieverTest(TestCase):
                 "embeddings": [np.ones(self.retrieval_vector_size + 1), 2 * np.ones(self.retrieval_vector_size + 1)],
             }
         )
-        dataset.add_faiss_index("embeddings", string_factory="Flat", metric_type=faiss.METRIC_INNER_PRODUCT)
+        dataset.add_faiss_index(
+            "embeddings", string_factory="Flat", metric_type=faiss.METRIC_INNER_PRODUCT)
 
-        index_file_name = os.path.join(self.tmpdirname, "hf_bert_base.hnswSQ8_correct_phi_128.c_index")
+        index_file_name = os.path.join(
+            self.tmpdirname, "hf_bert_base.hnswSQ8_correct_phi_128.c_index")
         dataset.save_faiss_index("embeddings", index_file_name + ".index.dpr")
-        pickle.dump(dataset["id"], open(index_file_name + ".index_meta.dpr", "wb"))
+        pickle.dump(dataset["id"], open(
+            index_file_name + ".index_meta.dpr", "wb"))
 
         passages_file_name = os.path.join(self.tmpdirname, "psgs_w100.tsv.pkl")
-        passages = {sample["id"]: [sample["text"], sample["title"]] for sample in dataset}
+        passages = {sample["id"]: [sample["text"], sample["title"]]
+                    for sample in dataset}
         pickle.dump(passages, open(passages_file_name, "wb"))
 
         config = RagConfig(
@@ -215,13 +225,18 @@ class RagRetrieverTest(TestCase):
         hidden_states = np.array(
             [np.ones(self.retrieval_vector_size), -np.ones(self.retrieval_vector_size)], dtype=np.float32
         )
-        retrieved_doc_embeds, doc_ids, doc_dicts = retriever.retrieve(hidden_states, n_docs=n_docs)
-        self.assertEqual(retrieved_doc_embeds.shape, (2, n_docs, self.retrieval_vector_size))
+        retrieved_doc_embeds, doc_ids, doc_dicts = retriever.retrieve(
+            hidden_states, n_docs=n_docs)
+        self.assertEqual(retrieved_doc_embeds.shape,
+                         (2, n_docs, self.retrieval_vector_size))
         self.assertEqual(len(doc_dicts), 2)
-        self.assertEqual(sorted(doc_dicts[0]), ["embeddings", "id", "text", "title"])
+        self.assertEqual(sorted(doc_dicts[0]), [
+                         "embeddings", "id", "text", "title"])
         self.assertEqual(len(doc_dicts[0]["id"]), n_docs)
-        self.assertEqual(doc_dicts[0]["id"][0], "1")  # max inner product is reached with second doc
-        self.assertEqual(doc_dicts[1]["id"][0], "0")  # max inner product is reached with first doc
+        # max inner product is reached with second doc
+        self.assertEqual(doc_dicts[0]["id"][0], "1")
+        # max inner product is reached with first doc
+        self.assertEqual(doc_dicts[1]["id"][0], "0")
         self.assertListEqual(doc_ids.tolist(), [[1], [0]])
 
     def test_canonical_hf_index_retriever_save_and_from_pretrained(self):
@@ -244,13 +259,18 @@ class RagRetrieverTest(TestCase):
         hidden_states = np.array(
             [np.ones(self.retrieval_vector_size), -np.ones(self.retrieval_vector_size)], dtype=np.float32
         )
-        retrieved_doc_embeds, doc_ids, doc_dicts = retriever.retrieve(hidden_states, n_docs=n_docs)
-        self.assertEqual(retrieved_doc_embeds.shape, (2, n_docs, self.retrieval_vector_size))
+        retrieved_doc_embeds, doc_ids, doc_dicts = retriever.retrieve(
+            hidden_states, n_docs=n_docs)
+        self.assertEqual(retrieved_doc_embeds.shape,
+                         (2, n_docs, self.retrieval_vector_size))
         self.assertEqual(len(doc_dicts), 2)
-        self.assertEqual(sorted(doc_dicts[0]), ["embeddings", "id", "text", "title"])
+        self.assertEqual(sorted(doc_dicts[0]), [
+                         "embeddings", "id", "text", "title"])
         self.assertEqual(len(doc_dicts[0]["id"]), n_docs)
-        self.assertEqual(doc_dicts[0]["id"][0], "1")  # max inner product is reached with second doc
-        self.assertEqual(doc_dicts[1]["id"][0], "0")  # max inner product is reached with first doc
+        # max inner product is reached with second doc
+        self.assertEqual(doc_dicts[0]["id"][0], "1")
+        # max inner product is reached with first doc
+        self.assertEqual(doc_dicts[1]["id"][0], "0")
         self.assertListEqual(doc_ids.tolist(), [[1], [0]])
 
     def test_custom_hf_index_retriever_save_and_from_pretrained(self):
@@ -271,13 +291,18 @@ class RagRetrieverTest(TestCase):
         hidden_states = np.array(
             [np.ones(self.retrieval_vector_size), -np.ones(self.retrieval_vector_size)], dtype=np.float32
         )
-        retrieved_doc_embeds, doc_ids, doc_dicts = retriever.retrieve(hidden_states, n_docs=n_docs)
-        self.assertEqual(retrieved_doc_embeds.shape, (2, n_docs, self.retrieval_vector_size))
+        retrieved_doc_embeds, doc_ids, doc_dicts = retriever.retrieve(
+            hidden_states, n_docs=n_docs)
+        self.assertEqual(retrieved_doc_embeds.shape,
+                         (2, n_docs, self.retrieval_vector_size))
         self.assertEqual(len(doc_dicts), 2)
-        self.assertEqual(sorted(doc_dicts[0]), ["embeddings", "id", "text", "title"])
+        self.assertEqual(sorted(doc_dicts[0]), [
+                         "embeddings", "id", "text", "title"])
         self.assertEqual(len(doc_dicts[0]["id"]), n_docs)
-        self.assertEqual(doc_dicts[0]["id"][0], "1")  # max inner product is reached with second doc
-        self.assertEqual(doc_dicts[1]["id"][0], "0")  # max inner product is reached with first doc
+        # max inner product is reached with second doc
+        self.assertEqual(doc_dicts[0]["id"][0], "1")
+        # max inner product is reached with first doc
+        self.assertEqual(doc_dicts[1]["id"][0], "0")
         self.assertListEqual(doc_ids.tolist(), [[1], [0]])
 
     def test_custom_hf_index_retriever_save_and_from_pretrained_from_disk(self):
@@ -298,13 +323,17 @@ class RagRetrieverTest(TestCase):
         hidden_states = np.array(
             [np.ones(self.retrieval_vector_size), -np.ones(self.retrieval_vector_size)], dtype=np.float32
         )
-        retrieved_doc_embeds, doc_ids, doc_dicts = retriever.retrieve(hidden_states, n_docs=n_docs)
-        self.assertEqual(retrieved_doc_embeds.shape, (2, n_docs, self.retrieval_vector_size))
+        retrieved_doc_embeds, doc_ids, doc_dicts = retriever.retrieve(
+            hidden_states, n_docs=n_docs)
+        self.assertEqual(retrieved_doc_embeds.shape,
+                         (2, n_docs, self.retrieval_vector_size))
         self.assertEqual(len(doc_dicts), 2)
         self.assertEqual(sorted(doc_dicts[0]), ["text", "title"])
         self.assertEqual(len(doc_dicts[0]["text"]), n_docs)
-        self.assertEqual(doc_dicts[0]["text"][0], "bar")  # max inner product is reached with second doc
-        self.assertEqual(doc_dicts[1]["text"][0], "foo")  # max inner product is reached with first doc
+        # max inner product is reached with second doc
+        self.assertEqual(doc_dicts[0]["text"][0], "bar")
+        # max inner product is reached with first doc
+        self.assertEqual(doc_dicts[1]["text"][0], "foo")
         self.assertListEqual(doc_ids.tolist(), [[1], [0]])
 
     def test_legacy_hf_index_retriever_save_and_from_pretrained(self):
@@ -331,13 +360,15 @@ class RagRetrieverTest(TestCase):
         hidden_states = np.array(
             [np.ones(self.retrieval_vector_size), -np.ones(self.retrieval_vector_size)], dtype=np.float32
         )
-        out = retriever(question_input_ids, hidden_states, prefix=retriever.config.generator.prefix, n_docs=n_docs)
+        out = retriever(question_input_ids, hidden_states,
+                        prefix=retriever.config.generator.prefix, n_docs=n_docs)
         context_input_ids, context_attention_mask, retrieved_doc_embeds = (
             out["context_input_ids"],
             out["context_attention_mask"],
             out["retrieved_doc_embeds"],
         )
-        self.assertEqual(retrieved_doc_embeds.shape, (2, n_docs, self.retrieval_vector_size))
+        self.assertEqual(retrieved_doc_embeds.shape,
+                         (2, n_docs, self.retrieval_vector_size))
         self.assertIsInstance(context_input_ids, list)
         self.assertIsInstance(context_attention_mask, list)
         self.assertIsInstance(retrieved_doc_embeds, np.ndarray)
@@ -355,7 +386,8 @@ class RagRetrieverTest(TestCase):
             out["retrieved_doc_embeds"],
             out["doc_ids"],
         )
-        self.assertEqual(retrieved_doc_embeds.shape, (2, n_docs, self.retrieval_vector_size))
+        self.assertEqual(retrieved_doc_embeds.shape,
+                         (2, n_docs, self.retrieval_vector_size))
         self.assertIsInstance(context_input_ids, torch.Tensor)
         self.assertIsInstance(context_attention_mask, torch.Tensor)
         self.assertIsInstance(retrieved_doc_embeds, torch.Tensor)

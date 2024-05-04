@@ -78,19 +78,23 @@ class TokenizerUtilsTest(unittest.TestCase):
 
         # Python no tensor
         with self.subTest("BatchEncoding (Python, return_tensors=None)"):
-            self.assert_dump_and_restore(tokenizer_p("Small example to encode"))
+            self.assert_dump_and_restore(
+                tokenizer_p("Small example to encode"))
 
         with self.subTest("BatchEncoding (Python, return_tensors=NUMPY)"):
             self.assert_dump_and_restore(
-                tokenizer_p("Small example to encode", return_tensors=TensorType.NUMPY), np.array_equal
+                tokenizer_p("Small example to encode",
+                            return_tensors=TensorType.NUMPY), np.array_equal
             )
 
         with self.subTest("BatchEncoding (Rust, return_tensors=None)"):
-            self.assert_dump_and_restore(tokenizer_r("Small example to encode"))
+            self.assert_dump_and_restore(
+                tokenizer_r("Small example to encode"))
 
         with self.subTest("BatchEncoding (Rust, return_tensors=NUMPY)"):
             self.assert_dump_and_restore(
-                tokenizer_r("Small example to encode", return_tensors=TensorType.NUMPY), np.array_equal
+                tokenizer_r("Small example to encode",
+                            return_tensors=TensorType.NUMPY), np.array_equal
             )
 
     @require_tf
@@ -106,12 +110,14 @@ class TokenizerUtilsTest(unittest.TestCase):
 
         with self.subTest("BatchEncoding (Python, return_tensors=TENSORFLOW)"):
             self.assert_dump_and_restore(
-                tokenizer_p("Small example to encode", return_tensors=TensorType.TENSORFLOW), tf_array_equals
+                tokenizer_p("Small example to encode",
+                            return_tensors=TensorType.TENSORFLOW), tf_array_equals
             )
 
         with self.subTest("BatchEncoding (Rust, return_tensors=TENSORFLOW)"):
             self.assert_dump_and_restore(
-                tokenizer_r("Small example to encode", return_tensors=TensorType.TENSORFLOW), tf_array_equals
+                tokenizer_r("Small example to encode",
+                            return_tensors=TensorType.TENSORFLOW), tf_array_equals
             )
 
     @require_torch
@@ -124,12 +130,14 @@ class TokenizerUtilsTest(unittest.TestCase):
 
         with self.subTest("BatchEncoding (Python, return_tensors=PYTORCH)"):
             self.assert_dump_and_restore(
-                tokenizer_p("Small example to encode", return_tensors=TensorType.PYTORCH), torch.equal
+                tokenizer_p("Small example to encode",
+                            return_tensors=TensorType.PYTORCH), torch.equal
             )
 
         with self.subTest("BatchEncoding (Rust, return_tensors=PYTORCH)"):
             self.assert_dump_and_restore(
-                tokenizer_r("Small example to encode", return_tensors=TensorType.PYTORCH), torch.equal
+                tokenizer_r("Small example to encode",
+                            return_tensors=TensorType.PYTORCH), torch.equal
             )
 
     @require_tokenizers
@@ -146,110 +154,132 @@ class TokenizerUtilsTest(unittest.TestCase):
     @require_tokenizers
     def test_batch_encoding_word_to_tokens(self):
         tokenizer_r = BertTokenizerFast.from_pretrained("bert-base-cased")
-        encoded = tokenizer_r(["Test", "\xad", "test"], is_split_into_words=True)
+        encoded = tokenizer_r(["Test", "\xad", "test"],
+                              is_split_into_words=True)
 
         self.assertEqual(encoded.word_to_tokens(0), TokenSpan(start=1, end=2))
         self.assertEqual(encoded.word_to_tokens(1), None)
         self.assertEqual(encoded.word_to_tokens(2), TokenSpan(start=2, end=3))
 
     def test_batch_encoding_with_labels(self):
-        batch = BatchEncoding({"inputs": [[1, 2, 3], [4, 5, 6]], "labels": [0, 1]})
+        batch = BatchEncoding(
+            {"inputs": [[1, 2, 3], [4, 5, 6]], "labels": [0, 1]})
         tensor_batch = batch.convert_to_tensors(tensor_type="np")
         self.assertEqual(tensor_batch["inputs"].shape, (2, 3))
         self.assertEqual(tensor_batch["labels"].shape, (2,))
         # test converting the converted
         with CaptureStderr() as cs:
             tensor_batch = batch.convert_to_tensors(tensor_type="np")
-        self.assertFalse(len(cs.err), msg=f"should have no warning, but got {cs.err}")
+        self.assertFalse(
+            len(cs.err), msg=f"should have no warning, but got {cs.err}")
 
         batch = BatchEncoding({"inputs": [1, 2, 3], "labels": 0})
-        tensor_batch = batch.convert_to_tensors(tensor_type="np", prepend_batch_axis=True)
+        tensor_batch = batch.convert_to_tensors(
+            tensor_type="np", prepend_batch_axis=True)
         self.assertEqual(tensor_batch["inputs"].shape, (1, 3))
         self.assertEqual(tensor_batch["labels"].shape, (1,))
 
     @require_torch
     def test_batch_encoding_with_labels_pt(self):
-        batch = BatchEncoding({"inputs": [[1, 2, 3], [4, 5, 6]], "labels": [0, 1]})
+        batch = BatchEncoding(
+            {"inputs": [[1, 2, 3], [4, 5, 6]], "labels": [0, 1]})
         tensor_batch = batch.convert_to_tensors(tensor_type="pt")
         self.assertEqual(tensor_batch["inputs"].shape, (2, 3))
         self.assertEqual(tensor_batch["labels"].shape, (2,))
         # test converting the converted
         with CaptureStderr() as cs:
             tensor_batch = batch.convert_to_tensors(tensor_type="pt")
-        self.assertFalse(len(cs.err), msg=f"should have no warning, but got {cs.err}")
+        self.assertFalse(
+            len(cs.err), msg=f"should have no warning, but got {cs.err}")
 
         batch = BatchEncoding({"inputs": [1, 2, 3], "labels": 0})
-        tensor_batch = batch.convert_to_tensors(tensor_type="pt", prepend_batch_axis=True)
+        tensor_batch = batch.convert_to_tensors(
+            tensor_type="pt", prepend_batch_axis=True)
         self.assertEqual(tensor_batch["inputs"].shape, (1, 3))
         self.assertEqual(tensor_batch["labels"].shape, (1,))
 
     @require_tf
     def test_batch_encoding_with_labels_tf(self):
-        batch = BatchEncoding({"inputs": [[1, 2, 3], [4, 5, 6]], "labels": [0, 1]})
+        batch = BatchEncoding(
+            {"inputs": [[1, 2, 3], [4, 5, 6]], "labels": [0, 1]})
         tensor_batch = batch.convert_to_tensors(tensor_type="tf")
         self.assertEqual(tensor_batch["inputs"].shape, (2, 3))
         self.assertEqual(tensor_batch["labels"].shape, (2,))
         # test converting the converted
         with CaptureStderr() as cs:
             tensor_batch = batch.convert_to_tensors(tensor_type="tf")
-        self.assertFalse(len(cs.err), msg=f"should have no warning, but got {cs.err}")
+        self.assertFalse(
+            len(cs.err), msg=f"should have no warning, but got {cs.err}")
 
         batch = BatchEncoding({"inputs": [1, 2, 3], "labels": 0})
-        tensor_batch = batch.convert_to_tensors(tensor_type="tf", prepend_batch_axis=True)
+        tensor_batch = batch.convert_to_tensors(
+            tensor_type="tf", prepend_batch_axis=True)
         self.assertEqual(tensor_batch["inputs"].shape, (1, 3))
         self.assertEqual(tensor_batch["labels"].shape, (1,))
 
     @require_flax
     def test_batch_encoding_with_labels_jax(self):
-        batch = BatchEncoding({"inputs": [[1, 2, 3], [4, 5, 6]], "labels": [0, 1]})
+        batch = BatchEncoding(
+            {"inputs": [[1, 2, 3], [4, 5, 6]], "labels": [0, 1]})
         tensor_batch = batch.convert_to_tensors(tensor_type="jax")
         self.assertEqual(tensor_batch["inputs"].shape, (2, 3))
         self.assertEqual(tensor_batch["labels"].shape, (2,))
         # test converting the converted
         with CaptureStderr() as cs:
             tensor_batch = batch.convert_to_tensors(tensor_type="jax")
-        self.assertFalse(len(cs.err), msg=f"should have no warning, but got {cs.err}")
+        self.assertFalse(
+            len(cs.err), msg=f"should have no warning, but got {cs.err}")
 
         batch = BatchEncoding({"inputs": [1, 2, 3], "labels": 0})
-        tensor_batch = batch.convert_to_tensors(tensor_type="jax", prepend_batch_axis=True)
+        tensor_batch = batch.convert_to_tensors(
+            tensor_type="jax", prepend_batch_axis=True)
         self.assertEqual(tensor_batch["inputs"].shape, (1, 3))
         self.assertEqual(tensor_batch["labels"].shape, (1,))
 
     def test_padding_accepts_tensors(self):
-        features = [{"input_ids": np.array([0, 1, 2])}, {"input_ids": np.array([0, 1, 2, 3])}]
+        features = [{"input_ids": np.array([0, 1, 2])}, {
+            "input_ids": np.array([0, 1, 2, 3])}]
         tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
         batch = tokenizer.pad(features, padding=True)
         self.assertTrue(isinstance(batch["input_ids"], np.ndarray))
-        self.assertEqual(batch["input_ids"].tolist(), [[0, 1, 2, tokenizer.pad_token_id], [0, 1, 2, 3]])
+        self.assertEqual(batch["input_ids"].tolist(), [
+                         [0, 1, 2, tokenizer.pad_token_id], [0, 1, 2, 3]])
         batch = tokenizer.pad(features, padding=True, return_tensors="np")
         self.assertTrue(isinstance(batch["input_ids"], np.ndarray))
-        self.assertEqual(batch["input_ids"].tolist(), [[0, 1, 2, tokenizer.pad_token_id], [0, 1, 2, 3]])
+        self.assertEqual(batch["input_ids"].tolist(), [
+                         [0, 1, 2, tokenizer.pad_token_id], [0, 1, 2, 3]])
 
     @require_torch
     def test_padding_accepts_tensors_pt(self):
         import torch
 
-        features = [{"input_ids": torch.tensor([0, 1, 2])}, {"input_ids": torch.tensor([0, 1, 2, 3])}]
+        features = [{"input_ids": torch.tensor([0, 1, 2])}, {
+            "input_ids": torch.tensor([0, 1, 2, 3])}]
         tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
         batch = tokenizer.pad(features, padding=True)
         self.assertTrue(isinstance(batch["input_ids"], torch.Tensor))
-        self.assertEqual(batch["input_ids"].tolist(), [[0, 1, 2, tokenizer.pad_token_id], [0, 1, 2, 3]])
+        self.assertEqual(batch["input_ids"].tolist(), [
+                         [0, 1, 2, tokenizer.pad_token_id], [0, 1, 2, 3]])
         batch = tokenizer.pad(features, padding=True, return_tensors="pt")
         self.assertTrue(isinstance(batch["input_ids"], torch.Tensor))
-        self.assertEqual(batch["input_ids"].tolist(), [[0, 1, 2, tokenizer.pad_token_id], [0, 1, 2, 3]])
+        self.assertEqual(batch["input_ids"].tolist(), [
+                         [0, 1, 2, tokenizer.pad_token_id], [0, 1, 2, 3]])
 
     @require_tf
     def test_padding_accepts_tensors_tf(self):
         import tensorflow as tf
 
-        features = [{"input_ids": tf.constant([0, 1, 2])}, {"input_ids": tf.constant([0, 1, 2, 3])}]
+        features = [{"input_ids": tf.constant([0, 1, 2])}, {
+            "input_ids": tf.constant([0, 1, 2, 3])}]
         tokenizer = BertTokenizer.from_pretrained("bert-base-cased")
 
         batch = tokenizer.pad(features, padding=True)
         self.assertTrue(isinstance(batch["input_ids"], tf.Tensor))
-        self.assertEqual(batch["input_ids"].numpy().tolist(), [[0, 1, 2, tokenizer.pad_token_id], [0, 1, 2, 3]])
+        self.assertEqual(batch["input_ids"].numpy().tolist(), [
+                         [0, 1, 2, tokenizer.pad_token_id], [0, 1, 2, 3]])
         batch = tokenizer.pad(features, padding=True, return_tensors="tf")
         self.assertTrue(isinstance(batch["input_ids"], tf.Tensor))
-        self.assertEqual(batch["input_ids"].numpy().tolist(), [[0, 1, 2, tokenizer.pad_token_id], [0, 1, 2, 3]])
+        self.assertEqual(batch["input_ids"].numpy().tolist(), [
+                         [0, 1, 2, tokenizer.pad_token_id], [0, 1, 2, 3]])

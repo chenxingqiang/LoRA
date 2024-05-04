@@ -53,8 +53,10 @@ def format_for_slack(total_results, results, scheduled: bool):
         {
             "type": "section",
             "fields": [
-                {"type": "mrkdwn", "text": f"*Failures:*\n❌ {total_results['failed']} failures."},
-                {"type": "mrkdwn", "text": f"*Passed:*\n✅ {total_results['success']} tests passed."},
+                {"type": "mrkdwn",
+                 "text": f"*Failures:*\n❌ {total_results['failed']} failures."},
+                {"type": "mrkdwn",
+                 "text": f"*Passed:*\n✅ {total_results['success']} tests passed."},
             ],
         }
         if total_results["failed"] > 0
@@ -69,7 +71,8 @@ def format_for_slack(total_results, results, scheduled: bool):
     if total_results["failed"] > 0:
         for key, result in results.items():
             print(key, result)
-            blocks.append({"type": "header", "text": {"type": "plain_text", "text": key, "emoji": True}})
+            blocks.append({"type": "header", "text": {
+                          "type": "plain_text", "text": key, "emoji": True}})
             blocks.append(
                 {
                     "type": "section",
@@ -78,14 +81,16 @@ def format_for_slack(total_results, results, scheduled: bool):
                             "type": "mrkdwn",
                             "text": f"*Results:*\n{result['failed']} failed, {result['success']} passed.",
                         },
-                        {"type": "mrkdwn", "text": f"*Time spent:*\n{result['time_spent']}"},
+                        {"type": "mrkdwn",
+                         "text": f"*Time spent:*\n{result['time_spent']}"},
                     ],
                 }
             )
     else:
         for key, result in results.items():
             blocks.append(
-                {"type": "section", "fields": [{"type": "mrkdwn", "text": f"*{key}*\n{result['time_spent']}."}]}
+                {"type": "section", "fields": [
+                    {"type": "mrkdwn", "text": f"*{key}*\n{result['time_spent']}."}]}
             )
 
     footer = {
@@ -145,7 +150,8 @@ if __name__ == "__main__":
         for job, file_dict in file_paths.items():
 
             # Single return value for failed/success across steps of a same job
-            results[job] = {"failed": 0, "success": 0, "time_spent": "", "failures": ""}
+            results[job] = {"failed": 0, "success": 0,
+                            "time_spent": "", "failures": ""}
 
             for key, file_path in file_dict.items():
                 with open(file_path.replace("[]", "stats")) as f:
@@ -182,4 +188,5 @@ if __name__ == "__main__":
 
     except Exception as e:
         # Voluntarily catch every exception and send it to Slack.
-        raise Exception(f"Setup error: no artifacts were found. Error: {e}") from e
+        raise Exception(
+            f"Setup error: no artifacts were found. Error: {e}") from e

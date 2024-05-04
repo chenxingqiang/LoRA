@@ -118,7 +118,8 @@ class XLMRobertaTokenizer(PreTrainedTokenizer):
         **kwargs
     ):
         # Mask token behave like a normal word, i.e. include the space before it
-        mask_token = AddedToken(mask_token, lstrip=True, rstrip=False) if isinstance(mask_token, str) else mask_token
+        mask_token = AddedToken(mask_token, lstrip=True, rstrip=False) if isinstance(
+            mask_token, str) else mask_token
 
         super().__init__(
             bos_token=bos_token,
@@ -142,13 +143,16 @@ class XLMRobertaTokenizer(PreTrainedTokenizer):
         # spm      | '<unk>' | '<s>'   | '</s>' | ','     | '.' | '▁' | 's' | '▁de' | '-'   | '▁a'
 
         # Mimic fairseq token-to-id alignment for the first 4 token
-        self.fairseq_tokens_to_ids = {"<s>": 0, "<pad>": 1, "</s>": 2, "<unk>": 3}
+        self.fairseq_tokens_to_ids = {
+            "<s>": 0, "<pad>": 1, "</s>": 2, "<unk>": 3}
 
         # The first "real" token "," has position 4 in the original fairseq vocab and position 3 in the spm vocab
         self.fairseq_offset = 1
 
-        self.fairseq_tokens_to_ids["<mask>"] = len(self.sp_model) + self.fairseq_offset
-        self.fairseq_ids_to_tokens = {v: k for k, v in self.fairseq_tokens_to_ids.items()}
+        self.fairseq_tokens_to_ids["<mask>"] = len(
+            self.sp_model) + self.fairseq_offset
+        self.fairseq_ids_to_tokens = {v: k for k,
+                                      v in self.fairseq_tokens_to_ids.items()}
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -244,10 +248,12 @@ class XLMRobertaTokenizer(PreTrainedTokenizer):
 
     @property
     def vocab_size(self):
-        return len(self.sp_model) + self.fairseq_offset + 1  # Add the <mask> token
+        # Add the <mask> token
+        return len(self.sp_model) + self.fairseq_offset + 1
 
     def get_vocab(self):
-        vocab = {self.convert_ids_to_tokens(i): i for i in range(self.vocab_size)}
+        vocab = {self.convert_ids_to_tokens(
+            i): i for i in range(self.vocab_size)}
         vocab.update(self.added_tokens_encoder)
         return vocab
 
@@ -276,10 +282,12 @@ class XLMRobertaTokenizer(PreTrainedTokenizer):
 
     def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
         if not os.path.isdir(save_directory):
-            logger.error("Vocabulary path ({}) should be a directory".format(save_directory))
+            logger.error(
+                "Vocabulary path ({}) should be a directory".format(save_directory))
             return
         out_vocab_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["vocab_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["vocab_file"]
         )
 
         if os.path.abspath(self.vocab_file) != os.path.abspath(out_vocab_file):

@@ -18,13 +18,11 @@ limitations under the License.
 
 You can find here a list of the official notebooks provided by Hugging Face.
 
-Also, we would like to list here interesting content created by the community. 
-If you wrote some notebook(s) leveraging 🤗 Transformers and would like be listed here, please open a 
-Pull Request so it can be included under the Community notebooks. 
-
+Also, we would like to list here interesting content created by the community.
+If you wrote some notebook(s) leveraging 🤗 Transformers and would like be listed here, please open a
+Pull Request so it can be included under the Community notebooks.
 
 ## Hugging Face's notebooks 🤗
-
 
 | Notebook     |      Description      |   |
 |:----------|:-------------|------:|
@@ -41,7 +39,6 @@ Pull Request so it can be included under the Community notebooks.
 | [How to use Benchmarks](https://github.com/huggingface/transformers/blob/master/notebooks/05-benchmark.ipynb) | How to benchmark models with transformers | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/huggingface/transformers/blob/master/notebooks/05-benchmark.ipynb)|
 | [Reformer](https://github.com/huggingface/blog/blob/master/notebooks/03_reformer.ipynb) | How Reformer pushes the limits of language modeling | [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/patrickvonplaten/blog/blob/master/notebooks/03_reformer.ipynb)|
 
-
-## Community notebooks:
+## Community notebooks
 
 More notebooks developed by the community are available [here](https://huggingface.co/transformers/master/community.html#community-notebooks).

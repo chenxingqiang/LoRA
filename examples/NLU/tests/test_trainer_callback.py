@@ -91,7 +91,8 @@ class TrainerCallbackTest(unittest.TestCase):
         config = RegressionModelConfig(a=a, b=b)
         model = RegressionPreTrainedModel(config)
 
-        args = TrainingArguments(self.output_dir, disable_tqdm=disable_tqdm, report_to=[], **kwargs)
+        args = TrainingArguments(
+            self.output_dir, disable_tqdm=disable_tqdm, report_to=[], **kwargs)
         return Trainer(
             model,
             args,
@@ -104,8 +105,10 @@ class TrainerCallbackTest(unittest.TestCase):
         self.assertEqual(len(cbs1), len(cbs2))
 
         # Order doesn't matter
-        cbs1 = list(sorted(cbs1, key=lambda cb: cb.__name__ if isinstance(cb, type) else cb.__class__.__name__))
-        cbs2 = list(sorted(cbs2, key=lambda cb: cb.__name__ if isinstance(cb, type) else cb.__class__.__name__))
+        cbs1 = list(sorted(cbs1, key=lambda cb: cb.__name__ if isinstance(
+            cb, type) else cb.__class__.__name__))
+        cbs2 = list(sorted(cbs2, key=lambda cb: cb.__name__ if isinstance(
+            cb, type) else cb.__class__.__name__))
 
         for cb1, cb2 in zip(cbs1, cbs2):
             if isinstance(cb1, type) and isinstance(cb2, type):
@@ -121,7 +124,8 @@ class TrainerCallbackTest(unittest.TestCase):
         expected_events = ["on_init_end", "on_train_begin"]
         step = 0
         train_dl_len = len(trainer.get_eval_dataloader())
-        evaluation_events = ["on_prediction_step"] * len(trainer.get_eval_dataloader()) + ["on_log", "on_evaluate"]
+        evaluation_events = ["on_prediction_step"] * \
+            len(trainer.get_eval_dataloader()) + ["on_log", "on_evaluate"]
         for _ in range(trainer.state.num_train_epochs):
             expected_events.append("on_epoch_begin")
             for _ in range(train_dl_len):
@@ -142,17 +146,20 @@ class TrainerCallbackTest(unittest.TestCase):
     def test_init_callback(self):
         trainer = self.get_trainer()
         expected_callbacks = DEFAULT_CALLBACKS.copy() + [ProgressCallback]
-        self.check_callbacks_equality(trainer.callback_handler.callbacks, expected_callbacks)
+        self.check_callbacks_equality(
+            trainer.callback_handler.callbacks, expected_callbacks)
 
         # Callbacks passed at init are added to the default callbacks
         trainer = self.get_trainer(callbacks=[MyTestTrainerCallback])
         expected_callbacks.append(MyTestTrainerCallback)
-        self.check_callbacks_equality(trainer.callback_handler.callbacks, expected_callbacks)
+        self.check_callbacks_equality(
+            trainer.callback_handler.callbacks, expected_callbacks)
 
         # TrainingArguments.disable_tqdm controls if use ProgressCallback or PrinterCallback
         trainer = self.get_trainer(disable_tqdm=True)
         expected_callbacks = DEFAULT_CALLBACKS.copy() + [PrinterCallback]
-        self.check_callbacks_equality(trainer.callback_handler.callbacks, expected_callbacks)
+        self.check_callbacks_equality(
+            trainer.callback_handler.callbacks, expected_callbacks)
 
     def test_add_remove_callback(self):
         expected_callbacks = DEFAULT_CALLBACKS.copy() + [ProgressCallback]
@@ -161,33 +168,39 @@ class TrainerCallbackTest(unittest.TestCase):
         # We can add, pop, or remove by class name
         trainer.remove_callback(DefaultFlowCallback)
         expected_callbacks.remove(DefaultFlowCallback)
-        self.check_callbacks_equality(trainer.callback_handler.callbacks, expected_callbacks)
+        self.check_callbacks_equality(
+            trainer.callback_handler.callbacks, expected_callbacks)
 
         trainer = self.get_trainer()
         cb = trainer.pop_callback(DefaultFlowCallback)
         self.assertEqual(cb.__class__, DefaultFlowCallback)
-        self.check_callbacks_equality(trainer.callback_handler.callbacks, expected_callbacks)
+        self.check_callbacks_equality(
+            trainer.callback_handler.callbacks, expected_callbacks)
 
         trainer.add_callback(DefaultFlowCallback)
         expected_callbacks.insert(0, DefaultFlowCallback)
-        self.check_callbacks_equality(trainer.callback_handler.callbacks, expected_callbacks)
+        self.check_callbacks_equality(
+            trainer.callback_handler.callbacks, expected_callbacks)
 
         # We can also add, pop, or remove by instance
         trainer = self.get_trainer()
         cb = trainer.callback_handler.callbacks[0]
         trainer.remove_callback(cb)
         expected_callbacks.remove(DefaultFlowCallback)
-        self.check_callbacks_equality(trainer.callback_handler.callbacks, expected_callbacks)
+        self.check_callbacks_equality(
+            trainer.callback_handler.callbacks, expected_callbacks)
 
         trainer = self.get_trainer()
         cb1 = trainer.callback_handler.callbacks[0]
         cb2 = trainer.pop_callback(cb1)
         self.assertEqual(cb1, cb2)
-        self.check_callbacks_equality(trainer.callback_handler.callbacks, expected_callbacks)
+        self.check_callbacks_equality(
+            trainer.callback_handler.callbacks, expected_callbacks)
 
         trainer.add_callback(cb1)
         expected_callbacks.insert(0, DefaultFlowCallback)
-        self.check_callbacks_equality(trainer.callback_handler.callbacks, expected_callbacks)
+        self.check_callbacks_equality(
+            trainer.callback_handler.callbacks, expected_callbacks)
 
     def test_event_flow(self):
         import warnings
@@ -201,22 +214,26 @@ class TrainerCallbackTest(unittest.TestCase):
         self.assertEqual(events, self.get_expected_events(trainer))
 
         # Independent log/save/eval
-        trainer = self.get_trainer(callbacks=[MyTestTrainerCallback], logging_steps=5)
+        trainer = self.get_trainer(
+            callbacks=[MyTestTrainerCallback], logging_steps=5)
         trainer.train()
         events = trainer.callback_handler.callbacks[-2].events
         self.assertEqual(events, self.get_expected_events(trainer))
 
-        trainer = self.get_trainer(callbacks=[MyTestTrainerCallback], save_steps=5)
+        trainer = self.get_trainer(
+            callbacks=[MyTestTrainerCallback], save_steps=5)
         trainer.train()
         events = trainer.callback_handler.callbacks[-2].events
         self.assertEqual(events, self.get_expected_events(trainer))
 
-        trainer = self.get_trainer(callbacks=[MyTestTrainerCallback], eval_steps=5, evaluation_strategy="steps")
+        trainer = self.get_trainer(
+            callbacks=[MyTestTrainerCallback], eval_steps=5, evaluation_strategy="steps")
         trainer.train()
         events = trainer.callback_handler.callbacks[-2].events
         self.assertEqual(events, self.get_expected_events(trainer))
 
-        trainer = self.get_trainer(callbacks=[MyTestTrainerCallback], evaluation_strategy="epoch")
+        trainer = self.get_trainer(
+            callbacks=[MyTestTrainerCallback], evaluation_strategy="epoch")
         trainer.train()
         events = trainer.callback_handler.callbacks[-2].events
         self.assertEqual(events, self.get_expected_events(trainer))

@@ -21,7 +21,8 @@ from .tokenization_bart import BartTokenizer
 logger = logging.get_logger(__name__)
 
 
-VOCAB_FILES_NAMES = {"vocab_file": "vocab.json", "merges_file": "merges.txt", "tokenizer_file": "tokenizer.json"}
+VOCAB_FILES_NAMES = {"vocab_file": "vocab.json",
+                     "merges_file": "merges.txt", "tokenizer_file": "tokenizer.json"}
 
 # See all BART models at https://huggingface.co/models?filter=bart
 PRETRAINED_VOCAB_FILES_MAP = {

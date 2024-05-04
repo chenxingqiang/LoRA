@@ -2,11 +2,11 @@
 #  Copyright (c) Microsoft Corporation. All rights reserved.
 #  Licensed under the MIT License (MIT). See LICENSE in the repo root for license information.
 #  ------------------------------------------------------------------------------------------
-import functools
-import os, shutil
-import numpy as np
-
 import torch
+import numpy as np
+import functools
+import os
+importshutil
 
 
 def logging(s, log_path, print_=True, log_=True):
@@ -35,7 +35,8 @@ def create_exp_dir(dir_path, scripts_to_save=None, debug=False):
         if not os.path.exists(script_path):
             os.makedirs(script_path)
         for script in scripts_to_save:
-            dst_file = os.path.join(dir_path, 'scripts', os.path.basename(script))
+            dst_file = os.path.join(
+                dir_path, 'scripts', os.path.basename(script))
             shutil.copyfile(script, dst_file)
 
     return get_logger(log_path=os.path.join(dir_path, 'log.txt'))
@@ -43,4 +44,5 @@ def create_exp_dir(dir_path, scripts_to_save=None, debug=False):
 
 def save_checkpoint(model, optimizer, path, epoch):
     torch.save(model, os.path.join(path, 'model_{}.pt'.format(epoch)))
-    torch.save(optimizer.state_dict(), os.path.join(path, 'optimizer_{}.pt'.format(epoch)))
+    torch.save(optimizer.state_dict(), os.path.join(
+        path, 'optimizer_{}.pt'.format(epoch)))

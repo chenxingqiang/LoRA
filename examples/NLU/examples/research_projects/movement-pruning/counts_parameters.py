@@ -28,9 +28,11 @@ def main(args):
     pruning_method = args.pruning_method
     threshold = args.threshold
 
-    st = torch.load(os.path.join(serialization_dir, "pytorch_model.bin"), map_location="cpu")
+    st = torch.load(os.path.join(serialization_dir,
+                    "pytorch_model.bin"), map_location="cpu")
 
-    remaining_count = 0  # Number of remaining (not pruned) params in the encoder
+    # Number of remaining (not pruned) params in the encoder
+    remaining_count = 0
     encoder_count = 0  # Number of params in the encoder
 
     print("name".ljust(60, " "), "Remaining Weights %", "Remaining Weight")
@@ -42,7 +44,8 @@ def main(args):
             if pruning_method == "topK":
                 mask_ones = TopKBinarizer.apply(param, threshold).sum().item()
             elif pruning_method == "sigmoied_threshold":
-                mask_ones = ThresholdBinarizer.apply(param, threshold, True).sum().item()
+                mask_ones = ThresholdBinarizer.apply(
+                    param, threshold, True).sum().item()
             elif pruning_method == "l0":
                 l, r = -0.1, 1.1
                 s = torch.sigmoid(param)
@@ -52,14 +55,16 @@ def main(args):
             else:
                 raise ValueError("Unknown pruning method")
             remaining_count += mask_ones
-            print(name.ljust(60, " "), str(round(100 * mask_ones / param.numel(), 3)).ljust(20, " "), str(mask_ones))
+            print(name.ljust(60, " "), str(round(100 * mask_ones /
+                  param.numel(), 3)).ljust(20, " "), str(mask_ones))
         else:
             encoder_count += param.numel()
             if "bias" in name or "LayerNorm" in name:
                 remaining_count += param.numel()
 
     print("")
-    print("Remaining Weights (global) %: ", 100 * remaining_count / encoder_count)
+    print("Remaining Weights (global) %: ",
+          100 * remaining_count / encoder_count)
 
 
 if __name__ == "__main__":

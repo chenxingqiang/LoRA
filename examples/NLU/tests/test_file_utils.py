@@ -55,26 +55,30 @@ class GetFromCacheTests(unittest.TestCase):
 
     def test_revision_not_found(self):
         # Valid file but missing revision
-        url = hf_bucket_url(MODEL_ID, filename=CONFIG_NAME, revision=REVISION_ID_INVALID)
+        url = hf_bucket_url(MODEL_ID, filename=CONFIG_NAME,
+                            revision=REVISION_ID_INVALID)
         with self.assertRaisesRegex(requests.exceptions.HTTPError, "404 Client Error"):
             _ = get_from_cache(url)
 
     def test_standard_object(self):
-        url = hf_bucket_url(MODEL_ID, filename=CONFIG_NAME, revision=REVISION_ID_DEFAULT)
+        url = hf_bucket_url(MODEL_ID, filename=CONFIG_NAME,
+                            revision=REVISION_ID_DEFAULT)
         filepath = get_from_cache(url, force_download=True)
         metadata = filename_to_url(filepath)
         self.assertEqual(metadata, (url, f'"{PINNED_SHA1}"'))
 
     def test_standard_object_rev(self):
         # Same object, but different revision
-        url = hf_bucket_url(MODEL_ID, filename=CONFIG_NAME, revision=REVISION_ID_ONE_SPECIFIC_COMMIT)
+        url = hf_bucket_url(MODEL_ID, filename=CONFIG_NAME,
+                            revision=REVISION_ID_ONE_SPECIFIC_COMMIT)
         filepath = get_from_cache(url, force_download=True)
         metadata = filename_to_url(filepath)
         self.assertNotEqual(metadata[1], f'"{PINNED_SHA1}"')
         # Caution: check that the etag is *not* equal to the one from `test_standard_object`
 
     def test_lfs_object(self):
-        url = hf_bucket_url(MODEL_ID, filename=WEIGHTS_NAME, revision=REVISION_ID_DEFAULT)
+        url = hf_bucket_url(MODEL_ID, filename=WEIGHTS_NAME,
+                            revision=REVISION_ID_DEFAULT)
         filepath = get_from_cache(url, force_download=True)
         metadata = filename_to_url(filepath)
         self.assertEqual(metadata, (url, f'"{PINNED_SHA256}"'))

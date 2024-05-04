@@ -49,7 +49,8 @@ def main(args):
             print(f"Copied layer {name}")
         else:
             if pruning_method == "magnitude":
-                mask = MagnitudeBinarizer.apply(inputs=tensor, threshold=threshold)
+                mask = MagnitudeBinarizer.apply(
+                    inputs=tensor, threshold=threshold)
                 pruned_model[name] = tensor * mask
                 print(f"Pruned layer {name}")
             elif pruning_method == "topK":
@@ -84,14 +85,16 @@ def main(args):
 
     if target_model_path is None:
         target_model_path = os.path.join(
-            os.path.dirname(model_name_or_path), f"bertarized_{os.path.basename(model_name_or_path)}"
+            os.path.dirname(
+                model_name_or_path), f"bertarized_{os.path.basename(model_name_or_path)}"
         )
 
     if not os.path.isdir(target_model_path):
         shutil.copytree(model_name_or_path, target_model_path)
         print(f"\nCreated folder {target_model_path}")
 
-    torch.save(pruned_model, os.path.join(target_model_path, "pytorch_model.bin"))
+    torch.save(pruned_model, os.path.join(
+        target_model_path, "pytorch_model.bin"))
     print("\nPruned model saved! See you later!")
 
 

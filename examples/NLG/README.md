@@ -3,8 +3,8 @@
 This folder contains the implementation of LoRA in GPT-2 using the Python package `lora` and steps to replicate the results in our recent paper
 
 **LoRA: Low-Rank Adaptation of Large Language Models** <br>
-*Edward J. Hu\*, Yelong Shen\*, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen* <br>
-Paper: https://arxiv.org/abs/2106.09685 <br>
+_Edward J. Hu\*, Yelong Shen\*, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen_ <br>
+Paper: <https://arxiv.org/abs/2106.09685> <br>
 
 <p>
 <img src="figures/LoRA_GPT2.PNG" width="800" >
@@ -16,38 +16,42 @@ This repo reproduces our experiments on GPT-2.
 
 Our implementation is based on the fine-tuning code for GPT-2 in [Hugging Face](https://huggingface.co/).
 There are several directories in this repo:
-* [src/](src) contains the source code used for data processing, training, and decoding.
-* [eval/](eval) contains the code for task-specific evaluation scripts.
-* [data/](data) contains the raw data we used in our experiments.
-* [vocab/](vocab) contains the GPT-2 vocabulary files.
+
+-   [src/](src) contains the source code used for data processing, training, and decoding.
+-   [eval/](eval) contains the code for task-specific evaluation scripts.
+-   [data/](data) contains the raw data we used in our experiments.
+-   [vocab/](vocab) contains the GPT-2 vocabulary files.
 
 ## Getting Started
 
- 1. You can start with the following docker image: `nvcr.io/nvidia/pytorch:20.03-py3` on a GPU-capable machine, but any generic PyTorch image should work.
- ```
- docker run -it nvcr.io/nvidia/pytorch:20.03-py3
- ```
+1.  You can start with the following docker image: `nvcr.io/nvidia/pytorch:20.03-py3` on a GPU-capable machine, but any generic PyTorch image should work.
 
- 2. Clone the repo and install dependencies in a virtual environment (remove sudo if running in docker container):
- ```
- sudo apt-get update
- sudo apt-get -y install git jq virtualenv
- git clone https://github.com/microsoft/LoRA.git; cd LoRA
- virtualenv -p `which python3` ./venv
- . ./venv/bin/activate
- pip install -r requirement.txt
- bash download_pretrained_checkpoints.sh
- bash create_datasets.sh
- cd ./eval
- bash download_evalscript.sh
- cd ..
- ```
+```
+docker run -it nvcr.io/nvidia/pytorch:20.03-py3
+```
 
-#### Now we are ready to replicate the results in our paper.
+2.  Clone the repo and install dependencies in a virtual environment (remove sudo if running in docker container):
+
+```
+sudo apt-get update
+sudo apt-get -y install git jq virtualenv
+git clone https://github.com/microsoft/LoRA.git; cd LoRA
+virtualenv -p `which python3` ./venv
+. ./venv/bin/activate
+pip install -r requirement.txt
+bash download_pretrained_checkpoints.sh
+bash create_datasets.sh
+cd ./eval
+bash download_evalscript.sh
+cd ..
+```
+
+#### Now we are ready to replicate the results in our paper
 
 ## Replicating Our Result on E2E
 
 1. Train GPT-2 Medium with LoRA (see our paper for hyperparameters for GPT-2 Medium)
+
 ```
 python -m torch.distributed.launch --nproc_per_node=1 src/gpt2_ft.py \
     --train_data ./data/e2e/train.jsonl \
@@ -77,6 +81,7 @@ python -m torch.distributed.launch --nproc_per_node=1 src/gpt2_ft.py \
 ```
 
 2. Generate outputs from the trained model using beam search:
+
 ```
 python -m torch.distributed.launch --nproc_per_node=1 src/gpt2_beam.py \
     --data ./data/e2e/test.jsonl \
@@ -98,6 +103,7 @@ python -m torch.distributed.launch --nproc_per_node=1 src/gpt2_beam.py \
 ```
 
 3. Decode outputs from step (2)
+
 ```
 python src/gpt2_decode.py \
     --vocab ./vocab \
@@ -118,6 +124,7 @@ python eval/e2e/measure_scores.py e2e_ref.txt e2e_pred.txt -p
 1. Follow steps 1 and 2 from E2E pipeline by replacing references to E2E with webnlg (see our paper for hyperparameters)
 
 2. Decode outputs from beam search (step 2 above)
+
 ```
 python src/gpt2_decode.py \
     --vocab ./vocab \
@@ -131,13 +138,14 @@ python src/gpt2_decode.py \
 ```
 
 3. Run evaluation on WebNLG test set
+
 ```
 cd ./eval/GenerationEval/
 python eval.py \
     -R data/references_webnlg/reference \
     -H data/hypothesis_webnlg \
     -nr 6 \
-    -m bleu,meteor,ter 
+    -m bleu,meteor,ter
 cd ../..
 ```
 
@@ -146,6 +154,7 @@ cd ../..
 1. Follow steps 1 and 2 from E2E pipeline by replacing references to E2E with dart (see our paper for hyperparameters)
 
 2. Decode outputs from beam search (step 2 above)
+
 ```
 python src/gpt2_decode.py \
         --vocab ./vocab \
@@ -159,17 +168,19 @@ python src/gpt2_decode.py \
 ```
 
 3. Run evaluation on Dart test set
+
 ```
 cd ./eval/GenerationEval/
 python eval.py \
     -R data/references_dart/reference \
     -H data/hypothesis_dart \
     -nr 6 \
-    -m bleu,meteor,ter 
+    -m bleu,meteor,ter
 cd ../..
 ```
 
 ## Citation
+
 ```
 @misc{hu2021lora,
     title={LoRA: Low-Rank Adaptation of Large Language Models},

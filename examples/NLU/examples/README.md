@@ -23,12 +23,15 @@ be in this folder, it may have moved to our [research projects](https://github.c
 **Important**
 
 To make sure you can successfully run the latest versions of the example scripts, you have to **install the library from source** and install some example-specific requirements. To do this, execute the following steps in a new virtual environment:
+
 ```bash
 git clone https://github.com/huggingface/transformers
 cd transformers
 pip install .
 ```
+
 Then cd in the example folder of your choice and run
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -38,42 +41,46 @@ To browse the examples corresponding to released versions of 🤗 Transformers, 
 <details>
   <summary>Examples for older versions of 🤗 Transformers</summary>
 
-  - [v4.3.3](https://github.com/huggingface/transformers/tree/v4.3.3/examples)
-  - [v4.2.2](https://github.com/huggingface/transformers/tree/v4.2.2/examples)
-  - [v4.1.1](https://github.com/huggingface/transformers/tree/v4.1.1/examples)
-  - [v4.0.1](https://github.com/huggingface/transformers/tree/v4.0.1/examples)
-  - [v3.5.1](https://github.com/huggingface/transformers/tree/v3.5.1/examples)
-  - [v3.4.0](https://github.com/huggingface/transformers/tree/v3.4.0/examples)
-  - [v3.3.1](https://github.com/huggingface/transformers/tree/v3.3.1/examples)
-  - [v3.2.0](https://github.com/huggingface/transformers/tree/v3.2.0/examples)
-  - [v3.1.0](https://github.com/huggingface/transformers/tree/v3.1.0/examples)
-  - [v3.0.2](https://github.com/huggingface/transformers/tree/v3.0.2/examples)
-  - [v2.11.0](https://github.com/huggingface/transformers/tree/v2.11.0/examples)
-  - [v2.10.0](https://github.com/huggingface/transformers/tree/v2.10.0/examples)
-  - [v2.9.1](https://github.com/huggingface/transformers/tree/v2.9.1/examples)
-  - [v2.8.0](https://github.com/huggingface/transformers/tree/v2.8.0/examples)
-  - [v2.7.0](https://github.com/huggingface/transformers/tree/v2.7.0/examples)
-  - [v2.6.0](https://github.com/huggingface/transformers/tree/v2.6.0/examples)
-  - [v2.5.1](https://github.com/huggingface/transformers/tree/v2.5.1/examples)
-  - [v2.4.0](https://github.com/huggingface/transformers/tree/v2.4.0/examples)
-  - [v2.3.0](https://github.com/huggingface/transformers/tree/v2.3.0/examples)
-  - [v2.2.0](https://github.com/huggingface/transformers/tree/v2.2.0/examples)
-  - [v2.1.1](https://github.com/huggingface/transformers/tree/v2.1.0/examples)
-  - [v2.0.0](https://github.com/huggingface/transformers/tree/v2.0.0/examples)
-  - [v1.2.0](https://github.com/huggingface/transformers/tree/v1.2.0/examples)
-  - [v1.1.0](https://github.com/huggingface/transformers/tree/v1.1.0/examples)
-  - [v1.0.0](https://github.com/huggingface/transformers/tree/v1.0.0/examples)
+- [v4.3.3](https://github.com/huggingface/transformers/tree/v4.3.3/examples)
+- [v4.2.2](https://github.com/huggingface/transformers/tree/v4.2.2/examples)
+- [v4.1.1](https://github.com/huggingface/transformers/tree/v4.1.1/examples)
+- [v4.0.1](https://github.com/huggingface/transformers/tree/v4.0.1/examples)
+- [v3.5.1](https://github.com/huggingface/transformers/tree/v3.5.1/examples)
+- [v3.4.0](https://github.com/huggingface/transformers/tree/v3.4.0/examples)
+- [v3.3.1](https://github.com/huggingface/transformers/tree/v3.3.1/examples)
+- [v3.2.0](https://github.com/huggingface/transformers/tree/v3.2.0/examples)
+- [v3.1.0](https://github.com/huggingface/transformers/tree/v3.1.0/examples)
+- [v3.0.2](https://github.com/huggingface/transformers/tree/v3.0.2/examples)
+- [v2.11.0](https://github.com/huggingface/transformers/tree/v2.11.0/examples)
+- [v2.10.0](https://github.com/huggingface/transformers/tree/v2.10.0/examples)
+- [v2.9.1](https://github.com/huggingface/transformers/tree/v2.9.1/examples)
+- [v2.8.0](https://github.com/huggingface/transformers/tree/v2.8.0/examples)
+- [v2.7.0](https://github.com/huggingface/transformers/tree/v2.7.0/examples)
+- [v2.6.0](https://github.com/huggingface/transformers/tree/v2.6.0/examples)
+- [v2.5.1](https://github.com/huggingface/transformers/tree/v2.5.1/examples)
+- [v2.4.0](https://github.com/huggingface/transformers/tree/v2.4.0/examples)
+- [v2.3.0](https://github.com/huggingface/transformers/tree/v2.3.0/examples)
+- [v2.2.0](https://github.com/huggingface/transformers/tree/v2.2.0/examples)
+- [v2.1.1](https://github.com/huggingface/transformers/tree/v2.1.0/examples)
+- [v2.0.0](https://github.com/huggingface/transformers/tree/v2.0.0/examples)
+- [v1.2.0](https://github.com/huggingface/transformers/tree/v1.2.0/examples)
+- [v1.1.0](https://github.com/huggingface/transformers/tree/v1.1.0/examples)
+- [v1.0.0](https://github.com/huggingface/transformers/tree/v1.0.0/examples)
+
 </details>
 
 Alternatively, you can find switch your cloned 🤗 Transformers to a specific version (for instance with v3.5.1) with
+
 ```bash
 git checkout tags/v3.5.1
 ```
+
 and run the example command as usual afterward.
 
 ## The Big Table of Tasks
 
 Here is the list of all our examples:
+
 - with information on whether they are **built on top of `Trainer`/`TFTrainer`** (if not, they still work, they might
   just lack some features),
 - whether or not they leverage the [🤗 Datasets](https://github.com/huggingface/datasets) library.
@@ -94,7 +101,6 @@ Coming soon!
 | [**`token-classification`**](https://github.com/huggingface/transformers/tree/master/examples/token-classification) | CoNLL NER       | ✅ | ✅ | ✅ | [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/huggingface/notebooks/blob/master/examples/token_classification.ipynb)
 | [**`translation`**](https://github.com/huggingface/transformers/tree/master/examples/seq2seq)                       | WMT             | ✅  | - | - | -
 
-
 ## Distributed training and mixed precision
 
 All the PyTorch scripts mentioned above work out of the box with distributed training and mixed precision, thanks to
@@ -104,7 +110,7 @@ use the following command:
 ```bash
 python -m torch.distributed.launch \
     --nproc_per_node number_of_gpu_you_have path_to_script.py \
-	--all_arguments_of_the_script 
+ --all_arguments_of_the_script 
 ```
 
 As an example, here is how you would fine-tune the BERT large model (with whole word masking) on the text
@@ -148,7 +154,7 @@ regular training script with its arguments (this is similar to the `torch.distri
 ```bash
 python xla_spawn.py --num_cores num_tpu_you_have \
     path_to_script.py \
-	--all_arguments_of_the_script 
+ --all_arguments_of_the_script 
 ```
 
 As an example, here is how you would fine-tune the BERT large model (with whole word masking) on the text
@@ -172,9 +178,9 @@ python xla_spawn.py --num_cores 8 \
 
 You can easily log and monitor your runs code. The following are currently supported:
 
-* [TensorBoard](https://www.tensorflow.org/tensorboard)
-* [Weights & Biases](https://docs.wandb.ai/integrations/huggingface)
-* [Comet ML](https://www.comet.ml/docs/python-sdk/huggingface/)
+- [TensorBoard](https://www.tensorflow.org/tensorboard)
+- [Weights & Biases](https://docs.wandb.ai/integrations/huggingface)
+- [Comet ML](https://www.comet.ml/docs/python-sdk/huggingface/)
 
 ### Weights & Biases
 

@@ -233,4 +233,5 @@ class TapasConfig(PretrainedConfig):
         self.no_aggregation_label_index = no_aggregation_label_index
 
         if isinstance(self.aggregation_labels, dict):
-            self.aggregation_labels = {int(k): v for k, v in aggregation_labels.items()}
+            self.aggregation_labels = {
+                int(k): v for k, v in aggregation_labels.items()}

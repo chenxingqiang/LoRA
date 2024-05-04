@@ -69,7 +69,8 @@ class ModelCardTester(unittest.TestCase):
             model_card_first.to_json_file(filename)
             model_card_second = ModelCard.from_json_file(filename)
 
-        self.assertEqual(model_card_second.to_dict(), model_card_first.to_dict())
+        self.assertEqual(model_card_second.to_dict(),
+                         model_card_first.to_dict())
 
     def test_model_card_from_and_save_pretrained(self):
         model_card_first = ModelCard.from_dict(self.inputs_dict)
@@ -78,4 +79,5 @@ class ModelCardTester(unittest.TestCase):
             model_card_first.save_pretrained(tmpdirname)
             model_card_second = ModelCard.from_pretrained(tmpdirname)
 
-        self.assertEqual(model_card_second.to_dict(), model_card_first.to_dict())
+        self.assertEqual(model_card_second.to_dict(),
+                         model_card_first.to_dict())

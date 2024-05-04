@@ -90,22 +90,27 @@ class TFConvBertModelTester:
         self.scope = None
 
     def prepare_config_and_inputs(self):
-        input_ids = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+        input_ids = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size)
 
         input_mask = None
         if self.use_input_mask:
-            input_mask = ids_tensor([self.batch_size, self.seq_length], vocab_size=2)
+            input_mask = ids_tensor(
+                [self.batch_size, self.seq_length], vocab_size=2)
 
         token_type_ids = None
         if self.use_token_type_ids:
-            token_type_ids = ids_tensor([self.batch_size, self.seq_length], self.type_vocab_size)
+            token_type_ids = ids_tensor(
+                [self.batch_size, self.seq_length], self.type_vocab_size)
 
         sequence_labels = None
         token_labels = None
         choice_labels = None
         if self.use_labels:
-            sequence_labels = ids_tensor([self.batch_size], self.type_sequence_label_size)
-            token_labels = ids_tensor([self.batch_size, self.seq_length], self.num_labels)
+            sequence_labels = ids_tensor(
+                [self.batch_size], self.type_sequence_label_size)
+            token_labels = ids_tensor(
+                [self.batch_size, self.seq_length], self.num_labels)
             choice_labels = ids_tensor([self.batch_size], self.num_choices)
 
         config = ConvBertConfig(
@@ -129,14 +134,16 @@ class TFConvBertModelTester:
         self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
     ):
         model = TFConvBertModel(config=config)
-        inputs = {"input_ids": input_ids, "attention_mask": input_mask, "token_type_ids": token_type_ids}
+        inputs = {"input_ids": input_ids, "attention_mask": input_mask,
+                  "token_type_ids": token_type_ids}
 
         inputs = [input_ids, input_mask]
         result = model(inputs)
 
         result = model(input_ids)
 
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, self.seq_length, self.hidden_size))
+        self.parent.assertEqual(result.last_hidden_state.shape,
+                                (self.batch_size, self.seq_length, self.hidden_size))
 
     def create_and_check_for_masked_lm(
         self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
@@ -148,7 +155,8 @@ class TFConvBertModelTester:
             "token_type_ids": token_type_ids,
         }
         result = model(inputs)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
 
     def create_and_check_for_sequence_classification(
         self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
@@ -162,23 +170,28 @@ class TFConvBertModelTester:
         }
 
         result = model(inputs)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.num_labels))
+        self.parent.assertEqual(result.logits.shape,
+                                (self.batch_size, self.num_labels))
 
     def create_and_check_for_multiple_choice(
         self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
     ):
         config.num_choices = self.num_choices
         model = TFConvBertForMultipleChoice(config=config)
-        multiple_choice_inputs_ids = tf.tile(tf.expand_dims(input_ids, 1), (1, self.num_choices, 1))
-        multiple_choice_input_mask = tf.tile(tf.expand_dims(input_mask, 1), (1, self.num_choices, 1))
-        multiple_choice_token_type_ids = tf.tile(tf.expand_dims(token_type_ids, 1), (1, self.num_choices, 1))
+        multiple_choice_inputs_ids = tf.tile(
+            tf.expand_dims(input_ids, 1), (1, self.num_choices, 1))
+        multiple_choice_input_mask = tf.tile(
+            tf.expand_dims(input_mask, 1), (1, self.num_choices, 1))
+        multiple_choice_token_type_ids = tf.tile(
+            tf.expand_dims(token_type_ids, 1), (1, self.num_choices, 1))
         inputs = {
             "input_ids": multiple_choice_inputs_ids,
             "attention_mask": multiple_choice_input_mask,
             "token_type_ids": multiple_choice_token_type_ids,
         }
         result = model(inputs)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.num_choices))
+        self.parent.assertEqual(result.logits.shape,
+                                (self.batch_size, self.num_choices))
 
     def create_and_check_for_token_classification(
         self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
@@ -191,7 +204,8 @@ class TFConvBertModelTester:
             "token_type_ids": token_type_ids,
         }
         result = model(inputs)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.seq_length, self.num_labels))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.seq_length, self.num_labels))
 
     def create_and_check_for_question_answering(
         self, config, input_ids, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
@@ -204,8 +218,10 @@ class TFConvBertModelTester:
         }
 
         result = model(inputs)
-        self.parent.assertEqual(result.start_logits.shape, (self.batch_size, self.seq_length))
-        self.parent.assertEqual(result.end_logits.shape, (self.batch_size, self.seq_length))
+        self.parent.assertEqual(result.start_logits.shape,
+                                (self.batch_size, self.seq_length))
+        self.parent.assertEqual(result.end_logits.shape,
+                                (self.batch_size, self.seq_length))
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -218,7 +234,8 @@ class TFConvBertModelTester:
             token_labels,
             choice_labels,
         ) = config_and_inputs
-        inputs_dict = {"input_ids": input_ids, "token_type_ids": token_type_ids, "attention_mask": input_mask}
+        inputs_dict = {"input_ids": input_ids,
+                       "token_type_ids": token_type_ids, "attention_mask": input_mask}
         return config, inputs_dict
 
 
@@ -243,7 +260,8 @@ class TFConvBertModelTest(TFModelTesterMixin, unittest.TestCase):
 
     def setUp(self):
         self.model_tester = TFConvBertModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=ConvBertConfig, hidden_size=37)
+        self.config_tester = ConfigTester(
+            self, config_class=ConvBertConfig, hidden_size=37)
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -258,19 +276,23 @@ class TFConvBertModelTest(TFModelTesterMixin, unittest.TestCase):
 
     def test_for_multiple_choice(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_for_multiple_choice(*config_and_inputs)
+        self.model_tester.create_and_check_for_multiple_choice(
+            *config_and_inputs)
 
     def test_for_question_answering(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_for_question_answering(*config_and_inputs)
+        self.model_tester.create_and_check_for_question_answering(
+            *config_and_inputs)
 
     def test_for_sequence_classification(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_for_sequence_classification(*config_and_inputs)
+        self.model_tester.create_and_check_for_sequence_classification(
+            *config_and_inputs)
 
     def test_for_token_classification(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_for_token_classification(*config_and_inputs)
+        self.model_tester.create_and_check_for_token_classification(
+            *config_and_inputs)
 
     @slow
     def test_saved_model_creation_extended(self):
@@ -281,11 +303,14 @@ class TFConvBertModelTest(TFModelTesterMixin, unittest.TestCase):
         if hasattr(config, "use_cache"):
             config.use_cache = True
 
-        encoder_seq_length = getattr(self.model_tester, "encoder_seq_length", self.model_tester.seq_length)
-        encoder_key_length = getattr(self.model_tester, "key_length", encoder_seq_length)
+        encoder_seq_length = getattr(
+            self.model_tester, "encoder_seq_length", self.model_tester.seq_length)
+        encoder_key_length = getattr(
+            self.model_tester, "key_length", encoder_seq_length)
 
         for model_class in self.all_model_classes:
-            class_inputs_dict = self._prepare_for_class(inputs_dict, model_class)
+            class_inputs_dict = self._prepare_for_class(
+                inputs_dict, model_class)
             model = model_class(config)
             num_out = len(model(class_inputs_dict))
 
@@ -308,16 +333,19 @@ class TFConvBertModelTest(TFModelTesterMixin, unittest.TestCase):
                     self.model_tester, "expected_num_hidden_layers", self.model_tester.num_hidden_layers + 1
                 )
 
-                self.assertEqual(len(output_hidden_states), expected_num_layers)
+                self.assertEqual(len(output_hidden_states),
+                                 expected_num_layers)
                 self.assertListEqual(
                     list(output_hidden_states[0].shape[-2:]),
                     [self.model_tester.seq_length, self.model_tester.hidden_size],
                 )
 
-                self.assertEqual(len(output_attentions), self.model_tester.num_hidden_layers)
+                self.assertEqual(len(output_attentions),
+                                 self.model_tester.num_hidden_layers)
                 self.assertListEqual(
                     list(output_attentions[0].shape[-3:]),
-                    [self.model_tester.num_attention_heads / 2, encoder_seq_length, encoder_key_length],
+                    [self.model_tester.num_attention_heads / 2,
+                     encoder_seq_length, encoder_key_length],
                 )
 
     @slow
@@ -328,29 +356,37 @@ class TFConvBertModelTest(TFModelTesterMixin, unittest.TestCase):
     def test_attention_outputs(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
         config.return_dict = True
-        decoder_seq_length = getattr(self.model_tester, "decoder_seq_length", self.model_tester.seq_length)
-        encoder_seq_length = getattr(self.model_tester, "encoder_seq_length", self.model_tester.seq_length)
-        decoder_key_length = getattr(self.model_tester, "key_length", decoder_seq_length)
-        encoder_key_length = getattr(self.model_tester, "key_length", encoder_seq_length)
+        decoder_seq_length = getattr(
+            self.model_tester, "decoder_seq_length", self.model_tester.seq_length)
+        encoder_seq_length = getattr(
+            self.model_tester, "encoder_seq_length", self.model_tester.seq_length)
+        decoder_key_length = getattr(
+            self.model_tester, "key_length", decoder_seq_length)
+        encoder_key_length = getattr(
+            self.model_tester, "key_length", encoder_seq_length)
 
         def check_decoder_attentions_output(outputs):
             out_len = len(outputs)
             self.assertEqual(out_len % 2, 0)
             decoder_attentions = outputs.decoder_attentions
-            self.assertEqual(len(decoder_attentions), self.model_tester.num_hidden_layers)
+            self.assertEqual(len(decoder_attentions),
+                             self.model_tester.num_hidden_layers)
             self.assertListEqual(
                 list(decoder_attentions[0].shape[-3:]),
-                [self.model_tester.num_attention_heads / 2, decoder_seq_length, decoder_key_length],
+                [self.model_tester.num_attention_heads / 2,
+                 decoder_seq_length, decoder_key_length],
             )
 
         def check_encoder_attentions_output(outputs):
             attentions = [
                 t.numpy() for t in (outputs.encoder_attentions if config.is_encoder_decoder else outputs.attentions)
             ]
-            self.assertEqual(len(attentions), self.model_tester.num_hidden_layers)
+            self.assertEqual(
+                len(attentions), self.model_tester.num_hidden_layers)
             self.assertListEqual(
                 list(attentions[0].shape[-3:]),
-                [self.model_tester.num_attention_heads / 2, encoder_seq_length, encoder_key_length],
+                [self.model_tester.num_attention_heads / 2,
+                 encoder_seq_length, encoder_key_length],
             )
 
         for model_class in self.all_model_classes:
@@ -365,7 +401,8 @@ class TFConvBertModelTest(TFModelTesterMixin, unittest.TestCase):
 
             if self.is_encoder_decoder:
                 model = model_class(config)
-                outputs = model(self._prepare_for_class(inputs_dict, model_class))
+                outputs = model(self._prepare_for_class(
+                    inputs_dict, model_class))
                 self.assertEqual(config.output_hidden_states, False)
                 check_decoder_attentions_output(outputs)
 
@@ -383,7 +420,8 @@ class TFConvBertModelTest(TFModelTesterMixin, unittest.TestCase):
             model = model_class(config)
             outputs = model(self._prepare_for_class(inputs_dict, model_class))
 
-            self.assertEqual(out_len + (2 if self.is_encoder_decoder else 1), len(outputs))
+            self.assertEqual(
+                out_len + (2 if self.is_encoder_decoder else 1), len(outputs))
             self.assertEqual(model.config.output_hidden_states, True)
             check_encoder_attentions_output(outputs)
 

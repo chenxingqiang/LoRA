@@ -248,7 +248,8 @@ class TFDPRSpanPredictorLayer(tf.keras.layers.Layer):
         **kwargs,
     ) -> Union[TFDPRReaderOutput, Tuple[tf.Tensor, ...]]:
         # notations: N - number of questions in a batch, M - number of passages per questions, L - sequence length
-        n_passages, sequence_length = shape_list(input_ids) if input_ids is not None else shape_list(inputs_embeds)[:2]
+        n_passages, sequence_length = shape_list(
+            input_ids) if input_ids is not None else shape_list(inputs_embeds)[:2]
         # feed encoder
 
         inputs = input_processing(
@@ -635,13 +636,15 @@ class TFDPRContextEncoder(TFDPRPretrainedContextEncoder):
         )
 
         if inputs["input_ids"] is not None and inputs["inputs_embeds"] is not None:
-            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both input_ids and inputs_embeds at the same time")
         elif inputs["input_ids"] is not None:
             input_shape = shape_list(inputs["input_ids"])
         elif inputs["inputs_embeds"] is not None:
             input_shape = shape_list(inputs["inputs_embeds"])[:-1]
         else:
-            raise ValueError("You have to specify either input_ids or inputs_embeds")
+            raise ValueError(
+                "You have to specify either input_ids or inputs_embeds")
 
         if inputs["attention_mask"] is None:
             inputs["attention_mask"] = (
@@ -650,7 +653,8 @@ class TFDPRContextEncoder(TFDPRPretrainedContextEncoder):
                 else (inputs["input_ids"] != self.config.pad_token_id)
             )
         if inputs["token_type_ids"] is None:
-            inputs["token_type_ids"] = tf.zeros(input_shape, dtype=tf.dtypes.int32)
+            inputs["token_type_ids"] = tf.zeros(
+                input_shape, dtype=tf.dtypes.int32)
 
         outputs = self.ctx_encoder(
             input_ids=inputs["input_ids"],
@@ -671,8 +675,10 @@ class TFDPRContextEncoder(TFDPRPretrainedContextEncoder):
         )
 
     def serving_output(self, output):
-        hs = tf.convert_to_tensor(output.hidden_states) if self.config.output_hidden_states else None
-        attns = tf.convert_to_tensor(output.attentions) if self.config.output_attentions else None
+        hs = tf.convert_to_tensor(
+            output.hidden_states) if self.config.output_hidden_states else None
+        attns = tf.convert_to_tensor(
+            output.attentions) if self.config.output_attentions else None
 
         return TFDPRContextEncoderOutput(pooler_output=output.pooler_output, hidden_states=hs, attentions=attns)
 
@@ -684,7 +690,8 @@ class TFDPRContextEncoder(TFDPRPretrainedContextEncoder):
 class TFDPRQuestionEncoder(TFDPRPretrainedQuestionEncoder):
     def __init__(self, config: DPRConfig, *args, **kwargs):
         super().__init__(config, *args, **kwargs)
-        self.question_encoder = TFDPREncoderLayer(config, name="question_encoder")
+        self.question_encoder = TFDPREncoderLayer(
+            config, name="question_encoder")
 
     def get_input_embeddings(self):
         try:
@@ -733,13 +740,15 @@ class TFDPRQuestionEncoder(TFDPRPretrainedQuestionEncoder):
         )
 
         if inputs["input_ids"] is not None and inputs["inputs_embeds"] is not None:
-            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both input_ids and inputs_embeds at the same time")
         elif inputs["input_ids"] is not None:
             input_shape = shape_list(inputs["input_ids"])
         elif inputs["inputs_embeds"] is not None:
             input_shape = shape_list(inputs["inputs_embeds"])[:-1]
         else:
-            raise ValueError("You have to specify either input_ids or inputs_embeds")
+            raise ValueError(
+                "You have to specify either input_ids or inputs_embeds")
 
         if inputs["attention_mask"] is None:
             inputs["attention_mask"] = (
@@ -748,7 +757,8 @@ class TFDPRQuestionEncoder(TFDPRPretrainedQuestionEncoder):
                 else (inputs["input_ids"] != self.config.pad_token_id)
             )
         if inputs["token_type_ids"] is None:
-            inputs["token_type_ids"] = tf.zeros(input_shape, dtype=tf.dtypes.int32)
+            inputs["token_type_ids"] = tf.zeros(
+                input_shape, dtype=tf.dtypes.int32)
 
         outputs = self.question_encoder(
             input_ids=inputs["input_ids"],
@@ -768,8 +778,10 @@ class TFDPRQuestionEncoder(TFDPRPretrainedQuestionEncoder):
         )
 
     def serving_output(self, output):
-        hs = tf.convert_to_tensor(output.hidden_states) if self.config.output_hidden_states else None
-        attns = tf.convert_to_tensor(output.attentions) if self.config.output_attentions else None
+        hs = tf.convert_to_tensor(
+            output.hidden_states) if self.config.output_hidden_states else None
+        attns = tf.convert_to_tensor(
+            output.attentions) if self.config.output_attentions else None
 
         return TFDPRQuestionEncoderOutput(pooler_output=output.pooler_output, hidden_states=hs, attentions=attns)
 
@@ -781,7 +793,8 @@ class TFDPRQuestionEncoder(TFDPRPretrainedQuestionEncoder):
 class TFDPRReader(TFDPRPretrainedReader):
     def __init__(self, config: DPRConfig, *args, **kwargs):
         super().__init__(config, *args, **kwargs)
-        self.span_predictor = TFDPRSpanPredictorLayer(config, name="span_predictor")
+        self.span_predictor = TFDPRSpanPredictorLayer(
+            config, name="span_predictor")
 
     def get_input_embeddings(self):
         try:
@@ -837,16 +850,19 @@ class TFDPRReader(TFDPRPretrainedReader):
         )
 
         if inputs["input_ids"] is not None and inputs["inputs_embeds"] is not None:
-            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both input_ids and inputs_embeds at the same time")
         elif inputs["input_ids"] is not None:
             input_shape = shape_list(inputs["input_ids"])
         elif inputs["inputs_embeds"] is not None:
             input_shape = shape_list(inputs["inputs_embeds"])[:-1]
         else:
-            raise ValueError("You have to specify either input_ids or inputs_embeds")
+            raise ValueError(
+                "You have to specify either input_ids or inputs_embeds")
 
         if inputs["attention_mask"] is None:
-            inputs["attention_mask"] = tf.ones(input_shape, dtype=tf.dtypes.int32)
+            inputs["attention_mask"] = tf.ones(
+                input_shape, dtype=tf.dtypes.int32)
 
         return self.span_predictor(
             input_ids=inputs["input_ids"],
@@ -859,8 +875,10 @@ class TFDPRReader(TFDPRPretrainedReader):
         )
 
     def serving_output(self, output):
-        hs = tf.convert_to_tensor(output.hidden_states) if self.config.output_hidden_states else None
-        attns = tf.convert_to_tensor(output.attentions) if self.config.output_attentions else None
+        hs = tf.convert_to_tensor(
+            output.hidden_states) if self.config.output_hidden_states else None
+        attns = tf.convert_to_tensor(
+            output.attentions) if self.config.output_attentions else None
 
         return TFDPRReaderOutput(
             start_logits=output.start_logits,

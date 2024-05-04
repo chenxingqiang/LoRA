@@ -60,7 +60,8 @@ class RagTokenizerTest(TestCase):
         ]
         dpr_tokenizer_path = os.path.join(self.tmpdirname, "dpr_tokenizer")
         os.makedirs(dpr_tokenizer_path, exist_ok=True)
-        self.vocab_file = os.path.join(dpr_tokenizer_path, DPR_VOCAB_FILES_NAMES["vocab_file"])
+        self.vocab_file = os.path.join(
+            dpr_tokenizer_path, DPR_VOCAB_FILES_NAMES["vocab_file"])
         with open(self.vocab_file, "w", encoding="utf-8") as vocab_writer:
             vocab_writer.write("".join([x + "\n" for x in vocab_tokens]))
 
@@ -88,13 +89,16 @@ class RagTokenizerTest(TestCase):
             "<unk>",
         ]
         vocab_tokens = dict(zip(vocab, range(len(vocab))))
-        merges = ["#version: 0.2", "\u0120 l", "\u0120l o", "\u0120lo w", "e r", ""]
+        merges = ["#version: 0.2", "\u0120 l",
+                  "\u0120l o", "\u0120lo w", "e r", ""]
         self.special_tokens_map = {"unk_token": "<unk>"}
 
         bart_tokenizer_path = os.path.join(self.tmpdirname, "bart_tokenizer")
         os.makedirs(bart_tokenizer_path, exist_ok=True)
-        self.vocab_file = os.path.join(bart_tokenizer_path, BART_VOCAB_FILES_NAMES["vocab_file"])
-        self.merges_file = os.path.join(bart_tokenizer_path, BART_VOCAB_FILES_NAMES["merges_file"])
+        self.vocab_file = os.path.join(
+            bart_tokenizer_path, BART_VOCAB_FILES_NAMES["vocab_file"])
+        self.merges_file = os.path.join(
+            bart_tokenizer_path, BART_VOCAB_FILES_NAMES["merges_file"])
         with open(self.vocab_file, "w", encoding="utf-8") as fp:
             fp.write(json.dumps(vocab_tokens) + "\n")
         with open(self.merges_file, "w", encoding="utf-8") as fp:
@@ -113,15 +117,21 @@ class RagTokenizerTest(TestCase):
     def test_save_load_pretrained_with_saved_config(self):
 
         save_dir = os.path.join(self.tmpdirname, "rag_tokenizer")
-        rag_config = RagConfig(question_encoder=DPRConfig().to_dict(), generator=BartConfig().to_dict())
-        rag_tokenizer = RagTokenizer(question_encoder=self.get_dpr_tokenizer(), generator=self.get_bart_tokenizer())
+        rag_config = RagConfig(question_encoder=DPRConfig(
+        ).to_dict(), generator=BartConfig().to_dict())
+        rag_tokenizer = RagTokenizer(
+            question_encoder=self.get_dpr_tokenizer(), generator=self.get_bart_tokenizer())
         rag_config.save_pretrained(save_dir)
         rag_tokenizer.save_pretrained(save_dir)
-        new_rag_tokenizer = RagTokenizer.from_pretrained(save_dir, config=rag_config)
-        self.assertIsInstance(new_rag_tokenizer.question_encoder, DPRQuestionEncoderTokenizerFast)
-        self.assertEqual(new_rag_tokenizer.question_encoder.get_vocab(), rag_tokenizer.question_encoder.get_vocab())
+        new_rag_tokenizer = RagTokenizer.from_pretrained(
+            save_dir, config=rag_config)
+        self.assertIsInstance(
+            new_rag_tokenizer.question_encoder, DPRQuestionEncoderTokenizerFast)
+        self.assertEqual(new_rag_tokenizer.question_encoder.get_vocab(
+        ), rag_tokenizer.question_encoder.get_vocab())
         self.assertIsInstance(new_rag_tokenizer.generator, BartTokenizerFast)
-        self.assertEqual(new_rag_tokenizer.generator.get_vocab(), rag_tokenizer.generator.get_vocab())
+        self.assertEqual(new_rag_tokenizer.generator.get_vocab(),
+                         rag_tokenizer.generator.get_vocab())
 
     @slow
     def test_pretrained_token_nq_tokenizer(self):

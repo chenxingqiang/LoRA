@@ -184,7 +184,8 @@ class TFTrainingArguments(TrainingArguments):
         metadata={"help": "Power for the Polynomial decay LR scheduler."},
     )
 
-    xla: bool = field(default=False, metadata={"help": "Whether to activate the XLA compilation or not"})
+    xla: bool = field(default=False, metadata={
+                      "help": "Whether to activate the XLA compilation or not"})
 
     @cached_property
     @tf_required
@@ -198,7 +199,8 @@ class TFTrainingArguments(TrainingArguments):
 
         # Set to float16 at first
         if self.fp16:
-            policy = tf.keras.mixed_precision.experimental.Policy("mixed_float16")
+            policy = tf.keras.mixed_precision.experimental.Policy(
+                "mixed_float16")
             tf.keras.mixed_precision.experimental.set_policy(policy)
 
         if self.no_cuda:
@@ -217,7 +219,8 @@ class TFTrainingArguments(TrainingArguments):
             if tpu:
                 # Set to bfloat16 in case of TPU
                 if self.fp16:
-                    policy = tf.keras.mixed_precision.experimental.Policy("mixed_bfloat16")
+                    policy = tf.keras.mixed_precision.experimental.Policy(
+                        "mixed_bfloat16")
                     tf.keras.mixed_precision.experimental.set_policy(policy)
 
                 tf.config.experimental_connect_to_cluster(tpu)
@@ -233,7 +236,8 @@ class TFTrainingArguments(TrainingArguments):
                 # If you only want to use a specific subset of GPUs use `CUDA_VISIBLE_DEVICES=0`
                 strategy = tf.distribute.MirroredStrategy()
             else:
-                raise ValueError("Cannot find the proper strategy please check your environment properties.")
+                raise ValueError(
+                    "Cannot find the proper strategy please check your environment properties.")
 
         return strategy
 

@@ -54,7 +54,8 @@ class T5TokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         tokens = tokenizer.tokenize("This is a test")
         self.assertListEqual(tokens, ["▁This", "▁is", "▁a", "▁t", "est"])
 
-        self.assertListEqual(tokenizer.convert_tokens_to_ids(tokens), [285, 46, 10, 170, 382])
+        self.assertListEqual(tokenizer.convert_tokens_to_ids(
+            tokens), [285, 46, 10, 170, 382])
 
         tokens = tokenizer.tokenize("I was born in 92000, and this is falsé.")
         self.assertListEqual(
@@ -84,7 +85,8 @@ class T5TokenizationTest(TokenizerTesterMixin, unittest.TestCase):
             ],
         )
         ids = tokenizer.convert_tokens_to_ids(tokens)
-        self.assertListEqual(ids, [8, 21, 84, 55, 24, 19, 7, 0, 602, 347, 347, 347, 3, 12, 66, 46, 72, 80, 6, 0, 4])
+        self.assertListEqual(
+            ids, [8, 21, 84, 55, 24, 19, 7, 0, 602, 347, 347, 347, 3, 12, 66, 46, 72, 80, 6, 0, 4])
 
         back_tokens = tokenizer.convert_ids_to_tokens(ids)
         self.assertListEqual(
@@ -152,14 +154,18 @@ class T5TokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 
     def test_eos_treatment(self):
         tokenizer = self.t5_base_tokenizer
-        batch_with_eos_added = tokenizer(["hi</s>", "I went to the gym</s>", "</s>"])
+        batch_with_eos_added = tokenizer(
+            ["hi</s>", "I went to the gym</s>", "</s>"])
         batch_without_eos_added = tokenizer(["hi", "I went to the gym", ""])
-        self.assertListEqual(batch_with_eos_added["input_ids"], batch_without_eos_added["input_ids"])
+        self.assertListEqual(
+            batch_with_eos_added["input_ids"], batch_without_eos_added["input_ids"])
 
     def test_prepare_batch(self):
         tokenizer = self.t5_base_tokenizer
-        src_text = ["A long paragraph for summarization.", "Another paragraph for summarization."]
-        expected_src_tokens = [71, 307, 8986, 21, 4505, 1635, 1707, 5, tokenizer.eos_token_id]
+        src_text = ["A long paragraph for summarization.",
+                    "Another paragraph for summarization."]
+        expected_src_tokens = [71, 307, 8986, 21, 4505,
+                               1635, 1707, 5, tokenizer.eos_token_id]
         batch = tokenizer(src_text, padding=True, return_tensors=FRAMEWORK)
         self.assertIsInstance(batch, BatchEncoding)
 
@@ -175,7 +181,8 @@ class T5TokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 
     def test_empty_target_text(self):
         tokenizer = self.t5_base_tokenizer
-        src_text = ["A long paragraph for summarization.", "Another paragraph for summarization."]
+        src_text = ["A long paragraph for summarization.",
+                    "Another paragraph for summarization."]
         batch = tokenizer(src_text, padding=True, return_tensors=FRAMEWORK)
         # check if input_ids are returned and no decoder_input_ids
         self.assertIn("input_ids", batch)
@@ -237,8 +244,10 @@ class T5TokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         tgt_ids = [0, 1960, 19, 2, 1245, 239, 1]
         tgt_text = "<pad> Today is<unk> nice day</s>"
 
-        fast_ids = self.t5_base_tokenizer_fast(src_text, add_special_tokens=False).input_ids
-        slow_ids = self.t5_base_tokenizer(src_text, add_special_tokens=False).input_ids
+        fast_ids = self.t5_base_tokenizer_fast(
+            src_text, add_special_tokens=False).input_ids
+        slow_ids = self.t5_base_tokenizer(
+            src_text, add_special_tokens=False).input_ids
         self.assertEqual(tgt_ids, fast_ids)
         self.assertEqual(tgt_ids, slow_ids)
 

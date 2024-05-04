@@ -35,7 +35,8 @@ class BortIntegrationTest(unittest.TestCase):
         model.to(torch_device)
 
         input_ids = torch.tensor(
-            [[0, 18077, 4082, 7804, 8606, 6195, 2457, 3321, 11, 10489, 16, 269, 2579, 328, 2]],
+            [[0, 18077, 4082, 7804, 8606, 6195, 2457,
+              3321, 11, 10489, 16, 269, 2579, 328, 2]],
             device=torch_device,
             dtype=torch.long,
         )  # Schloß Nymphenburg in Munich is really nice!
@@ -44,8 +45,10 @@ class BortIntegrationTest(unittest.TestCase):
         self.assertEqual(output.shape, expected_shape)
         # compare the actual values for a slice.
         expected_slice = torch.tensor(
-            [[[-0.0349, 0.0436, -1.8654], [-0.6964, 0.0835, -1.7393], [-0.9819, 0.2956, -0.2868]]],
+            [[[-0.0349, 0.0436, -1.8654], [-0.6964, 0.0835, -1.7393],
+                [-0.9819, 0.2956, -0.2868]]],
             device=torch_device,
             dtype=torch.float,
         )
-        self.assertTrue(torch.allclose(output[:, :3, :3], expected_slice, atol=1e-4))
+        self.assertTrue(torch.allclose(
+            output[:, :3, :3], expected_slice, atol=1e-4))

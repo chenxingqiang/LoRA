@@ -29,9 +29,11 @@ class Blenderbot3BTokenizerTests(unittest.TestCase):
         tok = self.tokenizer_3b
         src_text = " I am a small frog."
         encoded = tok([src_text], padding=False, truncation=False)["input_ids"]
-        decoded = tok.batch_decode(encoded, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
+        decoded = tok.batch_decode(
+            encoded, skip_special_tokens=True, clean_up_tokenization_spaces=False)[0]
         assert src_text == decoded
 
     def test_3B_tokenization_same_as_parlai(self):
         assert self.tokenizer_3b.add_prefix_space
-        assert self.tokenizer_3b([" Sam", "Sam"]).input_ids == [[5502, 2], [5502, 2]]
+        assert self.tokenizer_3b([" Sam", "Sam"]).input_ids == [
+            [5502, 2], [5502, 2]]

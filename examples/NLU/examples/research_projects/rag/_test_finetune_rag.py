@@ -79,7 +79,8 @@ class RagFinetuneExampleTests(TestCasePlus):
             testargs.append("--distributed_backend=ddp_cpu")
             testargs.append("--num_processes=2")
 
-        cmd = [sys.executable, str(Path(finetune_rag.__file__).resolve())] + testargs
+        cmd = [sys.executable, str(
+            Path(finetune_rag.__file__).resolve())] + testargs
         execute_subprocess_async(cmd, env=self.get_env())
 
         metrics_save_path = os.path.join(output_dir, "metrics.json")

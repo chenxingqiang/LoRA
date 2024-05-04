@@ -8,7 +8,7 @@ import json
 
 
 with open(sys.argv[1], 'r', encoding='utf8') as reader, \
-     open(sys.argv[2], 'w', encoding='utf8') as writer :
+        open(sys.argv[2], 'w', encoding='utf8') as writer:
     lines_dict = json.load(reader)
 
     full_rela_lst = []
@@ -17,15 +17,15 @@ with open(sys.argv[1], 'r', encoding='utf8') as reader, \
     full_cate_lst = []
 
     seen = [
-        'Airport', 
-        'Astronaut', 
-        'Building', 
-        'City', 
-        'ComicsCharacter', 
-        'Food', 
-        'Monument', 
-        'SportsTeam', 
-        'University', 
+        'Airport',
+        'Astronaut',
+        'Building',
+        'City',
+        'ComicsCharacter',
+        'Food',
+        'Monument',
+        'SportsTeam',
+        'University',
         'WrittenWork'
     ]
 
@@ -58,11 +58,10 @@ with open(sys.argv[1], 'r', encoding='utf8') as reader, \
     for cate in cate_dict:
         print('cate', cate, cate_dict[cate])
 
-    #edited_sents = []
+    # edited_sents = []
     for src, tgt, cate in zip(full_src_lst, full_tgt_lst, full_cate_lst):
         x = {}
-        x['context'] =  src # context #+ '||'
-        x['completion'] = tgt #completion
+        x['context'] = src  # context #+ '||'
+        x['completion'] = tgt  # completion
         x['cate'] = cate in seen
         writer.write(json.dumps(x)+'\n')
-

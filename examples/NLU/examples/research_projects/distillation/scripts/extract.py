@@ -27,9 +27,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Extraction some layers of the full RobertaForMaskedLM or GPT2LMHeadModel for Transfer Learned Distillation"
     )
-    parser.add_argument("--model_type", default="roberta", choices=["roberta", "gpt2"])
+    parser.add_argument("--model_type", default="roberta",
+                        choices=["roberta", "gpt2"])
     parser.add_argument("--model_name", default="roberta-large", type=str)
-    parser.add_argument("--dump_checkpoint", default="serialization_dir/tf_roberta_048131723.pth", type=str)
+    parser.add_argument(
+        "--dump_checkpoint", default="serialization_dir/tf_roberta_048131723.pth", type=str)
     parser.add_argument("--vocab_transform", action="store_true")
     args = parser.parse_args()
 
@@ -96,7 +98,8 @@ if __name__ == "__main__":
         compressed_sd["lm_head.weight"] = state_dict["lm_head.weight"]
 
     print(f"N layers selected for distillation: {std_idx}")
-    print(f"Number of params transferred for distillation: {len(compressed_sd.keys())}")
+    print(
+        f"Number of params transferred for distillation: {len(compressed_sd.keys())}")
 
     print(f"Save transferred checkpoint to {args.dump_checkpoint}.")
     torch.save(compressed_sd, args.dump_checkpoint)

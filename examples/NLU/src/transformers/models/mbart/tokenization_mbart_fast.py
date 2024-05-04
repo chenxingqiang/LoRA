@@ -33,7 +33,8 @@ else:
 logger = logging.get_logger(__name__)
 
 
-VOCAB_FILES_NAMES = {"vocab_file": "sentencepiece.bpe.model", "tokenizer_file": "tokenizer.json"}
+VOCAB_FILES_NAMES = {"vocab_file": "sentencepiece.bpe.model",
+                     "tokenizer_file": "tokenizer.json"}
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
@@ -113,9 +114,11 @@ class MBartTokenizerFast(XLMRobertaTokenizerFast):
     suffix_tokens: List[int] = []
 
     def __init__(self, *args, tokenizer_file=None, src_lang=None, tgt_lang=None, **kwargs):
-        super().__init__(*args, tokenizer_file=tokenizer_file, src_lang=src_lang, tgt_lang=tgt_lang, **kwargs)
+        super().__init__(*args, tokenizer_file=tokenizer_file,
+                         src_lang=src_lang, tgt_lang=tgt_lang, **kwargs)
 
-        self.add_special_tokens({"additional_special_tokens": FAIRSEQ_LANGUAGE_CODES})
+        self.add_special_tokens(
+            {"additional_special_tokens": FAIRSEQ_LANGUAGE_CODES})
 
         self._src_lang = src_lang if src_lang is not None else "en_XX"
         self.cur_lang_code = self.convert_tokens_to_ids(self._src_lang)
@@ -226,7 +229,8 @@ class MBartTokenizerFast(XLMRobertaTokenizerFast):
         self._tokenizer.post_processor = processors.TemplateProcessing(
             single=prefix_tokens_str + ["$A"] + suffix_tokens_str,
             pair=prefix_tokens_str + ["$A", "$B"] + suffix_tokens_str,
-            special_tokens=list(zip(prefix_tokens_str + suffix_tokens_str, self.prefix_tokens + self.suffix_tokens)),
+            special_tokens=list(zip(
+                prefix_tokens_str + suffix_tokens_str, self.prefix_tokens + self.suffix_tokens)),
         )
 
     def set_tgt_lang_special_tokens(self, lang: str) -> None:
@@ -241,5 +245,6 @@ class MBartTokenizerFast(XLMRobertaTokenizerFast):
         self._tokenizer.post_processor = processors.TemplateProcessing(
             single=prefix_tokens_str + ["$A"] + suffix_tokens_str,
             pair=prefix_tokens_str + ["$A", "$B"] + suffix_tokens_str,
-            special_tokens=list(zip(prefix_tokens_str + suffix_tokens_str, self.prefix_tokens + self.suffix_tokens)),
+            special_tokens=list(zip(
+                prefix_tokens_str + suffix_tokens_str, self.prefix_tokens + self.suffix_tokens)),
         )

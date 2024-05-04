@@ -26,7 +26,8 @@ from .tokenization_bert import BertTokenizer
 
 logger = logging.get_logger(__name__)
 
-VOCAB_FILES_NAMES = {"vocab_file": "vocab.txt", "tokenizer_file": "tokenizer.json"}
+VOCAB_FILES_NAMES = {"vocab_file": "vocab.txt",
+                     "tokenizer_file": "tokenizer.json"}
 
 PRETRAINED_VOCAB_FILES_MAP = {
     "vocab_file": {
@@ -188,7 +189,8 @@ class BertTokenizerFast(PreTrainedTokenizerFast):
             **kwargs,
         )
 
-        pre_tok_state = json.loads(self.backend_tokenizer.normalizer.__getstate__())
+        pre_tok_state = json.loads(
+            self.backend_tokenizer.normalizer.__getstate__())
         if (
             pre_tok_state.get("do_lower_case", do_lower_case) != do_lower_case
             or pre_tok_state.get("strip_accents", strip_accents) != strip_accents
@@ -255,5 +257,6 @@ class BertTokenizerFast(PreTrainedTokenizerFast):
         return len(cls + token_ids_0 + sep) * [0] + len(token_ids_1 + sep) * [1]
 
     def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
-        files = self._tokenizer.model.save(save_directory, name=filename_prefix)
+        files = self._tokenizer.model.save(
+            save_directory, name=filename_prefix)
         return tuple(files)

@@ -272,7 +272,8 @@ _import_structure = {
 if is_sentencepiece_available():
     _import_structure["models.albert"].append("AlbertTokenizer")
     _import_structure["models.barthez"].append("BarthezTokenizer")
-    _import_structure["models.bert_generation"].append("BertGenerationTokenizer")
+    _import_structure["models.bert_generation"].append(
+        "BertGenerationTokenizer")
     _import_structure["models.camembert"].append("CamembertTokenizer")
     _import_structure["models.deberta_v2"].append("DebertaV2Tokenizer")
     _import_structure["models.m2m_100"].append("M2M100Tokenizer")
@@ -306,7 +307,8 @@ if is_tokenizers_available():
     _import_structure["models.camembert"].append("CamembertTokenizerFast")
     _import_structure["models.distilbert"].append("DistilBertTokenizerFast")
     _import_structure["models.dpr"].extend(
-        ["DPRContextEncoderTokenizerFast", "DPRQuestionEncoderTokenizerFast", "DPRReaderTokenizerFast"]
+        ["DPRContextEncoderTokenizerFast",
+         "DPRQuestionEncoderTokenizerFast", "DPRReaderTokenizerFast"]
     )
     _import_structure["models.electra"].append("ElectraTokenizerFast")
     _import_structure["models.funnel"].append("FunnelTokenizerFast")
@@ -333,7 +335,8 @@ if is_tokenizers_available():
     _import_structure["tokenization_utils_fast"] = ["PreTrainedTokenizerFast"]
 
     if is_sentencepiece_available():
-        _import_structure["convert_slow_tokenizer"] = ["SLOW_TO_FAST_CONVERTERS", "convert_slow_tokenizer"]
+        _import_structure["convert_slow_tokenizer"] = [
+            "SLOW_TO_FAST_CONVERTERS", "convert_slow_tokenizer"]
 else:
     from .utils import dummy_tokenizers_objects
 
@@ -344,7 +347,8 @@ else:
 # PyTorch-backed objects
 if is_torch_available():
     _import_structure["benchmark.benchmark"] = ["PyTorchBenchmark"]
-    _import_structure["benchmark.benchmark_args"] = ["PyTorchBenchmarkArguments"]
+    _import_structure["benchmark.benchmark_args"] = [
+        "PyTorchBenchmarkArguments"]
     _import_structure["data.data_collator"] = [
         "DataCollator",
         "DataCollatorForLanguageModeling",
@@ -367,7 +371,8 @@ if is_torch_available():
         "TextDataset",
         "TextDatasetForNextSentencePrediction",
     ]
-    _import_structure["generation_beam_search"] = ["BeamScorer", "BeamSearchScorer"]
+    _import_structure["generation_beam_search"] = [
+        "BeamScorer", "BeamSearchScorer"]
     _import_structure["generation_logits_process"] = [
         "HammingDiversityLogitsProcessor",
         "LogitsProcessor",
@@ -389,7 +394,8 @@ if is_torch_available():
         "MaxTimeCriteria",
     ]
     _import_structure["generation_utils"] = ["top_k_top_p_filtering"]
-    _import_structure["modeling_utils"] = ["Conv1D", "PreTrainedModel", "apply_chunking_to_forward", "prune_layer"]
+    _import_structure["modeling_utils"] = [
+        "Conv1D", "PreTrainedModel", "apply_chunking_to_forward", "prune_layer"]
     # PyTorch models structure
 
     _import_structure["models.speech_to_text"].extend(
@@ -620,7 +626,8 @@ if is_torch_available():
             "FlaubertWithLMHeadModel",
         ]
     )
-    _import_structure["models.fsmt"].extend(["FSMTForConditionalGeneration", "FSMTModel", "PretrainedFSMTModel"])
+    _import_structure["models.fsmt"].extend(
+        ["FSMTForConditionalGeneration", "FSMTModel", "PretrainedFSMTModel"])
     _import_structure["models.funnel"].extend(
         [
             "FUNNEL_PRETRAINED_MODEL_ARCHIVE_LIST",
@@ -699,7 +706,8 @@ if is_torch_available():
             "LxmertXLayer",
         ]
     )
-    _import_structure["models.marian"].extend(["MarianModel", "MarianMTModel", "MarianForCausalLM"])
+    _import_structure["models.marian"].extend(
+        ["MarianModel", "MarianMTModel", "MarianForCausalLM"])
     _import_structure["models.mbart"].extend(
         [
             "MBartForCausalLM",
@@ -709,7 +717,8 @@ if is_torch_available():
             "MBartModel",
         ]
     )
-    _import_structure["models.mmbt"].extend(["MMBTForClassification", "MMBTModel", "ModalEmbeddings"])
+    _import_structure["models.mmbt"].extend(
+        ["MMBTForClassification", "MMBTModel", "ModalEmbeddings"])
     _import_structure["models.mobilebert"].extend(
         [
             "MOBILEBERT_PRETRAINED_MODEL_ARCHIVE_LIST",
@@ -739,7 +748,8 @@ if is_torch_available():
             "MPNetPreTrainedModel",
         ]
     )
-    _import_structure["models.mt5"].extend(["MT5EncoderModel", "MT5ForConditionalGeneration", "MT5Model"])
+    _import_structure["models.mt5"].extend(
+        ["MT5EncoderModel", "MT5ForConditionalGeneration", "MT5Model"])
     _import_structure["models.openai"].extend(
         [
             "OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_LIST",
@@ -765,7 +775,8 @@ if is_torch_available():
             "ProphetNetPreTrainedModel",
         ]
     )
-    _import_structure["models.rag"].extend(["RagModel", "RagSequenceForGeneration", "RagTokenForGeneration"])
+    _import_structure["models.rag"].extend(
+        ["RagModel", "RagSequenceForGeneration", "RagTokenForGeneration"])
     _import_structure["models.reformer"].extend(
         [
             "REFORMER_PRETRAINED_MODEL_ARCHIVE_LIST",
@@ -779,7 +790,8 @@ if is_torch_available():
         ]
     )
     _import_structure["models.retribert"].extend(
-        ["RETRIBERT_PRETRAINED_MODEL_ARCHIVE_LIST", "RetriBertModel", "RetriBertPreTrainedModel"]
+        ["RETRIBERT_PRETRAINED_MODEL_ARCHIVE_LIST",
+         "RetriBertModel", "RetriBertPreTrainedModel"]
     )
     _import_structure["models.roberta"].extend(
         [
@@ -902,11 +914,13 @@ if is_torch_available():
 else:
     from .utils import dummy_pt_objects
 
-    _import_structure["utils.dummy_pt_objects"] = [name for name in dir(dummy_pt_objects) if not name.startswith("_")]
+    _import_structure["utils.dummy_pt_objects"] = [
+        name for name in dir(dummy_pt_objects) if not name.startswith("_")]
 
 # TensorFlow-backed objects
 if is_tf_available():
-    _import_structure["benchmark.benchmark_args_tf"] = ["TensorFlowBenchmarkArguments"]
+    _import_structure["benchmark.benchmark_args_tf"] = [
+        "TensorFlowBenchmarkArguments"]
     _import_structure["benchmark.benchmark_tf"] = ["TensorFlowBenchmark"]
     _import_structure["generation_tf_utils"] = ["tf_top_k_top_p_filtering"]
     _import_structure["modeling_tf_utils"] = [
@@ -969,7 +983,8 @@ if is_tf_available():
             "TFAutoModelWithLMHead",
         ]
     )
-    _import_structure["models.bart"].extend(["TFBartForConditionalGeneration", "TFBartModel", "TFBartPretrainedModel"])
+    _import_structure["models.bart"].extend(
+        ["TFBartForConditionalGeneration", "TFBartModel", "TFBartPretrainedModel"])
     _import_structure["models.bert"].extend(
         [
             "TF_BERT_PRETRAINED_MODEL_ARCHIVE_LIST",
@@ -987,7 +1002,8 @@ if is_tf_available():
             "TFBertPreTrainedModel",
         ]
     )
-    _import_structure["models.blenderbot"].extend(["TFBlenderbotForConditionalGeneration", "TFBlenderbotModel"])
+    _import_structure["models.blenderbot"].extend(
+        ["TFBlenderbotForConditionalGeneration", "TFBlenderbotModel"])
     _import_structure["models.blenderbot_small"].extend(
         ["TFBlenderbotSmallForConditionalGeneration", "TFBlenderbotSmallModel"]
     )
@@ -1085,7 +1101,8 @@ if is_tf_available():
             "TFGPT2PreTrainedModel",
         ]
     )
-    _import_structure["models.led"].extend(["TFLEDForConditionalGeneration", "TFLEDModel", "TFLEDPreTrainedModel"])
+    _import_structure["models.led"].extend(
+        ["TFLEDForConditionalGeneration", "TFLEDModel", "TFLEDPreTrainedModel"])
     _import_structure["models.longformer"].extend(
         [
             "TF_LONGFORMER_PRETRAINED_MODEL_ARCHIVE_LIST",
@@ -1108,8 +1125,10 @@ if is_tf_available():
             "TFLxmertVisualFeatureEncoder",
         ]
     )
-    _import_structure["models.marian"].extend(["TFMarianMTModel", "TFMarianModel"])
-    _import_structure["models.mbart"].extend(["TFMBartForConditionalGeneration", "TFMBartModel"])
+    _import_structure["models.marian"].extend(
+        ["TFMarianMTModel", "TFMarianModel"])
+    _import_structure["models.mbart"].extend(
+        ["TFMBartForConditionalGeneration", "TFMBartModel"])
     _import_structure["models.mobilebert"].extend(
         [
             "TF_MOBILEBERT_PRETRAINED_MODEL_ARCHIVE_LIST",
@@ -1138,7 +1157,8 @@ if is_tf_available():
             "TFMPNetPreTrainedModel",
         ]
     )
-    _import_structure["models.mt5"].extend(["TFMT5EncoderModel", "TFMT5ForConditionalGeneration", "TFMT5Model"])
+    _import_structure["models.mt5"].extend(
+        ["TFMT5EncoderModel", "TFMT5ForConditionalGeneration", "TFMT5Model"])
     _import_structure["models.openai"].extend(
         [
             "TF_OPENAI_GPT_PRETRAINED_MODEL_ARCHIVE_LIST",
@@ -1150,7 +1170,8 @@ if is_tf_available():
             "TFOpenAIGPTPreTrainedModel",
         ]
     )
-    _import_structure["models.pegasus"].extend(["TFPegasusForConditionalGeneration", "TFPegasusModel"])
+    _import_structure["models.pegasus"].extend(
+        ["TFPegasusForConditionalGeneration", "TFPegasusModel"])
     _import_structure["models.rag"].extend(
         [
             "TFRagModel",
@@ -1228,19 +1249,23 @@ if is_tf_available():
             "TFXLNetPreTrainedModel",
         ]
     )
-    _import_structure["optimization_tf"] = ["AdamWeightDecay", "GradientAccumulator", "WarmUp", "create_optimizer"]
+    _import_structure["optimization_tf"] = ["AdamWeightDecay",
+                                            "GradientAccumulator", "WarmUp", "create_optimizer"]
     _import_structure["trainer_tf"] = ["TFTrainer"]
 
 else:
     from .utils import dummy_tf_objects
 
-    _import_structure["utils.dummy_tf_objects"] = [name for name in dir(dummy_tf_objects) if not name.startswith("_")]
+    _import_structure["utils.dummy_tf_objects"] = [
+        name for name in dir(dummy_tf_objects) if not name.startswith("_")]
 
 # FLAX-backed objects
 if is_flax_available():
     _import_structure["modeling_flax_utils"] = ["FlaxPreTrainedModel"]
-    _import_structure["models.auto"].extend(["FLAX_MODEL_MAPPING", "FlaxAutoModel"])
-    _import_structure["models.bert"].extend(["FlaxBertForMaskedLM", "FlaxBertModel"])
+    _import_structure["models.auto"].extend(
+        ["FLAX_MODEL_MAPPING", "FlaxAutoModel"])
+    _import_structure["models.bert"].extend(
+        ["FlaxBertForMaskedLM", "FlaxBertModel"])
     _import_structure["models.roberta"].append("FlaxRobertaModel")
 else:
     from .utils import dummy_flax_objects

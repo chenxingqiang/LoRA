@@ -76,8 +76,10 @@ if __name__ == "__main__":
         action="store_true",
         help="If decoder has to be renamed to encoder in PyTorch model.",
     )
-    parser.add_argument("--is_encoder", action="store_true", help="If model is an encoder.")
-    parser.add_argument("--vocab_size", default=50358, type=int, help="Vocab size of model")
+    parser.add_argument("--is_encoder", action="store_true",
+                        help="If model is an encoder.")
+    parser.add_argument("--vocab_size", default=50358,
+                        type=int, help="Vocab size of model")
     args = parser.parse_args()
     convert_tf_checkpoint_to_pytorch(
         args.tf_hub_path,

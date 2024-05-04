@@ -110,7 +110,8 @@ class FlaxPerformerLayerNorm(nn.Module):
     epsilon: float = 1e-6
     dtype: jnp.dtype = jnp.float32  # the dtype of the computation
     bias: bool = True  # If True, bias (beta) is added.
-    scale: bool = True  # If True, multiply by scale (gamma). When the next layer is linear
+    # If True, multiply by scale (gamma). When the next layer is linear
+    scale: bool = True
     # (also e.g. nn.relu), this can be disabled since the scaling will be
     # done by the next layer.
     bias_init: jnp.ndarray = nn.initializers.zeros
@@ -135,10 +136,12 @@ class FlaxPerformerLayerNorm(nn.Module):
         var = mean2 - jax.lax.square(mean)
         mul = jax.lax.rsqrt(var + self.epsilon)
         if self.scale:
-            mul = mul * jnp.asarray(self.param("gamma", self.scale_init, (features,)), self.dtype)
+            mul = mul * jnp.asarray(self.param("gamma",
+                                    self.scale_init, (features,)), self.dtype)
         y = (x - mean) * mul
         if self.bias:
-            y = y + jnp.asarray(self.param("beta", self.bias_init, (features,)), self.dtype)
+            y = y + jnp.asarray(self.param("beta",
+                                self.bias_init, (features,)), self.dtype)
         return y
 
 
@@ -154,7 +157,8 @@ class FlaxPerformerEmbedding(nn.Module):
 
     @nn.compact
     def __call__(self, inputs):
-        embedding = self.param("weight", self.emb_init, (self.vocab_size, self.hidden_size))
+        embedding = self.param("weight", self.emb_init,
+                               (self.vocab_size, self.hidden_size))
         return jnp.take(embedding, inputs, axis=0)
 
 
@@ -195,12 +199,14 @@ class FlaxPerformerAttention(nn.Module):
     @nn.compact
     def __call__(self, hidden_state, attention_mask):
         single_head_dim = self.head_size // self.num_heads
-        fast_softmax_attention = make_fast_softmax_attention(qkv_dim=single_head_dim)
+        fast_softmax_attention = make_fast_softmax_attention(
+            qkv_dim=single_head_dim)
         self_att = nn.attention.SelfAttention(
             num_heads=self.num_heads, qkv_features=self.head_size, name="self", attention_fn=fast_softmax_attention
         )(hidden_state, attention_mask)
 
-        layer_norm = FlaxPerformerLayerNorm(name="layer_norm")(self_att + hidden_state)
+        layer_norm = FlaxPerformerLayerNorm(
+            name="layer_norm")(self_att + hidden_state)
         return layer_norm
 
 
@@ -218,8 +224,10 @@ class FlaxPerformerIntermediate(nn.Module):
 class FlaxPerformerOutput(nn.Module):
     @nn.compact
     def __call__(self, intermediate_output, attention_output):
-        hidden_state = nn.Dense(attention_output.shape[-1], name="dense")(intermediate_output)
-        hidden_state = FlaxPerformerLayerNorm(name="layer_norm")(hidden_state + attention_output)
+        hidden_state = nn.Dense(
+            attention_output.shape[-1], name="dense")(intermediate_output)
+        hidden_state = FlaxPerformerLayerNorm(
+            name="layer_norm")(hidden_state + attention_output)
         return hidden_state
 
 
@@ -369,23 +377,27 @@ class FlaxPerformerModel(FlaxBertPreTrainedModel):
 
                 # Flax SelfAttention decomposes the heads (num_head, size // num_heads)
                 if "bias" in key:
-                    jax_state[key] = tensor.reshape((config.num_attention_heads, -1))
+                    jax_state[key] = tensor.reshape(
+                        (config.num_attention_heads, -1))
                 elif "weight":
                     del jax_state[key]
                     key = key.replace("weight", "kernel")
-                    tensor = tensor.reshape((config.num_attention_heads, -1, config.hidden_size)).transpose((2, 0, 1))
+                    tensor = tensor.reshape(
+                        (config.num_attention_heads, -1, config.hidden_size)).transpose((2, 0, 1))
                     jax_state[key] = tensor
 
             # SelfAttention output is not a separate layer, remove one nesting
             if "attention.output.dense" in key:
                 del jax_state[key]
-                key = key.replace("attention.output.dense", "attention.self.out")
+                key = key.replace("attention.output.dense",
+                                  "attention.self.out")
                 jax_state[key] = tensor
 
             # SelfAttention output is not a separate layer, remove nesting on layer norm
             if "attention.output.LayerNorm" in key:
                 del jax_state[key]
-                key = key.replace("attention.output.LayerNorm", "attention.LayerNorm")
+                key = key.replace("attention.output.LayerNorm",
+                                  "attention.LayerNorm")
                 jax_state[key] = tensor
 
             # There are some transposed parameters w.r.t their PyTorch counterpart
@@ -545,7 +557,8 @@ class FlaxPerformerForMaskedLMModule(nn.Module):
         )(input_ids, attention_mask, token_type_ids, position_ids)
 
         # Compute the prediction scores
-        encoder = nn.Dropout(rate=self.dropout_rate)(encoder, deterministic=deterministic)
+        encoder = nn.Dropout(rate=self.dropout_rate)(
+            encoder, deterministic=deterministic)
         logits = FlaxBertOnlyMLMHead(
             vocab_size=self.vocab_size, hidden_act=self.hidden_act, name="cls", dtype=self.dtype
         )(encoder)

@@ -73,16 +73,19 @@ def postprocess_qa_predictions(
         is_world_process_zero (:obj:`bool`, `optional`, defaults to :obj:`True`):
             Whether this process is the main process or not (used to determine if logging/saves should be done).
     """
-    assert len(predictions) == 2, "`predictions` should be a tuple with two elements (start_logits, end_logits)."
+    assert len(
+        predictions) == 2, "`predictions` should be a tuple with two elements (start_logits, end_logits)."
     all_start_logits, all_end_logits = predictions
 
-    assert len(predictions[0]) == len(features), f"Got {len(predictions[0])} predictions and {len(features)} features."
+    assert len(predictions[0]) == len(
+        features), f"Got {len(predictions[0])} predictions and {len(features)} features."
 
     # Build a map example to its corresponding features.
     example_id_to_index = {k: i for i, k in enumerate(examples["id"])}
     features_per_example = collections.defaultdict(list)
     for i, feature in enumerate(features):
-        features_per_example[example_id_to_index[feature["example_id"]]].append(i)
+        features_per_example[example_id_to_index[feature["example_id"]]].append(
+            i)
 
     # The dictionaries we have to fill.
     all_predictions = collections.OrderedDict()
@@ -92,7 +95,8 @@ def postprocess_qa_predictions(
 
     # Logging.
     logger.setLevel(logging.INFO if is_world_process_zero else logging.WARN)
-    logger.info(f"Post-processing {len(examples)} example predictions split into {len(features)} features.")
+    logger.info(
+        f"Post-processing {len(examples)} example predictions split into {len(features)} features.")
 
     # Let's loop over all the examples!
     for example_index, example in enumerate(tqdm(examples)):
@@ -112,7 +116,8 @@ def postprocess_qa_predictions(
             offset_mapping = features[feature_index]["offset_mapping"]
             # Optional `token_is_max_context`, if provided we will remove answers that do not have the maximum context
             # available in the current feature.
-            token_is_max_context = features[feature_index].get("token_is_max_context", None)
+            token_is_max_context = features[feature_index].get(
+                "token_is_max_context", None)
 
             # Update minimum null prediction.
             feature_null_score = start_logits[0] + end_logits[0]
@@ -125,8 +130,10 @@ def postprocess_qa_predictions(
                 }
 
             # Go through all possibilities for the `n_best_size` greater start and end logits.
-            start_indexes = np.argsort(start_logits)[-1 : -n_best_size - 1 : -1].tolist()
-            end_indexes = np.argsort(end_logits)[-1 : -n_best_size - 1 : -1].tolist()
+            start_indexes = np.argsort(
+                start_logits)[-1: -n_best_size - 1: -1].tolist()
+            end_indexes = np.argsort(
+                end_logits)[-1: -n_best_size - 1: -1].tolist()
             for start_index in start_indexes:
                 for end_index in end_indexes:
                     # Don't consider out-of-scope answers, either because the indices are out of bounds or correspond
@@ -159,7 +166,8 @@ def postprocess_qa_predictions(
             null_score = min_null_prediction["score"]
 
         # Only keep the best `n_best_size` predictions.
-        predictions = sorted(prelim_predictions, key=lambda x: x["score"], reverse=True)[:n_best_size]
+        predictions = sorted(prelim_predictions, key=lambda x: x["score"], reverse=True)[
+            :n_best_size]
 
         # Add back the minimum null prediction if it was removed because of its low score.
         if version_2_with_negative and not any(p["offsets"] == (0, 0) for p in predictions):
@@ -169,12 +177,13 @@ def postprocess_qa_predictions(
         context = example["context"]
         for pred in predictions:
             offsets = pred.pop("offsets")
-            pred["text"] = context[offsets[0] : offsets[1]]
+            pred["text"] = context[offsets[0]: offsets[1]]
 
         # In the very rare edge case we have not a single non-null prediction, we create a fake prediction to avoid
         # failure.
         if len(predictions) == 0 or (len(predictions) == 1 and predictions[0]["text"] == ""):
-            predictions.insert(0, {"text": "empty", "start_logit": 0.0, "end_logit": 0.0, "score": 0.0})
+            predictions.insert(
+                0, {"text": "empty", "start_logit": 0.0, "end_logit": 0.0, "score": 0.0})
 
         # Compute the softmax of all scores (we do it with numpy to stay independent from torch/tf in this file, using
         # the LogSumExp trick).
@@ -197,8 +206,11 @@ def postprocess_qa_predictions(
             best_non_null_pred = predictions[i]
 
             # Then we compare to the null prediction using the threshold.
-            score_diff = null_score - best_non_null_pred["start_logit"] - best_non_null_pred["end_logit"]
-            scores_diff_json[example["id"]] = float(score_diff)  # To be JSON-serializable.
+            score_diff = null_score - \
+                best_non_null_pred["start_logit"] - \
+                best_non_null_pred["end_logit"]
+            # To be JSON-serializable.
+            scores_diff_json[example["id"]] = float(score_diff)
             if score_diff > null_score_diff_threshold:
                 all_predictions[example["id"]] = ""
             else:
@@ -206,7 +218,8 @@ def postprocess_qa_predictions(
 
         # Make `predictions` JSON-serializable by casting np.float back to float.
         all_nbest_json[example["id"]] = [
-            {k: (float(v) if isinstance(v, (np.float16, np.float32, np.float64)) else v) for k, v in pred.items()}
+            {k: (float(v) if isinstance(v, (np.float16, np.float32, np.float64)) else v)
+             for k, v in pred.items()}
             for pred in predictions
         ]
 
@@ -283,7 +296,8 @@ def postprocess_qa_predictions_with_beam_search(
         is_world_process_zero (:obj:`bool`, `optional`, defaults to :obj:`True`):
             Whether this process is the main process or not (used to determine if logging/saves should be done).
     """
-    assert len(predictions) == 5, "`predictions` should be a tuple with five elements."
+    assert len(
+        predictions) == 5, "`predictions` should be a tuple with five elements."
     start_top_log_probs, start_top_index, end_top_log_probs, end_top_index, cls_logits = predictions
 
     assert len(predictions[0]) == len(
@@ -294,7 +308,8 @@ def postprocess_qa_predictions_with_beam_search(
     example_id_to_index = {k: i for i, k in enumerate(examples["id"])}
     features_per_example = collections.defaultdict(list)
     for i, feature in enumerate(features):
-        features_per_example[example_id_to_index[feature["example_id"]]].append(i)
+        features_per_example[example_id_to_index[feature["example_id"]]].append(
+            i)
 
     # The dictionaries we have to fill.
     all_predictions = collections.OrderedDict()
@@ -303,7 +318,8 @@ def postprocess_qa_predictions_with_beam_search(
 
     # Logging.
     logger.setLevel(logging.INFO if is_world_process_zero else logging.WARN)
-    logger.info(f"Post-processing {len(examples)} example predictions split into {len(features)} features.")
+    logger.info(
+        f"Post-processing {len(examples)} example predictions split into {len(features)} features.")
 
     # Let's loop over all the examples!
     for example_index, example in enumerate(tqdm(examples)):
@@ -326,7 +342,8 @@ def postprocess_qa_predictions_with_beam_search(
             offset_mapping = features[feature_index]["offset_mapping"]
             # Optional `token_is_max_context`, if provided we will remove answers that do not have the maximum context
             # available in the current feature.
-            token_is_max_context = features[feature_index].get("token_is_max_context", None)
+            token_is_max_context = features[feature_index].get(
+                "token_is_max_context", None)
 
             # Update minimum null prediction
             if min_null_score is None or feature_null_score < min_null_score:
@@ -364,18 +381,20 @@ def postprocess_qa_predictions_with_beam_search(
                     )
 
         # Only keep the best `n_best_size` predictions.
-        predictions = sorted(prelim_predictions, key=lambda x: x["score"], reverse=True)[:n_best_size]
+        predictions = sorted(prelim_predictions, key=lambda x: x["score"], reverse=True)[
+            :n_best_size]
 
         # Use the offsets to gather the answer text in the original context.
         context = example["context"]
         for pred in predictions:
             offsets = pred.pop("offsets")
-            pred["text"] = context[offsets[0] : offsets[1]]
+            pred["text"] = context[offsets[0]: offsets[1]]
 
         # In the very rare edge case we have not a single non-null prediction, we create a fake prediction to avoid
         # failure.
         if len(predictions) == 0:
-            predictions.insert(0, {"text": "", "start_logit": -1e-6, "end_logit": -1e-6, "score": -2e-6})
+            predictions.insert(
+                0, {"text": "", "start_logit": -1e-6, "end_logit": -1e-6, "score": -2e-6})
 
         # Compute the softmax of all scores (we do it with numpy to stay independent from torch/tf in this file, using
         # the LogSumExp trick).
@@ -394,7 +413,8 @@ def postprocess_qa_predictions_with_beam_search(
 
         # Make `predictions` JSON-serializable by casting np.float back to float.
         all_nbest_json[example["id"]] = [
-            {k: (float(v) if isinstance(v, (np.float16, np.float32, np.float64)) else v) for k, v in pred.items()}
+            {k: (float(v) if isinstance(v, (np.float16, np.float32, np.float64)) else v)
+             for k, v in pred.items()}
             for pred in predictions
         ]
 

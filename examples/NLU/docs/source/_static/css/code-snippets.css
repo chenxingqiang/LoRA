@@ -1,16 +1,24 @@
-
-.highlight .c1, .highlight .sd{
-    color: #999
+.highlight .c1,
+.highlight .sd {
+    color: #999;
 }
 
-.highlight .nn, .highlight .k, .highlight .s1, .highlight .nb, .highlight .bp, .highlight .kc {
-    color: #FB8D68;
+.highlight .nn,
+.highlight .k,
+.highlight .s1,
+.highlight .nb,
+.highlight .bp,
+.highlight .kc {
+    color: #fb8d68;
 }
 
-.highlight .kn, .highlight .nv, .highlight .s2, .highlight .ow {
-    color: #6670FF;
+.highlight .kn,
+.highlight .nv,
+.highlight .s2,
+.highlight .ow {
+    color: #6670ff;
 }
 
 .highlight .gp {
-    color: #FB8D68;
+    color: #fb8d68;
 }

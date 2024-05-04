@@ -76,8 +76,10 @@ class Speech2TextFeatureExtractor(SequenceFeatureExtractor):
         **kwargs
     ):
         if not is_torchaudio_available():
-            raise ImportError("`Speech2TextFeatureExtractor` requires torchaudio: `pip install torchaudio`.")
-        super().__init__(feature_size=feature_size, sampling_rate=sampling_rate, padding_value=padding_value, **kwargs)
+            raise ImportError(
+                "`Speech2TextFeatureExtractor` requires torchaudio: `pip install torchaudio`.")
+        super().__init__(feature_size=feature_size, sampling_rate=sampling_rate,
+                         padding_value=padding_value, **kwargs)
         self.num_mel_bins = num_mel_bins
         self.do_ceptral_normalize = do_ceptral_normalize
         self.normalize_means = normalize_means
@@ -92,9 +94,11 @@ class Speech2TextFeatureExtractor(SequenceFeatureExtractor):
         Get mel-filter bank features using TorchAudio. Note that TorchAudio requires 16-bit signed integers as inputs
         and hence the waveform should not be normalized before feature extraction.
         """
-        waveform = waveform * (2 ** 15)  # Kaldi compliance: 16-bit signed integers
+        waveform = waveform * \
+            (2 ** 15)  # Kaldi compliance: 16-bit signed integers
         waveform = torch.from_numpy(waveform).unsqueeze(0)
-        features = ta_kaldi.fbank(waveform, num_mel_bins=self.num_mel_bins, sample_frequency=self.sampling_rate)
+        features = ta_kaldi.fbank(
+            waveform, num_mel_bins=self.num_mel_bins, sample_frequency=self.sampling_rate)
         return features.numpy()
 
     @staticmethod
@@ -203,7 +207,8 @@ class Speech2TextFeatureExtractor(SequenceFeatureExtractor):
             raw_speech = [raw_speech]
 
         # extract fbank features
-        features = [self._extract_fbank_features(waveform) for waveform in raw_speech]
+        features = [self._extract_fbank_features(
+            waveform) for waveform in raw_speech]
 
         # Utterance-level cepstral mean and variance normalization
         if self.do_ceptral_normalize:

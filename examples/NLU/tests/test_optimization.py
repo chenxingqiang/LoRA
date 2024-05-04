@@ -77,7 +77,8 @@ class OptimizationTest(unittest.TestCase):
             loss = criterion(w, target)
             loss.backward()
             optimizer.step()
-            w.grad.detach_()  # No zero_grad() function on simple tensors. we do it ourselves.
+            # No zero_grad() function on simple tensors. we do it ourselves.
+            w.grad.detach_()
             w.grad.zero_()
         self.assertListAlmostEqual(w.tolist(), [0.4, 0.2, -0.5], tol=1e-2)
 
@@ -102,7 +103,8 @@ class OptimizationTest(unittest.TestCase):
             loss = criterion(w, target)
             loss.backward()
             optimizer.step()
-            w.grad.detach_()  # No zero_grad() function on simple tensors. we do it ourselves.
+            # No zero_grad() function on simple tensors. we do it ourselves.
+            w.grad.detach_()
             w.grad.zero_()
         self.assertListAlmostEqual(w.tolist(), [0.4, 0.2, -0.5], tol=1e-2)
 
@@ -110,7 +112,8 @@ class OptimizationTest(unittest.TestCase):
 @require_torch
 class ScheduleInitTest(unittest.TestCase):
     m = torch.nn.Linear(50, 50) if is_torch_available() else None
-    optimizer = AdamW(m.parameters(), lr=10.0) if is_torch_available() else None
+    optimizer = AdamW(
+        m.parameters(), lr=10.0) if is_torch_available() else None
     num_steps = 10
 
     def assertListAlmostEqual(self, list1, list2, tol, msg=None):
@@ -162,4 +165,5 @@ class ScheduleInitTest(unittest.TestCase):
 
             scheduler = scheduler_func(self.optimizer, **kwargs)
             lrs_2 = unwrap_and_save_reload_schedule(scheduler, self.num_steps)
-            self.assertListEqual(lrs_1, lrs_2, msg=f"failed for {scheduler_func} in save and reload")
+            self.assertListEqual(
+                lrs_1, lrs_2, msg=f"failed for {scheduler_func} in save and reload")

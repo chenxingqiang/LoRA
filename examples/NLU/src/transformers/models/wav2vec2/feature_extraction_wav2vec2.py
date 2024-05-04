@@ -74,7 +74,8 @@ class Wav2Vec2FeatureExtractor(SequenceFeatureExtractor):
         do_normalize=True,
         **kwargs
     ):
-        super().__init__(feature_size=feature_size, sampling_rate=sampling_rate, padding_value=padding_value, **kwargs)
+        super().__init__(feature_size=feature_size, sampling_rate=sampling_rate,
+                         padding_value=padding_value, **kwargs)
         self.return_attention_mask = return_attention_mask
         self.do_normalize = do_normalize
 

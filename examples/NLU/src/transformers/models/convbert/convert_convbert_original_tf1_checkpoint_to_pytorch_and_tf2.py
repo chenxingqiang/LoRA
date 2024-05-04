@@ -52,4 +52,5 @@ if __name__ == "__main__":
         "--pytorch_dump_path", default=None, type=str, required=True, help="Path to the output PyTorch model."
     )
     args = parser.parse_args()
-    convert_orig_tf1_checkpoint_to_pytorch(args.tf_checkpoint_path, args.convbert_config_file, args.pytorch_dump_path)
+    convert_orig_tf1_checkpoint_to_pytorch(
+        args.tf_checkpoint_path, args.convbert_config_file, args.pytorch_dump_path)

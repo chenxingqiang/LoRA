@@ -38,7 +38,7 @@ def remove_suffix(text: str, suffix: str):
 
 def remove_prefix(text: str, prefix: str):
     if text.startswith(prefix):
-        return text[len(prefix) :]
+        return text[len(prefix):]
     return text  # or whatever
 
 
@@ -48,7 +48,8 @@ def convert_encoder_layer(opus_dict, layer_prefix: str, converter: dict):
         if not k.startswith(layer_prefix):
             continue
         stripped = remove_prefix(k, layer_prefix)
-        v = opus_dict[k].T  # besides embeddings, everything must be transposed.
+        # besides embeddings, everything must be transposed.
+        v = opus_dict[k].T
         sd[converter[stripped]] = torch.tensor(v).squeeze()
     return sd
 
@@ -65,11 +66,13 @@ def find_pretrained_model(src_lang: str, tgt_lang: str) -> List[str]:
     prefix = "Helsinki-NLP/opus-mt-"
     api = HfApi()
     model_list = api.model_list()
-    model_ids = [x.modelId for x in model_list if x.modelId.startswith("Helsinki-NLP")]
+    model_ids = [
+        x.modelId for x in model_list if x.modelId.startswith("Helsinki-NLP")]
     src_and_targ = [
         remove_prefix(m, prefix).lower().split("-") for m in model_ids if "+" not in m
     ]  # + cant be loaded.
-    matching = [f"{prefix}{a}-{b}" for (a, b) in src_and_targ if src_lang in a and tgt_lang in b]
+    matching = [
+        f"{prefix}{a}-{b}" for (a, b) in src_and_targ if src_lang in a and tgt_lang in b]
     return matching
 
 
@@ -129,7 +132,8 @@ GROUPS = [
     ("da+fo+is+no+nb+nn+sv", "SCANDINAVIA"),
     ("se+sma+smj+smn+sms", "SAMI"),
     ("nb_NO+nb+nn_NO+nn+nog+no_nb+no", "NORWAY"),
-    ("ga+cy+br+gd+kw+gv", "CELTIC"),  # https://en.wikipedia.org/wiki/Insular_Celtic_languages
+    # https://en.wikipedia.org/wiki/Insular_Celtic_languages
+    ("ga+cy+br+gd+kw+gv", "CELTIC"),
 ]
 GROUP_TO_OPUS_NAME = {
     "opus-mt-ZH-de": "cmn+cn+yue+ze_zh+zh_cn+zh_CN+zh_HK+zh_tw+zh_TW+zh_yue+zhs+zht+zh-de",
@@ -181,8 +185,10 @@ def get_system_metadata(repo_root):
     import git
 
     return dict(
-        helsinki_git_sha=git.Repo(path=repo_root, search_parent_directories=True).head.object.hexsha,
-        transformers_git_sha=git.Repo(path=".", search_parent_directories=True).head.object.hexsha,
+        helsinki_git_sha=git.Repo(
+            path=repo_root, search_parent_directories=True).head.object.hexsha,
+        transformers_git_sha=git.Repo(
+            path=".", search_parent_directories=True).head.object.hexsha,
         port_machine=socket.gethostname(),
         port_time=time.strftime("%Y-%m-%d-%H:%M"),
     )
@@ -218,8 +224,10 @@ def write_model_card(
     hf_model_name = remove_prefix(hf_model_name, ORG_NAME)
     opus_name: str = convert_hf_name_to_opus_name(hf_model_name)
     assert repo_root in ("OPUS-MT-train", "Tatoeba-Challenge")
-    opus_readme_path = Path(repo_root).joinpath("models", opus_name, "README.md")
-    assert opus_readme_path.exists(), f"Readme file {opus_readme_path} not found"
+    opus_readme_path = Path(repo_root).joinpath(
+        "models", opus_name, "README.md")
+    assert opus_readme_path.exists(
+    ), f"Readme file {opus_readme_path} not found"
 
     opus_src, opus_tgt = [x.split("+") for x in opus_name.split("-")]
 
@@ -245,7 +253,8 @@ def write_model_card(
     )
 
     content = opus_readme_path.open().read()
-    content = content.split("\n# ")[-1]  # Get the lowest level 1 header in the README -- the most recent model.
+    # Get the lowest level 1 header in the README -- the most recent model.
+    content = content.split("\n# ")[-1]
     splat = content.split("*")[2:]
     print(splat[3])
     content = "*".join(splat)
@@ -413,7 +422,8 @@ def check_marian_cfg_assumptions(marian_cfg):
     for k, v in assumed_settings.items():
         actual = marian_cfg[k]
         assert actual == v, f"Unexpected config value for {k} expected {v} got {actual}"
-    check_equal(marian_cfg, "transformer-ffn-activation", "transformer-aan-activation")
+    check_equal(marian_cfg, "transformer-ffn-activation",
+                "transformer-aan-activation")
     check_equal(marian_cfg, "transformer-ffn-depth", "transformer-aan-depth")
     check_equal(marian_cfg, "transformer-dim-ffn", "transformer-dim-aan")
 
@@ -458,7 +468,8 @@ class OpusState:
         assert cfg["dim-vocabs"][0] == cfg["dim-vocabs"][1]
         assert "Wpos" not in self.state_dict, "Wpos key in state dictionary"
         self.state_dict = dict(self.state_dict)
-        self.wemb, self.final_bias = add_emb_entries(self.state_dict["Wemb"], self.state_dict[BIAS_KEY], 1)
+        self.wemb, self.final_bias = add_emb_entries(
+            self.state_dict["Wemb"], self.state_dict[BIAS_KEY], 1)
         self.pad_token_id = self.wemb.shape[0] - 1
         cfg["vocab_size"] = self.pad_token_id + 1
         # self.state_dict['Wemb'].sha
@@ -505,11 +516,14 @@ class OpusState:
         self.decoder_l1 = self.sub_keys("decoder_l1")
         self.decoder_l2 = self.sub_keys("decoder_l2")
         if len(self.encoder_l1) != 16:
-            warnings.warn(f"Expected 16 keys for each encoder layer, got {len(self.encoder_l1)}")
+            warnings.warn(
+                f"Expected 16 keys for each encoder layer, got {len(self.encoder_l1)}")
         if len(self.decoder_l1) != 26:
-            warnings.warn(f"Expected 26 keys for each decoder layer, got {len(self.decoder_l1)}")
+            warnings.warn(
+                f"Expected 26 keys for each decoder layer, got {len(self.decoder_l1)}")
         if len(self.decoder_l2) != 26:
-            warnings.warn(f"Expected 26 keys for each decoder layer, got {len(self.decoder_l1)}")
+            warnings.warn(
+                f"Expected 26 keys for each decoder layer, got {len(self.decoder_l1)}")
 
     @property
     def extra_keys(self):
@@ -540,7 +554,8 @@ class OpusState:
             state_dict,
             BART_CONVERTER,
         )
-        load_layers_(model.model.decoder.layers, state_dict, BART_CONVERTER, is_decoder=True)
+        load_layers_(model.model.decoder.layers, state_dict,
+                     BART_CONVERTER, is_decoder=True)
 
         # handle tensors not associated with layers
         wemb_tensor = torch.nn.Parameter(torch.FloatTensor(self.wemb))
@@ -622,8 +637,10 @@ if __name__ == "__main__":
     """
     parser = argparse.ArgumentParser()
     # Required parameters
-    parser.add_argument("--src", type=str, help="path to marian model sub dir", default="en-de")
-    parser.add_argument("--dest", type=str, default=None, help="Path to the output PyTorch model.")
+    parser.add_argument("--src", type=str,
+                        help="path to marian model sub dir", default="en-de")
+    parser.add_argument("--dest", type=str, default=None,
+                        help="Path to the output PyTorch model.")
     args = parser.parse_args()
 
     source_dir = Path(args.src)

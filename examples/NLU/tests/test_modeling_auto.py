@@ -82,7 +82,8 @@ class AutoModelTest(unittest.TestCase):
             self.assertIsInstance(config, BertConfig)
 
             model = AutoModel.from_pretrained(model_name)
-            model, loading_info = AutoModel.from_pretrained(model_name, output_loading_info=True)
+            model, loading_info = AutoModel.from_pretrained(
+                model_name, output_loading_info=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, BertModel)
             for value in loading_info.values():
@@ -96,12 +97,14 @@ class AutoModelTest(unittest.TestCase):
             self.assertIsInstance(config, BertConfig)
 
             model = AutoModelForPreTraining.from_pretrained(model_name)
-            model, loading_info = AutoModelForPreTraining.from_pretrained(model_name, output_loading_info=True)
+            model, loading_info = AutoModelForPreTraining.from_pretrained(
+                model_name, output_loading_info=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, BertForPreTraining)
             # Only one value should not be initialized and in the missing keys.
             missing_keys = loading_info.pop("missing_keys")
-            self.assertListEqual(["cls.predictions.decoder.bias"], missing_keys)
+            self.assertListEqual(
+                ["cls.predictions.decoder.bias"], missing_keys)
             for key, value in loading_info.items():
                 self.assertEqual(len(value), 0)
 
@@ -113,7 +116,8 @@ class AutoModelTest(unittest.TestCase):
             self.assertIsInstance(config, BertConfig)
 
             model = AutoModelWithLMHead.from_pretrained(model_name)
-            model, loading_info = AutoModelWithLMHead.from_pretrained(model_name, output_loading_info=True)
+            model, loading_info = AutoModelWithLMHead.from_pretrained(
+                model_name, output_loading_info=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, BertForMaskedLM)
 
@@ -125,7 +129,8 @@ class AutoModelTest(unittest.TestCase):
             self.assertIsInstance(config, GPT2Config)
 
             model = AutoModelForCausalLM.from_pretrained(model_name)
-            model, loading_info = AutoModelForCausalLM.from_pretrained(model_name, output_loading_info=True)
+            model, loading_info = AutoModelForCausalLM.from_pretrained(
+                model_name, output_loading_info=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, GPT2LMHeadModel)
 
@@ -137,7 +142,8 @@ class AutoModelTest(unittest.TestCase):
             self.assertIsInstance(config, BertConfig)
 
             model = AutoModelForMaskedLM.from_pretrained(model_name)
-            model, loading_info = AutoModelForMaskedLM.from_pretrained(model_name, output_loading_info=True)
+            model, loading_info = AutoModelForMaskedLM.from_pretrained(
+                model_name, output_loading_info=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, BertForMaskedLM)
 
@@ -149,7 +155,8 @@ class AutoModelTest(unittest.TestCase):
             self.assertIsInstance(config, T5Config)
 
             model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
-            model, loading_info = AutoModelForSeq2SeqLM.from_pretrained(model_name, output_loading_info=True)
+            model, loading_info = AutoModelForSeq2SeqLM.from_pretrained(
+                model_name, output_loading_info=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, T5ForConditionalGeneration)
 
@@ -160,7 +167,8 @@ class AutoModelTest(unittest.TestCase):
             self.assertIsNotNone(config)
             self.assertIsInstance(config, BertConfig)
 
-            model = AutoModelForSequenceClassification.from_pretrained(model_name)
+            model = AutoModelForSequenceClassification.from_pretrained(
+                model_name)
             model, loading_info = AutoModelForSequenceClassification.from_pretrained(
                 model_name, output_loading_info=True
             )
@@ -175,7 +183,8 @@ class AutoModelTest(unittest.TestCase):
             self.assertIsInstance(config, BertConfig)
 
             model = AutoModelForQuestionAnswering.from_pretrained(model_name)
-            model, loading_info = AutoModelForQuestionAnswering.from_pretrained(model_name, output_loading_info=True)
+            model, loading_info = AutoModelForQuestionAnswering.from_pretrained(
+                model_name, output_loading_info=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, BertForQuestionAnswering)
 
@@ -187,7 +196,8 @@ class AutoModelTest(unittest.TestCase):
             self.assertIsNotNone(config)
             self.assertIsInstance(config, TapasConfig)
 
-            model = AutoModelForTableQuestionAnswering.from_pretrained(model_name)
+            model = AutoModelForTableQuestionAnswering.from_pretrained(
+                model_name)
             model, loading_info = AutoModelForTableQuestionAnswering.from_pretrained(
                 model_name, output_loading_info=True
             )
@@ -202,7 +212,8 @@ class AutoModelTest(unittest.TestCase):
             self.assertIsInstance(config, BertConfig)
 
             model = AutoModelForTokenClassification.from_pretrained(model_name)
-            model, loading_info = AutoModelForTokenClassification.from_pretrained(model_name, output_loading_info=True)
+            model, loading_info = AutoModelForTokenClassification.from_pretrained(
+                model_name, output_loading_info=True)
             self.assertIsNotNone(model)
             self.assertIsInstance(model, BertForTokenClassification)
 

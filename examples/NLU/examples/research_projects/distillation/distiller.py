@@ -62,12 +62,16 @@ class Distiller:
             sampler = DistributedSampler(dataset)
 
         if params.group_by_size:
-            groups = create_lengths_groups(lengths=dataset.lengths, k=params.max_model_input_size)
-            sampler = GroupedBatchSampler(sampler=sampler, group_ids=groups, batch_size=params.batch_size)
+            groups = create_lengths_groups(
+                lengths=dataset.lengths, k=params.max_model_input_size)
+            sampler = GroupedBatchSampler(
+                sampler=sampler, group_ids=groups, batch_size=params.batch_size)
         else:
-            sampler = BatchSampler(sampler=sampler, batch_size=params.batch_size, drop_last=False)
+            sampler = BatchSampler(
+                sampler=sampler, batch_size=params.batch_size, drop_last=False)
 
-        self.dataloader = DataLoader(dataset=dataset, batch_sampler=sampler, collate_fn=dataset.batch_sequences)
+        self.dataloader = DataLoader(
+            dataset=dataset, batch_sampler=sampler, collate_fn=dataset.batch_sequences)
 
         self.temperature = params.temperature
         assert self.temperature > 0.0
@@ -84,9 +88,12 @@ class Distiller:
             self.mlm_mask_prop = params.mlm_mask_prop
             assert 0.0 <= self.mlm_mask_prop <= 1.0
             assert params.word_mask + params.word_keep + params.word_rand == 1.0
-            self.pred_probs = torch.FloatTensor([params.word_mask, params.word_keep, params.word_rand])
-            self.pred_probs = self.pred_probs.to(f"cuda:{params.local_rank}") if params.n_gpu > 0 else self.pred_probs
-            self.token_probs = token_probs.to(f"cuda:{params.local_rank}") if params.n_gpu > 0 else token_probs
+            self.pred_probs = torch.FloatTensor(
+                [params.word_mask, params.word_keep, params.word_rand])
+            self.pred_probs = self.pred_probs.to(
+                f"cuda:{params.local_rank}") if params.n_gpu > 0 else self.pred_probs
+            self.token_probs = token_probs.to(
+                f"cuda:{params.local_rank}") if params.n_gpu > 0 else token_probs
             if self.fp16:
                 self.pred_probs = self.pred_probs.half()
                 self.token_probs = self.token_probs.half()
@@ -119,7 +126,8 @@ class Distiller:
         assert params.gradient_accumulation_steps >= 1
         self.num_steps_epoch = len(self.dataloader)
         num_train_optimization_steps = (
-            int(self.num_steps_epoch / params.gradient_accumulation_steps * params.n_epoch) + 1
+            int(self.num_steps_epoch /
+                params.gradient_accumulation_steps * params.n_epoch) + 1
         )
 
         no_decay = ["bias", "LayerNorm.weight"]
@@ -141,12 +149,15 @@ class Distiller:
             "------ Number of trainable parameters (student): %i"
             % sum([p.numel() for p in self.student.parameters() if p.requires_grad])
         )
-        logger.info("------ Number of parameters (student): %i" % sum([p.numel() for p in self.student.parameters()]))
+        logger.info("------ Number of parameters (student): %i" %
+                    sum([p.numel() for p in self.student.parameters()]))
         self.optimizer = AdamW(
-            optimizer_grouped_parameters, lr=params.learning_rate, eps=params.adam_epsilon, betas=(0.9, 0.98)
+            optimizer_grouped_parameters, lr=params.learning_rate, eps=params.adam_epsilon, betas=(
+                0.9, 0.98)
         )
 
-        warmup_steps = math.ceil(num_train_optimization_steps * params.warmup_prop)
+        warmup_steps = math.ceil(
+            num_train_optimization_steps * params.warmup_prop)
         self.scheduler = get_linear_schedule_with_warmup(
             self.optimizer, num_warmup_steps=warmup_steps, num_training_steps=num_train_optimization_steps
         )
@@ -155,8 +166,10 @@ class Distiller:
             try:
                 from apex import amp
             except ImportError:
-                raise ImportError("Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
-            logger.info(f"Using fp16 training: {self.params.fp16_opt_level} level")
+                raise ImportError(
+                    "Please install apex from https://www.github.com/nvidia/apex to use fp16 training.")
+            logger.info(
+                f"Using fp16 training: {self.params.fp16_opt_level} level")
             self.student, self.optimizer = amp.initialize(
                 self.student, self.optimizer, opt_level=self.params.fp16_opt_level
             )
@@ -166,12 +179,14 @@ class Distiller:
             if self.fp16:
                 from apex.parallel import DistributedDataParallel
 
-                logger.info("Using apex.parallel.DistributedDataParallel for distributed training.")
+                logger.info(
+                    "Using apex.parallel.DistributedDataParallel for distributed training.")
                 self.student = DistributedDataParallel(self.student)
             else:
                 from torch.nn.parallel import DistributedDataParallel
 
-                logger.info("Using nn.parallel.DistributedDataParallel for distributed training.")
+                logger.info(
+                    "Using nn.parallel.DistributedDataParallel for distributed training.")
                 self.student = DistributedDataParallel(
                     self.student,
                     device_ids=[params.local_rank],
@@ -182,9 +197,12 @@ class Distiller:
         self.is_master = params.is_master
         if self.is_master:
             logger.info("--- Initializing Tensorboard")
-            self.tensorboard = SummaryWriter(log_dir=os.path.join(self.dump_path, "log", "train"))
-            self.tensorboard.add_text(tag="config/training", text_string=str(self.params), global_step=0)
-            self.tensorboard.add_text(tag="config/student", text_string=str(self.student_config), global_step=0)
+            self.tensorboard = SummaryWriter(
+                log_dir=os.path.join(self.dump_path, "log", "train"))
+            self.tensorboard.add_text(
+                tag="config/training", text_string=str(self.params), global_step=0)
+            self.tensorboard.add_text(
+                tag="config/student", text_string=str(self.student_config), global_step=0)
 
     def prepare_batch_mlm(self, batch):
         """
@@ -206,14 +224,16 @@ class Distiller:
         token_ids, lengths = self.round_batch(x=token_ids, lengths=lengths)
         assert token_ids.size(0) == lengths.size(0)
 
-        attn_mask = torch.arange(token_ids.size(1), dtype=torch.long, device=lengths.device) < lengths[:, None]
+        attn_mask = torch.arange(token_ids.size(
+            1), dtype=torch.long, device=lengths.device) < lengths[:, None]
 
         bs, max_seq_len = token_ids.size()
         mlm_labels = token_ids.new(token_ids.size()).copy_(token_ids)
 
         x_prob = self.token_probs[token_ids.flatten()]
         n_tgt = math.ceil(self.mlm_mask_prop * lengths.sum().item())
-        tgt_ids = torch.multinomial(x_prob / x_prob.sum(), n_tgt, replacement=False)
+        tgt_ids = torch.multinomial(
+            x_prob / x_prob.sum(), n_tgt, replacement=False)
         pred_mask = torch.zeros(
             bs * max_seq_len, dtype=torch.bool, device=token_ids.device
         )  # previously `dtype=torch.uint8`, cf pytorch 1.2.0 compatibility
@@ -235,8 +255,10 @@ class Distiller:
 
         _token_ids_real = token_ids[pred_mask]
         _token_ids_rand = _token_ids_real.clone().random_(self.vocab_size)
-        _token_ids_mask = _token_ids_real.clone().fill_(self.params.special_tok_ids["mask_token"])
-        probs = torch.multinomial(self.pred_probs, len(_token_ids_real), replacement=True)
+        _token_ids_mask = _token_ids_real.clone().fill_(
+            self.params.special_tok_ids["mask_token"])
+        probs = torch.multinomial(self.pred_probs, len(
+            _token_ids_real), replacement=True)
         _token_ids = (
             _token_ids_mask * (probs == 0).long()
             + _token_ids_real * (probs == 1).long()
@@ -244,7 +266,8 @@ class Distiller:
         )
         token_ids = token_ids.masked_scatter(pred_mask, _token_ids)
 
-        mlm_labels[~pred_mask] = -100  # previously `mlm_labels[1-pred_mask] = -1`, cf pytorch 1.2.0 compatibility
+        # previously `mlm_labels[1-pred_mask] = -1`, cf pytorch 1.2.0 compatibility
+        mlm_labels[~pred_mask] = -100
 
         # sanity checks
         assert 0 <= token_ids.min() <= token_ids.max() < self.vocab_size
@@ -271,9 +294,11 @@ class Distiller:
         token_ids, lengths = self.round_batch(x=token_ids, lengths=lengths)
         assert token_ids.size(0) == lengths.size(0)
 
-        attn_mask = torch.arange(token_ids.size(1), dtype=torch.long, device=lengths.device) < lengths[:, None]
+        attn_mask = torch.arange(token_ids.size(
+            1), dtype=torch.long, device=lengths.device) < lengths[:, None]
         clm_labels = token_ids.new(token_ids.size()).copy_(token_ids)
-        clm_labels[~attn_mask] = -100  # previously `clm_labels[1-attn_mask] = -1`, cf pytorch 1.2.0 compatibility
+        # previously `clm_labels[1-attn_mask] = -1`, cf pytorch 1.2.0 compatibility
+        clm_labels[~attn_mask] = -100
 
         # sanity checks
         assert 0 <= token_ids.min() <= token_ids.max() < self.vocab_size
@@ -319,7 +344,8 @@ class Distiller:
                 pad_id = self.params.special_tok_ids["pad_token"]
             else:
                 pad_id = self.params.special_tok_ids["unk_token"]
-            padding_tensor = torch.zeros(bs2, pad, dtype=torch.long, device=x.device).fill_(pad_id)
+            padding_tensor = torch.zeros(
+                bs2, pad, dtype=torch.long, device=x.device).fill_(pad_id)
             x = torch.cat([x, padding_tensor], 1)
             assert x.size() == (bs2, ml2)
 
@@ -339,29 +365,37 @@ class Distiller:
 
         for _ in range(self.params.n_epoch):
             if self.is_master:
-                logger.info(f"--- Starting epoch {self.epoch}/{self.params.n_epoch-1}")
+                logger.info(
+                    f"--- Starting epoch {self.epoch}/{self.params.n_epoch-1}")
             if self.multi_gpu:
                 torch.distributed.barrier()
 
-            iter_bar = tqdm(self.dataloader, desc="-Iter", disable=self.params.local_rank not in [-1, 0])
+            iter_bar = tqdm(self.dataloader, desc="-Iter",
+                            disable=self.params.local_rank not in [-1, 0])
             for batch in iter_bar:
                 if self.params.n_gpu > 0:
-                    batch = tuple(t.to(f"cuda:{self.params.local_rank}") for t in batch)
+                    batch = tuple(
+                        t.to(f"cuda:{self.params.local_rank}") for t in batch)
 
                 if self.mlm:
-                    token_ids, attn_mask, lm_labels = self.prepare_batch_mlm(batch=batch)
+                    token_ids, attn_mask, lm_labels = self.prepare_batch_mlm(
+                        batch=batch)
                 else:
-                    token_ids, attn_mask, lm_labels = self.prepare_batch_clm(batch=batch)
-                self.step(input_ids=token_ids, attention_mask=attn_mask, lm_labels=lm_labels)
+                    token_ids, attn_mask, lm_labels = self.prepare_batch_clm(
+                        batch=batch)
+                self.step(input_ids=token_ids,
+                          attention_mask=attn_mask, lm_labels=lm_labels)
 
                 iter_bar.update()
                 iter_bar.set_postfix(
-                    {"Last_loss": f"{self.last_loss:.2f}", "Avg_cum_loss": f"{self.total_loss_epoch/self.n_iter:.2f}"}
+                    {"Last_loss": f"{self.last_loss:.2f}",
+                        "Avg_cum_loss": f"{self.total_loss_epoch/self.n_iter:.2f}"}
                 )
             iter_bar.close()
 
             if self.is_master:
-                logger.info(f"--- Ending epoch {self.epoch}/{self.params.n_epoch-1}")
+                logger.info(
+                    f"--- Ending epoch {self.epoch}/{self.params.n_epoch-1}")
             self.end_epoch()
 
         if self.is_master:
@@ -401,13 +435,19 @@ class Distiller:
         # https://github.com/peterliht/knowledge-distillation-pytorch/blob/master/model/net.py#L100
         # https://github.com/peterliht/knowledge-distillation-pytorch/issues/2
         if self.params.restrict_ce_to_mask:
-            mask = (lm_labels > -1).unsqueeze(-1).expand_as(s_logits)  # (bs, seq_length, voc_size)
+            # (bs, seq_length, voc_size)
+            mask = (lm_labels > -1).unsqueeze(-1).expand_as(s_logits)
         else:
-            mask = attention_mask.unsqueeze(-1).expand_as(s_logits)  # (bs, seq_length, voc_size)
-        s_logits_slct = torch.masked_select(s_logits, mask)  # (bs * seq_length * voc_size) modulo the 1s in mask
-        s_logits_slct = s_logits_slct.view(-1, s_logits.size(-1))  # (bs * seq_length, voc_size) modulo the 1s in mask
-        t_logits_slct = torch.masked_select(t_logits, mask)  # (bs * seq_length * voc_size) modulo the 1s in mask
-        t_logits_slct = t_logits_slct.view(-1, s_logits.size(-1))  # (bs * seq_length, voc_size) modulo the 1s in mask
+            # (bs, seq_length, voc_size)
+            mask = attention_mask.unsqueeze(-1).expand_as(s_logits)
+        # (bs * seq_length * voc_size) modulo the 1s in mask
+        s_logits_slct = torch.masked_select(s_logits, mask)
+        # (bs * seq_length, voc_size) modulo the 1s in mask
+        s_logits_slct = s_logits_slct.view(-1, s_logits.size(-1))
+        # (bs * seq_length * voc_size) modulo the 1s in mask
+        t_logits_slct = torch.masked_select(t_logits, mask)
+        # (bs * seq_length, voc_size) modulo the 1s in mask
+        t_logits_slct = t_logits_slct.view(-1, s_logits.size(-1))
         assert t_logits_slct.size() == s_logits_slct.size()
 
         loss_ce = (
@@ -420,12 +460,14 @@ class Distiller:
         loss = self.alpha_ce * loss_ce
 
         if self.alpha_mlm > 0.0:
-            loss_mlm = self.lm_loss_fct(s_logits.view(-1, s_logits.size(-1)), lm_labels.view(-1))
+            loss_mlm = self.lm_loss_fct(
+                s_logits.view(-1, s_logits.size(-1)), lm_labels.view(-1))
             loss += self.alpha_mlm * loss_mlm
         if self.alpha_clm > 0.0:
             shift_logits = s_logits[..., :-1, :].contiguous()
             shift_labels = lm_labels[..., 1:].contiguous()
-            loss_clm = self.lm_loss_fct(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+            loss_clm = self.lm_loss_fct(
+                shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
             loss += self.alpha_clm * loss_clm
 
         if self.alpha_mse > 0.0:
@@ -436,17 +478,24 @@ class Distiller:
         if self.alpha_cos > 0.0:
             s_hidden_states = s_hidden_states[-1]  # (bs, seq_length, dim)
             t_hidden_states = t_hidden_states[-1]  # (bs, seq_length, dim)
-            mask = attention_mask.unsqueeze(-1).expand_as(s_hidden_states)  # (bs, seq_length, dim)
+            # (bs, seq_length, dim)
+            mask = attention_mask.unsqueeze(-1).expand_as(s_hidden_states)
             assert s_hidden_states.size() == t_hidden_states.size()
             dim = s_hidden_states.size(-1)
 
-            s_hidden_states_slct = torch.masked_select(s_hidden_states, mask)  # (bs * seq_length * dim)
-            s_hidden_states_slct = s_hidden_states_slct.view(-1, dim)  # (bs * seq_length, dim)
-            t_hidden_states_slct = torch.masked_select(t_hidden_states, mask)  # (bs * seq_length * dim)
-            t_hidden_states_slct = t_hidden_states_slct.view(-1, dim)  # (bs * seq_length, dim)
+            s_hidden_states_slct = torch.masked_select(
+                s_hidden_states, mask)  # (bs * seq_length * dim)
+            # (bs * seq_length, dim)
+            s_hidden_states_slct = s_hidden_states_slct.view(-1, dim)
+            t_hidden_states_slct = torch.masked_select(
+                t_hidden_states, mask)  # (bs * seq_length * dim)
+            # (bs * seq_length, dim)
+            t_hidden_states_slct = t_hidden_states_slct.view(-1, dim)
 
-            target = s_hidden_states_slct.new(s_hidden_states_slct.size(0)).fill_(1)  # (bs * seq_length,)
-            loss_cos = self.cosine_loss_fct(s_hidden_states_slct, t_hidden_states_slct, target)
+            target = s_hidden_states_slct.new(
+                s_hidden_states_slct.size(0)).fill_(1)  # (bs * seq_length,)
+            loss_cos = self.cosine_loss_fct(
+                s_hidden_states_slct, t_hidden_states_slct, target)
             loss += self.alpha_cos * loss_cos
 
         self.total_loss_epoch += loss.item()
@@ -492,9 +541,11 @@ class Distiller:
         self.iter()
         if self.n_iter % self.params.gradient_accumulation_steps == 0:
             if self.fp16:
-                torch.nn.utils.clip_grad_norm_(amp.master_params(self.optimizer), self.params.max_grad_norm)
+                torch.nn.utils.clip_grad_norm_(amp.master_params(
+                    self.optimizer), self.params.max_grad_norm)
             else:
-                torch.nn.utils.clip_grad_norm_(self.student.parameters(), self.params.max_grad_norm)
+                torch.nn.utils.clip_grad_norm_(
+                    self.student.parameters(), self.params.max_grad_norm)
             self.optimizer.step()
             self.optimizer.zero_grad()
             self.scheduler.step()
@@ -540,7 +591,8 @@ class Distiller:
             scalar_value=self.total_loss_epoch / self.n_iter,
             global_step=self.n_total_iter,
         )
-        self.tensorboard.add_scalar(tag="losses/loss", scalar_value=self.last_loss, global_step=self.n_total_iter)
+        self.tensorboard.add_scalar(
+            tag="losses/loss", scalar_value=self.last_loss, global_step=self.n_total_iter)
         self.tensorboard.add_scalar(
             tag="losses/loss_ce", scalar_value=self.last_loss_ce, global_step=self.n_total_iter
         )
@@ -578,10 +630,12 @@ class Distiller:
         Finally arrived at the end of epoch (full pass on dataset).
         Do some tensorboard logging and checkpoint saving.
         """
-        logger.info(f"{self.n_sequences_epoch} sequences have been trained during this epoch.")
+        logger.info(
+            f"{self.n_sequences_epoch} sequences have been trained during this epoch.")
 
         if self.is_master:
-            self.save_checkpoint(checkpoint_name=f"model_epoch_{self.epoch}.pth")
+            self.save_checkpoint(
+                checkpoint_name=f"model_epoch_{self.epoch}.pth")
             self.tensorboard.add_scalar(
                 tag="epoch/loss", scalar_value=self.total_loss_epoch / self.n_iter, global_step=self.epoch
             )
@@ -597,7 +651,8 @@ class Distiller:
         """
         if not self.is_master:
             return
-        mdl_to_save = self.student.module if hasattr(self.student, "module") else self.student
+        mdl_to_save = self.student.module if hasattr(
+            self.student, "module") else self.student
         mdl_to_save.config.save_pretrained(self.dump_path)
         state_dict = mdl_to_save.state_dict()
         torch.save(state_dict, os.path.join(self.dump_path, checkpoint_name))

@@ -60,13 +60,15 @@ class ModelInfo:
         modelId: Optional[str] = None,  # id of model
         tags: List[str] = [],
         pipeline_tag: Optional[str] = None,
-        siblings: Optional[List[Dict]] = None,  # list of files that constitute the model
+        # list of files that constitute the model
+        siblings: Optional[List[Dict]] = None,
         **kwargs
     ):
         self.modelId = modelId
         self.tags = tags
         self.pipeline_tag = pipeline_tag
-        self.siblings = [ModelSibling(**x) for x in siblings] if siblings is not None else None
+        self.siblings = [ModelSibling(
+            **x) for x in siblings] if siblings is not None else None
         for k, v in kwargs.items():
             setattr(self, k, v)
 
@@ -84,7 +86,8 @@ class HfApi:
         Throws: requests.exceptions.HTTPError if credentials are invalid
         """
         path = "{}/api/login".format(self.endpoint)
-        r = requests.post(path, json={"username": username, "password": password})
+        r = requests.post(
+            path, json={"username": username, "password": password})
         r.raise_for_status()
         d = r.json()
         return d["token"]
@@ -94,7 +97,8 @@ class HfApi:
         Call HF API to know "whoami"
         """
         path = "{}/api/whoami".format(self.endpoint)
-        r = requests.get(path, headers={"authorization": "Bearer {}".format(token)})
+        r = requests.get(
+            path, headers={"authorization": "Bearer {}".format(token)})
         r.raise_for_status()
         d = r.json()
         return d["user"], d["orgs"]
@@ -104,7 +108,8 @@ class HfApi:
         Call HF API to log out.
         """
         path = "{}/api/logout".format(self.endpoint)
-        r = requests.post(path, headers={"authorization": "Bearer {}".format(token)})
+        r = requests.post(
+            path, headers={"authorization": "Bearer {}".format(token)})
         r.raise_for_status()
 
     def model_list(self) -> List[ModelInfo]:
@@ -124,8 +129,10 @@ class HfApi:
         Call HF API to list all stored files for user (or one of their organizations).
         """
         path = "{}/api/repos/ls".format(self.endpoint)
-        params = {"organization": organization} if organization is not None else None
-        r = requests.get(path, params=params, headers={"authorization": "Bearer {}".format(token)})
+        params = {
+            "organization": organization} if organization is not None else None
+        r = requests.get(path, params=params, headers={
+                         "authorization": "Bearer {}".format(token)})
         r.raise_for_status()
         d = r.json()
         return [RepoObj(**x) for x in d]

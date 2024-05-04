@@ -293,7 +293,8 @@ class TrainingArguments:
     """
 
     output_dir: str = field(
-        metadata={"help": "The output directory where the model predictions and checkpoints will be written."},
+        metadata={
+            "help": "The output directory where the model predictions and checkpoints will be written."},
     )
     overwrite_output_dir: bool = field(
         default=False,
@@ -305,16 +306,20 @@ class TrainingArguments:
         },
     )
 
-    do_train: bool = field(default=False, metadata={"help": "Whether to run training."})
-    do_eval: bool = field(default=None, metadata={"help": "Whether to run eval on the dev set."})
-    do_predict: bool = field(default=False, metadata={"help": "Whether to run predictions on the test set."})
+    do_train: bool = field(default=False, metadata={
+                           "help": "Whether to run training."})
+    do_eval: bool = field(default=None, metadata={
+                          "help": "Whether to run eval on the dev set."})
+    do_predict: bool = field(default=False, metadata={
+                             "help": "Whether to run predictions on the test set."})
     evaluation_strategy: IntervalStrategy = field(
         default="no",
         metadata={"help": "The evaluation strategy to use."},
     )
     prediction_loss_only: bool = field(
         default=False,
-        metadata={"help": "When performing evaluation and predictions, only returns the loss."},
+        metadata={
+            "help": "When performing evaluation and predictions, only returns the loss."},
     )
 
     per_device_train_batch_size: int = field(
@@ -341,24 +346,34 @@ class TrainingArguments:
 
     gradient_accumulation_steps: int = field(
         default=1,
-        metadata={"help": "Number of updates steps to accumulate before performing a backward/update pass."},
+        metadata={
+            "help": "Number of updates steps to accumulate before performing a backward/update pass."},
     )
     eval_accumulation_steps: Optional[int] = field(
         default=None,
-        metadata={"help": "Number of predictions steps to accumulate before moving the tensors to the CPU."},
+        metadata={
+            "help": "Number of predictions steps to accumulate before moving the tensors to the CPU."},
     )
 
-    learning_rate: float = field(default=5e-5, metadata={"help": "The initial learning rate for AdamW."})
-    weight_decay: float = field(default=0.0, metadata={"help": "Weight decay for AdamW if we apply some."})
-    adam_beta1: float = field(default=0.9, metadata={"help": "Beta1 for AdamW optimizer"})
-    adam_beta2: float = field(default=0.999, metadata={"help": "Beta2 for AdamW optimizer"})
-    adam_epsilon: float = field(default=1e-8, metadata={"help": "Epsilon for AdamW optimizer."})
-    max_grad_norm: float = field(default=1.0, metadata={"help": "Max gradient norm."})
+    learning_rate: float = field(
+        default=5e-5, metadata={"help": "The initial learning rate for AdamW."})
+    weight_decay: float = field(default=0.0, metadata={
+                                "help": "Weight decay for AdamW if we apply some."})
+    adam_beta1: float = field(default=0.9, metadata={
+                              "help": "Beta1 for AdamW optimizer"})
+    adam_beta2: float = field(default=0.999, metadata={
+                              "help": "Beta2 for AdamW optimizer"})
+    adam_epsilon: float = field(
+        default=1e-8, metadata={"help": "Epsilon for AdamW optimizer."})
+    max_grad_norm: float = field(default=1.0, metadata={
+                                 "help": "Max gradient norm."})
 
-    num_train_epochs: float = field(default=3.0, metadata={"help": "Total number of training epochs to perform."})
+    num_train_epochs: float = field(
+        default=3.0, metadata={"help": "Total number of training epochs to perform."})
     max_steps: int = field(
         default=-1,
-        metadata={"help": "If > 0: set total number of training steps to perform. Override num_train_epochs."},
+        metadata={
+            "help": "If > 0: set total number of training steps to perform. Override num_train_epochs."},
     )
     lr_scheduler_type: SchedulerType = field(
         default="linear",
@@ -367,20 +382,25 @@ class TrainingArguments:
     warmup_ratio: float = field(
         default=0.0, metadata={"help": "Linear warmup over warmup_ratio fraction of total steps."}
     )
-    warmup_steps: int = field(default=0, metadata={"help": "Linear warmup over warmup_steps."})
+    warmup_steps: int = field(
+        default=0, metadata={"help": "Linear warmup over warmup_steps."})
 
-    logging_dir: Optional[str] = field(default_factory=default_logdir, metadata={"help": "Tensorboard log dir."})
+    logging_dir: Optional[str] = field(default_factory=default_logdir, metadata={
+                                       "help": "Tensorboard log dir."})
     logging_strategy: IntervalStrategy = field(
         default="steps",
         metadata={"help": "The logging strategy to use."},
     )
-    logging_first_step: bool = field(default=False, metadata={"help": "Log the first global_step"})
-    logging_steps: int = field(default=500, metadata={"help": "Log every X updates steps."})
+    logging_first_step: bool = field(default=False, metadata={
+                                     "help": "Log the first global_step"})
+    logging_steps: int = field(default=500, metadata={
+                               "help": "Log every X updates steps."})
     save_strategy: IntervalStrategy = field(
         default="steps",
         metadata={"help": "The checkpoint save strategy to use."},
     )
-    save_steps: int = field(default=500, metadata={"help": "Save checkpoint every X updates steps."})
+    save_steps: int = field(default=500, metadata={
+                            "help": "Save checkpoint every X updates steps."})
     save_total_limit: Optional[int] = field(
         default=None,
         metadata={
@@ -390,12 +410,15 @@ class TrainingArguments:
             )
         },
     )
-    no_cuda: bool = field(default=False, metadata={"help": "Do not use CUDA even when it is available"})
-    seed: int = field(default=42, metadata={"help": "Random seed that will be set at the beginning of training."})
+    no_cuda: bool = field(default=False, metadata={
+                          "help": "Do not use CUDA even when it is available"})
+    seed: int = field(default=42, metadata={
+                      "help": "Random seed that will be set at the beginning of training."})
 
     fp16: bool = field(
         default=False,
-        metadata={"help": "Whether to use 16-bit (mixed) precision instead of 32-bit"},
+        metadata={
+            "help": "Whether to use 16-bit (mixed) precision instead of 32-bit"},
     )
     fp16_opt_level: str = field(
         default="O1",
@@ -408,27 +431,33 @@ class TrainingArguments:
     )
     fp16_backend: str = field(
         default="auto",
-        metadata={"help": "The backend to be used for mixed precision.", "choices": ["auto", "amp", "apex"]},
+        metadata={"help": "The backend to be used for mixed precision.",
+                  "choices": ["auto", "amp", "apex"]},
     )
     fp16_full_eval: bool = field(
         default=False,
-        metadata={"help": "Whether to use full 16-bit precision evaluation instead of 32-bit"},
+        metadata={
+            "help": "Whether to use full 16-bit precision evaluation instead of 32-bit"},
     )
-    local_rank: int = field(default=-1, metadata={"help": "For distributed training: local_rank"})
+    local_rank: int = field(
+        default=-1, metadata={"help": "For distributed training: local_rank"})
 
     tpu_num_cores: Optional[int] = field(
         default=None, metadata={"help": "TPU: Number of TPU cores (automatically passed by launcher script)"}
     )
     tpu_metrics_debug: bool = field(
         default=False,
-        metadata={"help": "Deprecated, the use of `--debug` is preferred. TPU: Whether to print debug metrics"},
+        metadata={
+            "help": "Deprecated, the use of `--debug` is preferred. TPU: Whether to print debug metrics"},
     )
-    debug: bool = field(default=False, metadata={"help": "Whether to print debug metrics on TPU"})
+    debug: bool = field(default=False, metadata={
+                        "help": "Whether to print debug metrics on TPU"})
 
     dataloader_drop_last: bool = field(
         default=False, metadata={"help": "Drop the last incomplete batch if it is not divisible by the batch size."}
     )
-    eval_steps: int = field(default=None, metadata={"help": "Run an evaluation every X steps."})
+    eval_steps: int = field(default=None, metadata={
+                            "help": "Run an evaluation every X steps."})
     dataloader_num_workers: int = field(
         default=0,
         metadata={
@@ -438,7 +467,8 @@ class TrainingArguments:
 
     past_index: int = field(
         default=-1,
-        metadata={"help": "If >=0, uses the corresponding part of the output as the past state for next step."},
+        metadata={
+            "help": "If >=0, uses the corresponding part of the output as the past state for next step."},
     )
 
     run_name: Optional[str] = field(
@@ -457,7 +487,8 @@ class TrainingArguments:
 
     load_best_model_at_end: Optional[bool] = field(
         default=False,
-        metadata={"help": "Whether or not to load the best model found during training at the end of training."},
+        metadata={
+            "help": "Whether or not to load the best model found during training at the end of training."},
     )
     metric_for_best_model: Optional[str] = field(
         default=None, metadata={"help": "The metric to use to compare two different models."}
@@ -482,15 +513,18 @@ class TrainingArguments:
     )
     deepspeed: Optional[str] = field(
         default=None,
-        metadata={"help": "Enable deepspeed and pass the path to deepspeed json config file (e.g. ds_config.json)"},
+        metadata={
+            "help": "Enable deepspeed and pass the path to deepspeed json config file (e.g. ds_config.json)"},
     )
     label_smoothing_factor: float = field(
         default=0.0, metadata={"help": "The label smoothing epsilon to apply (zero means no label smoothing)."}
     )
-    adafactor: bool = field(default=False, metadata={"help": "Whether or not to replace AdamW by Adafactor."})
+    adafactor: bool = field(default=False, metadata={
+                            "help": "Whether or not to replace AdamW by Adafactor."})
     group_by_length: bool = field(
         default=False,
-        metadata={"help": "Whether or not to group samples of roughly the same length together when batching."},
+        metadata={
+            "help": "Whether or not to group samples of roughly the same length together when batching."},
     )
     report_to: Optional[List[str]] = field(
         default=None, metadata={"help": "The list of integrations to report the results and logs to."}
@@ -509,8 +543,10 @@ class TrainingArguments:
         default=False, metadata={"help": "Whether or not to skip adding of memory profiler reports to metrics."}
     )
     _n_gpu: int = field(init=False, repr=False, default=-1)
-    cls_dropout: Optional[float] = field(default=None, metadata={"help": "cls drop out."})
-    use_deterministic_algorithms: Optional[bool] = field(default=False, metadata={"help": "Whether or not to use deterministic algorithms."})
+    cls_dropout: Optional[float] = field(
+        default=None, metadata={"help": "cls drop out."})
+    use_deterministic_algorithms: Optional[bool] = field(default=False, metadata={
+                                                         "help": "Whether or not to use deterministic algorithms."})
 
     def __post_init__(self):
         # expand paths, if not os.makedirs("~/bar") will make directory
@@ -545,7 +581,8 @@ class TrainingArguments:
         if self.load_best_model_at_end and self.metric_for_best_model is None:
             self.metric_for_best_model = "loss"
         if self.greater_is_better is None and self.metric_for_best_model is not None:
-            self.greater_is_better = self.metric_for_best_model not in ["loss", "eval_loss"]
+            self.greater_is_better = self.metric_for_best_model not in [
+                "loss", "eval_loss"]
         if self.run_name is None:
             self.run_name = self.output_dir
 
@@ -580,16 +617,19 @@ class TrainingArguments:
         if isinstance(self.sharded_ddp, bool):
             self.sharded_ddp = "simple" if self.sharded_ddp else ""
         if isinstance(self.sharded_ddp, str):
-            self.sharded_ddp = [ShardedDDPOption(s) for s in self.sharded_ddp.split()]
+            self.sharded_ddp = [ShardedDDPOption(
+                s) for s in self.sharded_ddp.split()]
         if self.sharded_ddp == [ShardedDDPOption.OFFLOAD]:
             raise ValueError(
                 "`--sharded_ddp offload` can't work on its own. It needs to be added to `--sharded_ddp zero_dp_2` or "
                 '`--sharded_ddp zero_dp_3`. For example, `--sharded_ddp "zero_dp_2 offload"`.'
             )
         elif len(self.sharded_ddp) > 1 and ShardedDDPOption.SIMPLE in self.sharded_ddp:
-            raise ValueError("`--sharded_ddp simple` is not compatible with any other option.")
+            raise ValueError(
+                "`--sharded_ddp simple` is not compatible with any other option.")
         elif ShardedDDPOption.ZERO_DP_2 in self.sharded_ddp and ShardedDDPOption.ZERO_DP_3 in self.sharded_ddp:
-            raise ValueError("`--sharded_ddp zero_dp_2` is not compatible with `--sharded_ddp zero_dp_3`.")
+            raise ValueError(
+                "`--sharded_ddp zero_dp_2` is not compatible with `--sharded_ddp zero_dp_3`.")
 
     def __repr__(self):
         # We override the default repr to remove deprecated arguments from the repr. This method should be removed once
@@ -651,7 +691,8 @@ class TrainingArguments:
             from .integrations import is_deepspeed_available
 
             if not is_deepspeed_available():
-                raise ImportError("--deepspeed requires deepspeed: `pip install deepspeed`.")
+                raise ImportError(
+                    "--deepspeed requires deepspeed: `pip install deepspeed`.")
             import deepspeed
 
             deepspeed.init_distributed()
@@ -670,14 +711,16 @@ class TrainingArguments:
             # trigger an error that a device index is missing. Index 0 takes into account the
             # GPUs available in the environment, so `CUDA_VISIBLE_DEVICES=1,2` with `cuda:0`
             # will use the first GPU in that env, i.e. GPU#1
-            device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+            device = torch.device(
+                "cuda:0" if torch.cuda.is_available() else "cpu")
             # Sometimes the line in the postinit has not been run before we end up here, so just checking we're not at
             # the default value.
             self._n_gpu = torch.cuda.device_count()
         else:
             # Here, we'll use torch.distributed.
             # Initializes the distributed backend which will take care of synchronizing nodes/GPUs
-            torch.distributed.init_process_group(backend="gloo" if sys.platform == "win32" else "nccl")
+            torch.distributed.init_process_group(
+                backend="gloo" if sys.platform == "win32" else "nccl")
             device = torch.device("cuda", self.local_rank)
             self._n_gpu = 1
 
@@ -796,7 +839,8 @@ class TrainingArguments:
         Sanitized serialization to use with TensorBoard’s hparams
         """
         d = self.to_dict()
-        d = {**d, **{"train_batch_size": self.train_batch_size, "eval_batch_size": self.eval_batch_size}}
+        d = {**d, **{"train_batch_size": self.train_batch_size,
+                     "eval_batch_size": self.eval_batch_size}}
 
         valid_types = [bool, int, float, str]
         if is_torch_available():

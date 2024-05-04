@@ -60,7 +60,8 @@ class Wav2Vec2FeatureExtractionTester(unittest.TestCase):
         self.batch_size = batch_size
         self.min_seq_length = min_seq_length
         self.max_seq_length = max_seq_length
-        self.seq_length_diff = (self.max_seq_length - self.min_seq_length) // (self.batch_size - 1)
+        self.seq_length_diff = (self.max_seq_length -
+                                self.min_seq_length) // (self.batch_size - 1)
         self.feature_size = feature_size
         self.padding_value = padding_value
         self.sampling_rate = sampling_rate
@@ -103,24 +104,32 @@ class Wav2Vec2FeatureExtractionTest(SequenceFeatureExtractionTestMixin, unittest
 
     def test_call(self):
         # Tests that all call wrap to encode_plus and batch_encode_plus
-        feat_extract = self.feature_extraction_class(**self.feat_extract_tester.prepare_feat_extract_dict())
+        feat_extract = self.feature_extraction_class(
+            **self.feat_extract_tester.prepare_feat_extract_dict())
         # create three inputs of length 800, 1000, and 1200
         speech_inputs = [floats_list((1, x))[0] for x in range(800, 1400, 200)]
-        np_speech_inputs = [np.asarray(speech_input) for speech_input in speech_inputs]
+        np_speech_inputs = [np.asarray(speech_input)
+                            for speech_input in speech_inputs]
 
         # Test not batched input
-        encoded_sequences_1 = feat_extract(speech_inputs[0], return_tensors="np").input_values
-        encoded_sequences_2 = feat_extract(np_speech_inputs[0], return_tensors="np").input_values
-        self.assertTrue(np.allclose(encoded_sequences_1, encoded_sequences_2, atol=1e-3))
+        encoded_sequences_1 = feat_extract(
+            speech_inputs[0], return_tensors="np").input_values
+        encoded_sequences_2 = feat_extract(
+            np_speech_inputs[0], return_tensors="np").input_values
+        self.assertTrue(np.allclose(encoded_sequences_1,
+                                    encoded_sequences_2, atol=1e-3))
 
         # Test batched
-        encoded_sequences_1 = feat_extract(speech_inputs, return_tensors="np").input_values
-        encoded_sequences_2 = feat_extract(np_speech_inputs, return_tensors="np").input_values
+        encoded_sequences_1 = feat_extract(
+            speech_inputs, return_tensors="np").input_values
+        encoded_sequences_2 = feat_extract(
+            np_speech_inputs, return_tensors="np").input_values
         for enc_seq_1, enc_seq_2 in zip(encoded_sequences_1, encoded_sequences_2):
             self.assertTrue(np.allclose(enc_seq_1, enc_seq_2, atol=1e-3))
 
     def test_zero_mean_unit_variance_normalization(self):
-        feat_extract = self.feature_extraction_class(**self.feat_extract_tester.prepare_feat_extract_dict())
+        feat_extract = self.feature_extraction_class(
+            **self.feat_extract_tester.prepare_feat_extract_dict())
         speech_inputs = [floats_list((1, x))[0] for x in range(800, 1400, 200)]
         processed = feat_extract(speech_inputs, padding="longest")
         input_values = processed.input_values
@@ -145,4 +154,5 @@ class Wav2Vec2FeatureExtractionTest(SequenceFeatureExtractionTestMixin, unittest
 
             # only "layer" feature extraction norm should make use of
             # attention_mask
-            self.assertEqual(feat_extract.return_attention_mask, config.feat_extract_norm == "layer")
+            self.assertEqual(feat_extract.return_attention_mask,
+                             config.feat_extract_norm == "layer")

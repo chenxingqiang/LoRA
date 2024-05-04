@@ -24,7 +24,8 @@ class ZeroShotClassificationArgumentHandler(ArgumentHandler):
 
     def __call__(self, sequences, labels, hypothesis_template):
         if len(labels) == 0 or len(sequences) == 0:
-            raise ValueError("You must include at least one label and at least one sequence.")
+            raise ValueError(
+                "You must include at least one label and at least one sequence.")
         if hypothesis_template.format(labels[0]) == hypothesis_template:
             raise ValueError(
                 (
@@ -39,7 +40,8 @@ class ZeroShotClassificationArgumentHandler(ArgumentHandler):
 
         sequence_pairs = []
         for sequence in sequences:
-            sequence_pairs.extend([[sequence, hypothesis_template.format(label)] for label in labels])
+            sequence_pairs.extend(
+                [[sequence, hypothesis_template.format(label)] for label in labels])
 
         return sequence_pairs
 
@@ -91,7 +93,8 @@ class ZeroShotClassificationPipeline(Pipeline):
         """
         Parse arguments and tokenize only_first so that hypothesis (label) is not truncated
         """
-        sequence_pairs = self._args_parser(sequences, candidate_labels, hypothesis_template)
+        sequence_pairs = self._args_parser(
+            sequences, candidate_labels, hypothesis_template)
         inputs = self.tokenizer(
             sequence_pairs,
             add_special_tokens=add_special_tokens,
@@ -153,7 +156,8 @@ class ZeroShotClassificationPipeline(Pipeline):
         outputs = super().__call__(sequences, candidate_labels, hypothesis_template)
         num_sequences = len(sequences)
         candidate_labels = self._args_parser._parse_labels(candidate_labels)
-        reshaped_outputs = outputs.reshape((num_sequences, len(candidate_labels), -1))
+        reshaped_outputs = outputs.reshape(
+            (num_sequences, len(candidate_labels), -1))
 
         if len(candidate_labels) == 1:
             multi_label = True
@@ -161,13 +165,16 @@ class ZeroShotClassificationPipeline(Pipeline):
         if not multi_label:
             # softmax the "entailment" logits over all candidate labels
             entail_logits = reshaped_outputs[..., self.entailment_id]
-            scores = np.exp(entail_logits) / np.exp(entail_logits).sum(-1, keepdims=True)
+            scores = np.exp(entail_logits) / \
+                np.exp(entail_logits).sum(-1, keepdims=True)
         else:
             # softmax over the entailment vs. contradiction dim for each label independently
             entailment_id = self.entailment_id
             contradiction_id = -1 if entailment_id == 0 else 0
-            entail_contr_logits = reshaped_outputs[..., [contradiction_id, entailment_id]]
-            scores = np.exp(entail_contr_logits) / np.exp(entail_contr_logits).sum(-1, keepdims=True)
+            entail_contr_logits = reshaped_outputs[..., [
+                contradiction_id, entailment_id]]
+            scores = np.exp(entail_contr_logits) / \
+                np.exp(entail_contr_logits).sum(-1, keepdims=True)
             scores = scores[..., 1]
 
         result = []

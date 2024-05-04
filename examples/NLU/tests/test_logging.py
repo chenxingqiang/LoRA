@@ -45,7 +45,8 @@ class HfArgumentParserTest(unittest.TestCase):
     def test_integration(self):
         level_origin = logging.get_verbosity()
 
-        logger = logging.get_logger("transformers.models.bart.tokenization_bart")
+        logger = logging.get_logger(
+            "transformers.models.bart.tokenization_bart")
         msg = "Testing 1, 2, 3"
 
         # should be able to log warnings (if default settings weren't overridden by `pytest --log-level-all`)
@@ -100,6 +101,7 @@ class HfArgumentParserTest(unittest.TestCase):
         with CaptureLogger(logger) as cl:
             # this action activates the env var
             logging.get_logger("transformers.models.bart.tokenization_bart")
-        self.assertIn("Unknown option TRANSFORMERS_VERBOSITY=super-error", cl.out)
+        self.assertIn(
+            "Unknown option TRANSFORMERS_VERBOSITY=super-error", cl.out)
 
         # no need to restore as nothing was changed

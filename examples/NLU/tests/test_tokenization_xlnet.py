@@ -23,7 +23,8 @@ from transformers.testing_utils import require_sentencepiece, require_tokenizers
 from .test_tokenization_common import TokenizerTesterMixin
 
 
-SAMPLE_VOCAB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures/test_sentencepiece.model")
+SAMPLE_VOCAB = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), "fixtures/test_sentencepiece.model")
 
 
 @require_sentencepiece
@@ -48,7 +49,8 @@ class XLNetTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         tokens = tokenizer.tokenize("This is a test")
         self.assertListEqual(tokens, ["▁This", "▁is", "▁a", "▁t", "est"])
 
-        self.assertListEqual(tokenizer.convert_tokens_to_ids(tokens), [285, 46, 10, 170, 382])
+        self.assertListEqual(tokenizer.convert_tokens_to_ids(
+            tokens), [285, 46, 10, 170, 382])
 
         tokens = tokenizer.tokenize("I was born in 92000, and this is falsé.")
         self.assertListEqual(
@@ -78,7 +80,8 @@ class XLNetTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
             ],
         )
         ids = tokenizer.convert_tokens_to_ids(tokens)
-        self.assertListEqual(ids, [8, 21, 84, 55, 24, 19, 7, 0, 602, 347, 347, 347, 3, 12, 66, 46, 72, 80, 6, 0, 4])
+        self.assertListEqual(
+            ids, [8, 21, 84, 55, 24, 19, 7, 0, 602, 347, 347, 347, 3, 12, 66, 46, 72, 80, 6, 0, 4])
 
         back_tokens = tokenizer.convert_ids_to_tokens(ids)
         self.assertListEqual(
@@ -137,7 +140,8 @@ class XLNetTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
                 ".",
             ],
         )
-        self.assertListEqual(tokenizer.tokenize("H\u00E9llo"), ["▁he", "ll", "o"])
+        self.assertListEqual(tokenizer.tokenize(
+            "H\u00E9llo"), ["▁he", "ll", "o"])
 
     def test_tokenizer_no_lower(self):
         tokenizer = XLNetTokenizer(SAMPLE_VOCAB, do_lower_case=False)
@@ -173,7 +177,8 @@ class XLNetTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         tokenizer = XLNetTokenizer.from_pretrained("xlnet-base-cased")
 
         text = tokenizer.encode("sequence builders", add_special_tokens=False)
-        text_2 = tokenizer.encode("multi-sequence build", add_special_tokens=False)
+        text_2 = tokenizer.encode(
+            "multi-sequence build", add_special_tokens=False)
 
         encoded_sentence = tokenizer.build_inputs_with_special_tokens(text)
         encoded_pair = tokenizer.build_inputs_with_special_tokens(text, text_2)

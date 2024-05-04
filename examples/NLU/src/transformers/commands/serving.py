@@ -104,12 +104,18 @@ class ServeCommand(BaseTransformersCLICommand):
         serve_parser.add_argument(
             "--task", type=str, choices=SUPPORTED_TASKS.keys(), help="The task to run the pipeline on"
         )
-        serve_parser.add_argument("--host", type=str, default="localhost", help="Interface the server will listen on.")
-        serve_parser.add_argument("--port", type=int, default=8888, help="Port the serving will listen to.")
-        serve_parser.add_argument("--workers", type=int, default=1, help="Number of http workers")
-        serve_parser.add_argument("--model", type=str, help="Model's name or path to stored model.")
-        serve_parser.add_argument("--config", type=str, help="Model's config name or path to stored model.")
-        serve_parser.add_argument("--tokenizer", type=str, help="Tokenizer name to use.")
+        serve_parser.add_argument(
+            "--host", type=str, default="localhost", help="Interface the server will listen on.")
+        serve_parser.add_argument(
+            "--port", type=int, default=8888, help="Port the serving will listen to.")
+        serve_parser.add_argument(
+            "--workers", type=int, default=1, help="Number of http workers")
+        serve_parser.add_argument(
+            "--model", type=str, help="Model's name or path to stored model.")
+        serve_parser.add_argument(
+            "--config", type=str, help="Model's config name or path to stored model.")
+        serve_parser.add_argument(
+            "--tokenizer", type=str, help="Tokenizer name to use.")
         serve_parser.add_argument(
             "--device",
             type=int,
@@ -184,13 +190,15 @@ class ServeCommand(BaseTransformersCLICommand):
             tokens_txt = self._pipeline.tokenizer.tokenize(text_input)
 
             if return_ids:
-                tokens_ids = self._pipeline.tokenizer.convert_tokens_to_ids(tokens_txt)
+                tokens_ids = self._pipeline.tokenizer.convert_tokens_to_ids(
+                    tokens_txt)
                 return ServeTokenizeResult(tokens=tokens_txt, tokens_ids=tokens_ids)
             else:
                 return ServeTokenizeResult(tokens=tokens_txt)
 
         except Exception as e:
-            raise HTTPException(status_code=500, detail={"model": "", "error": str(e)})
+            raise HTTPException(status_code=500, detail={
+                                "model": "", "error": str(e)})
 
     def detokenize(
         self,
@@ -204,10 +212,12 @@ class ServeCommand(BaseTransformersCLICommand):
         Flag indicating to remove all leading/trailing spaces and intermediate ones.
         """
         try:
-            decoded_str = self._pipeline.tokenizer.decode(tokens_ids, skip_special_tokens, cleanup_tokenization_spaces)
+            decoded_str = self._pipeline.tokenizer.decode(
+                tokens_ids, skip_special_tokens, cleanup_tokenization_spaces)
             return ServeDeTokenizeResult(model="", text=decoded_str)
         except Exception as e:
-            raise HTTPException(status_code=500, detail={"model": "", "error": str(e)})
+            raise HTTPException(status_code=500, detail={
+                                "model": "", "error": str(e)})
 
     async def forward(self, inputs=Body(None, embed=True)):
         """

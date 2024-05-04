@@ -50,7 +50,8 @@ if is_torch_available():
     ]
 
 if is_tf_available():
-    _import_structure["modeling_tf_mbart"] = ["TFMBartForConditionalGeneration", "TFMBartModel"]
+    _import_structure["modeling_tf_mbart"] = [
+        "TFMBartForConditionalGeneration", "TFMBartModel"]
 
 
 if TYPE_CHECKING:

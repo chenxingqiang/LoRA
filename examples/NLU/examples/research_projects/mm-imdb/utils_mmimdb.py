@@ -26,7 +26,8 @@ from PIL import Image
 from torch.utils.data import Dataset
 
 
-POOLING_BREAKDOWN = {1: (1, 1), 2: (2, 1), 3: (3, 1), 4: (2, 2), 5: (5, 1), 6: (3, 2), 7: (7, 1), 8: (4, 2), 9: (3, 3)}
+POOLING_BREAKDOWN = {1: (1, 1), 2: (2, 1), 3: (3, 1), 4: (
+    2, 2), 5: (5, 1), 6: (3, 2), 7: (7, 1), 8: (4, 2), 9: (3, 3)}
 
 
 class ImageEncoder(nn.Module):
@@ -35,7 +36,8 @@ class ImageEncoder(nn.Module):
         model = torchvision.models.resnet152(pretrained=True)
         modules = list(model.children())[:-2]
         self.model = nn.Sequential(*modules)
-        self.pool = nn.AdaptiveAvgPool2d(POOLING_BREAKDOWN[args.num_image_embeds])
+        self.pool = nn.AdaptiveAvgPool2d(
+            POOLING_BREAKDOWN[args.num_image_embeds])
 
     def forward(self, x):
         # Bx3x224x224 -> Bx2048x7x7 -> Bx2048xN -> BxNx2048
@@ -60,14 +62,17 @@ class JsonlDataset(Dataset):
         return len(self.data)
 
     def __getitem__(self, index):
-        sentence = torch.LongTensor(self.tokenizer.encode(self.data[index]["text"], add_special_tokens=True))
+        sentence = torch.LongTensor(self.tokenizer.encode(
+            self.data[index]["text"], add_special_tokens=True))
         start_token, sentence, end_token = sentence[0], sentence[1:-1], sentence[-1]
         sentence = sentence[: self.max_seq_length]
 
         label = torch.zeros(self.n_classes)
-        label[[self.labels.index(tgt) for tgt in self.data[index]["label"]]] = 1
+        label[[self.labels.index(tgt)
+              for tgt in self.data[index]["label"]]] = 1
 
-        image = Image.open(os.path.join(self.data_dir, self.data[index]["img"])).convert("RGB")
+        image = Image.open(os.path.join(
+            self.data_dir, self.data[index]["img"])).convert("RGB")
         image = self.transforms(image)
 
         return {

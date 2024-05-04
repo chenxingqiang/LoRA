@@ -28,7 +28,8 @@ from lightning_base import generic_train  # noqa
 class SummarizationDistiller(SummarizationModule):
     """Supports T5, Bart, Pegasus and other models that inherit from Bart."""
 
-    loss_names = ["loss", "ce_loss", "mlm_loss", "hid_loss_enc", "hid_loss_dec"]
+    loss_names = ["loss", "ce_loss", "mlm_loss",
+                  "hid_loss_enc", "hid_loss_dec"]
 
     def __init__(self, hparams):
         assert Path(hparams.data_dir).exists()
@@ -37,9 +38,11 @@ class SummarizationDistiller(SummarizationModule):
 
         save_dir = self.output_dir.joinpath("student")
 
-        hparams.model_name_or_path = str(save_dir)  # Tell lightning we are training the student
+        # Tell lightning we are training the student
+        hparams.model_name_or_path = str(save_dir)
         teacher = AutoModelForSeq2SeqLM.from_pretrained(hparams.teacher).eval()
-        use_task_specific_params(teacher, hparams.task)  # We copy good generation parameters to student by default
+        # We copy good generation parameters to student by default
+        use_task_specific_params(teacher, hparams.task)
         if hparams.student is not None:
             student = AutoModelForSeq2SeqLM.from_pretrained(hparams.student)
             use_task_specific_params(student, hparams.task)
@@ -68,14 +71,18 @@ class SummarizationDistiller(SummarizationModule):
             teacher_encoder_layers = teacher.config.encoder_layers
             teacher_decoder_layers = teacher.config.decoder_layers
 
-        self.different_base_models = not (hparams.student is None or hparams.teacher == hparams.student)
-        self.do_calc_hidden_loss = (not self.different_base_models) and hparams.alpha_hid > 0
-        self.different_encoder = self.different_base_models or (student_encoder_layers != teacher_encoder_layers)
+        self.different_base_models = not (
+            hparams.student is None or hparams.teacher == hparams.student)
+        self.do_calc_hidden_loss = (
+            not self.different_base_models) and hparams.alpha_hid > 0
+        self.different_encoder = self.different_base_models or (
+            student_encoder_layers != teacher_encoder_layers)
         # self.different_encoder determines whether we need to run the teacher encoder
         self.teacher = teacher
         freeze_params(self.teacher)
 
-        if not self.different_encoder:  # To save RAM, delete teacher encoder and freeze student encoder.
+        # To save RAM, delete teacher encoder and freeze student encoder.
+        if not self.different_encoder:
             try:
                 del self.teacher.model.encoder
             except AttributeError:  # T5
@@ -86,7 +93,8 @@ class SummarizationDistiller(SummarizationModule):
         if d_layer_ids is None:
             d_layer_ids = list(range(student_decoder_layers))
 
-        self.e_layer_ids, self.d_layer_ids = e_layer_ids, d_layer_ids  # type: List[int], List[int]
+        # type: List[int], List[int]
+        self.e_layer_ids, self.d_layer_ids = e_layer_ids, d_layer_ids
 
         if self.do_calc_hidden_loss:  # Intermediate supervision: Decide which layers to supervise
             if hparams.supervise_forward:
@@ -116,10 +124,14 @@ class SummarizationDistiller(SummarizationModule):
         # mask has False at padding_idx
         sel_mask = mask[:, :, None].expand_as(s_logits)
         vocab_size = s_logits.size(-1)
-        s_logits_slct = torch.masked_select(s_logits, sel_mask)  # (bs * seq_length * voc_size) modulo the 1s in mask
-        t_logits_slct = torch.masked_select(t_logits, sel_mask)  # (bs * seq_length * voc_size) modulo the 1s in mask
-        s_logits_slct = s_logits_slct.view(-1, vocab_size)  # (bs * seq_length, voc_size) modulo the 1s in mask
-        t_logits_slct = t_logits_slct.view(-1, vocab_size)  # (bs * seq_length, voc_size) modulo the 1s in mask
+        # (bs * seq_length * voc_size) modulo the 1s in mask
+        s_logits_slct = torch.masked_select(s_logits, sel_mask)
+        # (bs * seq_length * voc_size) modulo the 1s in mask
+        t_logits_slct = torch.masked_select(t_logits, sel_mask)
+        # (bs * seq_length, voc_size) modulo the 1s in mask
+        s_logits_slct = s_logits_slct.view(-1, vocab_size)
+        # (bs * seq_length, voc_size) modulo the 1s in mask
+        t_logits_slct = t_logits_slct.view(-1, vocab_size)
         assert t_logits_slct.size() == s_logits_slct.size()
         loss_ce = (
             self.ce_loss_fct(
@@ -161,7 +173,8 @@ class SummarizationDistiller(SummarizationModule):
         if self.hparams.label_smoothing == 0:
             # Same behavior as modeling_bart.py, besides ignoring pad_token_id
             loss_fct = torch.nn.CrossEntropyLoss(ignore_index=pad_token_id)
-            student_lm_loss = loss_fct(lm_logits.view(-1, lm_logits.shape[-1]), labels.view(-1))
+            student_lm_loss = loss_fct(
+                lm_logits.view(-1, lm_logits.shape[-1]), labels.view(-1))
         else:
             lprobs = F.log_softmax(lm_logits, dim=-1)
             student_lm_loss, _ = label_smoothed_nll_loss(
@@ -201,7 +214,8 @@ class SummarizationDistiller(SummarizationModule):
             use_cache=False,  # since we are not passing labels, never let this default to True
         )
         dec_mask = decoder_input_ids.ne(pad_token_id)
-        loss_ce = self.calc_ce_loss(dec_mask, lm_logits, teacher_outputs["logits"])
+        loss_ce = self.calc_ce_loss(
+            dec_mask, lm_logits, teacher_outputs["logits"])
         if self.do_calc_hidden_loss:  # Intermediate supervision of decoder hidden states
             hid_loss_dec = self.calc_hidden_loss(
                 dec_mask,
@@ -222,18 +236,24 @@ class SummarizationDistiller(SummarizationModule):
     def calc_hidden_loss(attention_mask, hidden_states, hidden_states_T, matches, normalize_hidden):
         """MSE(student_hid, teacher_hid[matches]). Called "Intermediate supervision" in paper. Inspired by TinyBERT."""
         msg = "expected list or tuple for hidden_states, got tensor of shape: "
-        assert not isinstance(hidden_states, torch.Tensor), f"{msg}{hidden_states.shape}"
-        assert not isinstance(hidden_states_T, torch.Tensor), f"{msg}{hidden_states_T.shape}"
+        assert not isinstance(
+            hidden_states, torch.Tensor), f"{msg}{hidden_states.shape}"
+        assert not isinstance(
+            hidden_states_T, torch.Tensor), f"{msg}{hidden_states_T.shape}"
         mask = attention_mask.to(hidden_states[0])
         valid_count = mask.sum() * hidden_states[0].size(-1)
-        student_states = torch.stack([hidden_states[i] for i in range(len(matches))])
+        student_states = torch.stack(
+            [hidden_states[i] for i in range(len(matches))])
         teacher_states = torch.stack([hidden_states_T[j] for j in matches])
         assert student_states.shape == teacher_states.shape, f"{student_states.shape} != {teacher_states.shape}"
         if normalize_hidden:
-            student_states = F.layer_norm(student_states, student_states.shape[1:])
-            teacher_states = F.layer_norm(teacher_states, teacher_states.shape[1:])
+            student_states = F.layer_norm(
+                student_states, student_states.shape[1:])
+            teacher_states = F.layer_norm(
+                teacher_states, teacher_states.shape[1:])
         mse = F.mse_loss(student_states, teacher_states, reduction="none")
-        masked_mse = (mse * mask.unsqueeze(0).unsqueeze(-1)).sum() / valid_count
+        masked_mse = (mse * mask.unsqueeze(0).unsqueeze(-1)
+                      ).sum() / valid_count
         return masked_mse
 
 
@@ -248,12 +268,16 @@ def add_distill_args(parser):
     parser.add_argument("--alpha_mlm", default=0.2, type=float)
     parser.add_argument("--alpha_hid", default=0.0, type=float, required=False)
     parser.add_argument("--student", type=str, required=False)
-    parser.add_argument("--student_decoder_layers", default=12, type=int, required=False)
-    parser.add_argument("--student_encoder_layers", default=12, type=int, required=False)
+    parser.add_argument("--student_decoder_layers",
+                        default=12, type=int, required=False)
+    parser.add_argument("--student_encoder_layers",
+                        default=12, type=int, required=False)
     parser.add_argument("--no_teacher", action="store_true", default=False)
     parser.add_argument("--length_penalty", type=float, default=-1)
-    parser.add_argument("--supervise_forward", action="store_true", default=False)
-    parser.add_argument("--normalize_hidden", action="store_true", default=False)
+    parser.add_argument("--supervise_forward",
+                        action="store_true", default=False)
+    parser.add_argument("--normalize_hidden",
+                        action="store_true", default=False)
 
 
 class TranslationDistiller(SummarizationDistiller):
@@ -304,7 +328,8 @@ def distill_main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser = pl.Trainer.add_argparse_args(parser)
-    parser = SummarizationDistiller.add_model_specific_args(parser, os.getcwd())
+    parser = SummarizationDistiller.add_model_specific_args(
+        parser, os.getcwd())
     args = parser.parse_args()
 
     distill_main(args)

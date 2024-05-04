@@ -38,7 +38,6 @@ In particular all "Please explain" questions or objectively very user-specific f
 
 * "How to train T5 on De->En translation?"
 
-
 ## The GitHub Issues
 
 Everything which hints at a bug should be opened as an [issue](https://github.com/huggingface/transformers/issues).
@@ -99,6 +98,7 @@ You are not required to read the following guidelines before opening an issue. H
      File "<string>", line 1, in <module>
    FileNotFoundError: [Errno 2] No such file or directory: '/tmp/wrong_path.txt'
    ```
+
    Here you'd search for just: `"FileNotFoundError: [Errno 2] No such file or directory"`
 
    If the local information that you removed were inside the error message and you removed them you may need to remove double quotes since your query is no longer exact. So if the error message was something like:
@@ -131,9 +131,11 @@ You are not required to read the following guidelines before opening an issue. H
    ```
 
    As compared to providing just the last line of the error message, e.g.:
+
    ```python
    ModuleNotFoundError: No module named 'tqdm.auto'
    ```
+
    which is not sufficient.
 
    If your application is running on more than one GPU (e.g. under `DistributedDataParallel`) and typically getting every log and traceback printed multiple times, please make sure that you paste only one copy of it. At times the traceback from parallel processes may get interleaved - so either disentangle these or change the loggers to log only for `local_rank==0` so that only one process logs things.
@@ -247,16 +249,14 @@ You are not required to read the following guidelines before opening an issue. H
 
     Try not use italics and bold text too much as these often make the text more difficult to read.
 
-
 12. If you are cross-referencing a specific comment in a given thread or another issue, always link to that specific comment, rather than using the issue link. If you do the latter it could be quite impossible to find which specific comment you're referring to.
 
     To get the link to the specific comment do not copy the url from the location bar of your browser, but instead, click the `...` icon in the upper right corner of the comment and then select "Copy Link".
 
     For example the first link is a link to an issue, and the second to a specific comment in the same issue:
 
-    1. https://github.com/huggingface/transformers/issues/9257
-    2. https://github.com/huggingface/transformers/issues/9257#issuecomment-749945162
-
+    1. <https://github.com/huggingface/transformers/issues/9257>
+    2. <https://github.com/huggingface/transformers/issues/9257#issuecomment-749945162>
 
 13. If you are replying to a last comment, it's totally fine to make your reply with just your comment in it. The readers can follow the information flow here.
 

@@ -56,21 +56,25 @@ class DPRReaderTokenizationTest(BertTokenizationTest):
     def test_decode_best_spans(self):
         tokenizer = self.tokenizer_class.from_pretrained("bert-base-uncased")
 
-        text_1 = tokenizer.encode("question sequence", add_special_tokens=False)
+        text_1 = tokenizer.encode(
+            "question sequence", add_special_tokens=False)
         text_2 = tokenizer.encode("title sequence", add_special_tokens=False)
-        text_3 = tokenizer.encode("text sequence " * 4, add_special_tokens=False)
+        text_3 = tokenizer.encode(
+            "text sequence " * 4, add_special_tokens=False)
         input_ids = [[101] + text_1 + [102] + text_2 + [102] + text_3]
         reader_input = BatchEncoding({"input_ids": input_ids})
 
         start_logits = [[0] * len(input_ids[0])]
         end_logits = [[0] * len(input_ids[0])]
         relevance_logits = [0]
-        reader_output = DPRReaderOutput(start_logits, end_logits, relevance_logits)
+        reader_output = DPRReaderOutput(
+            start_logits, end_logits, relevance_logits)
 
         start_index, end_index = 8, 9
         start_logits[0][start_index] = 10
         end_logits[0][end_index] = 10
-        predicted_spans = tokenizer.decode_best_spans(reader_input, reader_output)
+        predicted_spans = tokenizer.decode_best_spans(
+            reader_input, reader_output)
         self.assertEqual(predicted_spans[0].start_index, start_index)
         self.assertEqual(predicted_spans[0].end_index, end_index)
         self.assertEqual(predicted_spans[0].doc_id, 0)
@@ -79,11 +83,13 @@ class DPRReaderTokenizationTest(BertTokenizationTest):
     def test_call(self):
         tokenizer = self.tokenizer_class.from_pretrained("bert-base-uncased")
 
-        text_1 = tokenizer.encode("question sequence", add_special_tokens=False)
+        text_1 = tokenizer.encode(
+            "question sequence", add_special_tokens=False)
         text_2 = tokenizer.encode("title sequence", add_special_tokens=False)
         text_3 = tokenizer.encode("text sequence", add_special_tokens=False)
         expected_input_ids = [101] + text_1 + [102] + text_2 + [102] + text_3
-        encoded_input = tokenizer(questions=["question sequence"], titles=["title sequence"], texts=["text sequence"])
+        encoded_input = tokenizer(questions=["question sequence"], titles=[
+                                  "title sequence"], texts=["text sequence"])
         self.assertIn("input_ids", encoded_input)
         self.assertIn("attention_mask", encoded_input)
         self.assertListEqual(encoded_input["input_ids"][0], expected_input_ids)

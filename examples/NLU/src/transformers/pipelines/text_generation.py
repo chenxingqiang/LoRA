@@ -118,7 +118,8 @@ class TextGenerationPipeline(Pipeline):
                     prefix = self.XL_PREFIX
 
                 if prefix:
-                    prefix_inputs = self._parse_and_tokenize(prefix, padding=False, add_special_tokens=False)
+                    prefix_inputs = self._parse_and_tokenize(
+                        prefix, padding=False, add_special_tokens=False)
                     # This impacts max_length and min_length argument that need adjusting.
                     prefix_length = prefix_inputs["input_ids"].shape[-1]
                     if generate_kwargs.get("max_length", None) is not None:
@@ -127,7 +128,8 @@ class TextGenerationPipeline(Pipeline):
                         generate_kwargs["min_length"] += prefix_length
 
                 prefix = prefix or ""
-                inputs = self._parse_and_tokenize(prefix + prompt_text, padding=False, add_special_tokens=False)
+                inputs = self._parse_and_tokenize(
+                    prefix + prompt_text, padding=False, add_special_tokens=False)
 
                 # set input_ids to None to allow empty prompt
                 if inputs["input_ids"].shape[-1] == 0:
@@ -144,7 +146,8 @@ class TextGenerationPipeline(Pipeline):
                     input_ids is None or input_ids.shape[0] == 1
                 ), "Batch generation is currently not supported. See https://github.com/huggingface/transformers/issues/3021 for more information."
 
-                output_sequences = self.model.generate(input_ids=input_ids, **generate_kwargs)  # BS x SL
+                output_sequences = self.model.generate(
+                    input_ids=input_ids, **generate_kwargs)  # BS x SL
 
             result = []
             for generated_sequence in output_sequences:

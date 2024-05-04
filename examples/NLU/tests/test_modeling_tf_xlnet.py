@@ -71,28 +71,41 @@ class TFXLNetModelTester:
         self.num_choices = 4
 
     def prepare_config_and_inputs(self):
-        input_ids_1 = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
-        input_ids_2 = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
-        segment_ids = ids_tensor([self.batch_size, self.seq_length], self.type_vocab_size)
-        input_mask = ids_tensor([self.batch_size, self.seq_length], 2, dtype=tf.float32)
+        input_ids_1 = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size)
+        input_ids_2 = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size)
+        segment_ids = ids_tensor(
+            [self.batch_size, self.seq_length], self.type_vocab_size)
+        input_mask = ids_tensor(
+            [self.batch_size, self.seq_length], 2, dtype=tf.float32)
 
-        input_ids_q = ids_tensor([self.batch_size, self.seq_length + 1], self.vocab_size)
-        perm_mask = tf.zeros((self.batch_size, self.seq_length + 1, self.seq_length), dtype=tf.float32)
-        perm_mask_last = tf.ones((self.batch_size, self.seq_length + 1, 1), dtype=tf.float32)
+        input_ids_q = ids_tensor(
+            [self.batch_size, self.seq_length + 1], self.vocab_size)
+        perm_mask = tf.zeros(
+            (self.batch_size, self.seq_length + 1, self.seq_length), dtype=tf.float32)
+        perm_mask_last = tf.ones(
+            (self.batch_size, self.seq_length + 1, 1), dtype=tf.float32)
         perm_mask = tf.concat([perm_mask, perm_mask_last], axis=-1)
         # perm_mask[:, :, -1] = 1.0  # Previous tokens don't see last token
-        target_mapping = tf.zeros((self.batch_size, 1, self.seq_length), dtype=tf.float32)
-        target_mapping_last = tf.ones((self.batch_size, 1, 1), dtype=tf.float32)
-        target_mapping = tf.concat([target_mapping, target_mapping_last], axis=-1)
+        target_mapping = tf.zeros(
+            (self.batch_size, 1, self.seq_length), dtype=tf.float32)
+        target_mapping_last = tf.ones(
+            (self.batch_size, 1, 1), dtype=tf.float32)
+        target_mapping = tf.concat(
+            [target_mapping, target_mapping_last], axis=-1)
         # target_mapping[:, 0, -1] = 1.0  # predict last token
 
         sequence_labels = None
         lm_labels = None
         is_impossible_labels = None
         if self.use_labels:
-            lm_labels = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
-            sequence_labels = ids_tensor([self.batch_size], self.type_sequence_label_size)
-            is_impossible_labels = ids_tensor([self.batch_size], 2, dtype=tf.float32)
+            lm_labels = ids_tensor(
+                [self.batch_size, self.seq_length], self.vocab_size)
+            sequence_labels = ids_tensor(
+                [self.batch_size], self.type_sequence_label_size)
+            is_impossible_labels = ids_tensor(
+                [self.batch_size], 2, dtype=tf.float32)
 
         config = XLNetConfig(
             vocab_size=self.vocab_size,
@@ -147,7 +160,8 @@ class TFXLNetModelTester:
     ):
         model = TFXLNetModel(config)
 
-        inputs = {"input_ids": input_ids_1, "input_mask": input_mask, "token_type_ids": segment_ids}
+        inputs = {"input_ids": input_ids_1,
+                  "input_mask": input_mask, "token_type_ids": segment_ids}
         result = model(inputs)
 
         inputs = [input_ids_1, input_mask]
@@ -158,10 +172,12 @@ class TFXLNetModelTester:
         no_mems_outputs = model(inputs)
         self.parent.assertEqual(len(no_mems_outputs), 1)
 
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, self.seq_length, self.hidden_size))
+        self.parent.assertEqual(result.last_hidden_state.shape,
+                                (self.batch_size, self.seq_length, self.hidden_size))
         self.parent.assertListEqual(
             [mem.shape for mem in result.mems],
-            [(self.seq_length, self.batch_size, self.hidden_size)] * self.num_hidden_layers,
+            [(self.seq_length, self.batch_size, self.hidden_size)] *
+            self.num_hidden_layers,
         )
 
     def create_and_check_xlnet_lm_head(
@@ -183,21 +199,27 @@ class TFXLNetModelTester:
         inputs_1 = {"input_ids": input_ids_1, "token_type_ids": segment_ids}
         all_logits_1, mems_1 = model(inputs_1).to_tuple()
 
-        inputs_2 = {"input_ids": input_ids_2, "mems": mems_1, "token_type_ids": segment_ids}
+        inputs_2 = {"input_ids": input_ids_2,
+                    "mems": mems_1, "token_type_ids": segment_ids}
         all_logits_2, mems_2 = model(inputs_2).to_tuple()
 
-        inputs_3 = {"input_ids": input_ids_q, "perm_mask": perm_mask, "target_mapping": target_mapping}
+        inputs_3 = {"input_ids": input_ids_q,
+                    "perm_mask": perm_mask, "target_mapping": target_mapping}
         logits, _ = model(inputs_3).to_tuple()
 
-        self.parent.assertEqual(all_logits_1.shape, (self.batch_size, self.seq_length, self.vocab_size))
+        self.parent.assertEqual(
+            all_logits_1.shape, (self.batch_size, self.seq_length, self.vocab_size))
         self.parent.assertListEqual(
             [mem.shape for mem in mems_1],
-            [(self.seq_length, self.batch_size, self.hidden_size)] * self.num_hidden_layers,
+            [(self.seq_length, self.batch_size, self.hidden_size)] *
+            self.num_hidden_layers,
         )
-        self.parent.assertEqual(all_logits_2.shape, (self.batch_size, self.seq_length, self.vocab_size))
+        self.parent.assertEqual(
+            all_logits_2.shape, (self.batch_size, self.seq_length, self.vocab_size))
         self.parent.assertListEqual(
             [mem.shape for mem in mems_2],
-            [(self.mem_len, self.batch_size, self.hidden_size)] * self.num_hidden_layers,
+            [(self.mem_len, self.batch_size, self.hidden_size)] *
+            self.num_hidden_layers,
         )
 
     def create_and_check_xlnet_qa(
@@ -216,14 +238,18 @@ class TFXLNetModelTester:
     ):
         model = TFXLNetForQuestionAnsweringSimple(config)
 
-        inputs = {"input_ids": input_ids_1, "attention_mask": input_mask, "token_type_ids": segment_ids}
+        inputs = {"input_ids": input_ids_1,
+                  "attention_mask": input_mask, "token_type_ids": segment_ids}
         result = model(inputs)
 
-        self.parent.assertEqual(result.start_logits.shape, (self.batch_size, self.seq_length))
-        self.parent.assertEqual(result.end_logits.shape, (self.batch_size, self.seq_length))
+        self.parent.assertEqual(result.start_logits.shape,
+                                (self.batch_size, self.seq_length))
+        self.parent.assertEqual(result.end_logits.shape,
+                                (self.batch_size, self.seq_length))
         self.parent.assertListEqual(
             [mem.shape for mem in result.mems],
-            [(self.seq_length, self.batch_size, self.hidden_size)] * self.num_hidden_layers,
+            [(self.seq_length, self.batch_size, self.hidden_size)] *
+            self.num_hidden_layers,
         )
 
     def create_and_check_xlnet_sequence_classif(
@@ -244,10 +270,12 @@ class TFXLNetModelTester:
 
         result = model(input_ids_1)
 
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.type_sequence_label_size))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.type_sequence_label_size))
         self.parent.assertListEqual(
             [mem.shape for mem in result.mems],
-            [(self.seq_length, self.batch_size, self.hidden_size)] * self.num_hidden_layers,
+            [(self.seq_length, self.batch_size, self.hidden_size)] *
+            self.num_hidden_layers,
         )
 
     def create_and_check_xlnet_for_token_classification(
@@ -272,10 +300,12 @@ class TFXLNetModelTester:
             # 'token_type_ids': token_type_ids
         }
         result = model(inputs)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.seq_length, config.num_labels))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.seq_length, config.num_labels))
         self.parent.assertListEqual(
             [mem.shape for mem in result.mems],
-            [(self.seq_length, self.batch_size, self.hidden_size)] * self.num_hidden_layers,
+            [(self.seq_length, self.batch_size, self.hidden_size)] *
+            self.num_hidden_layers,
         )
 
     def create_and_check_xlnet_for_multiple_choice(
@@ -294,9 +324,12 @@ class TFXLNetModelTester:
     ):
         config.num_choices = self.num_choices
         model = TFXLNetForMultipleChoice(config=config)
-        multiple_choice_inputs_ids = tf.tile(tf.expand_dims(input_ids_1, 1), (1, self.num_choices, 1))
-        multiple_choice_input_mask = tf.tile(tf.expand_dims(input_mask, 1), (1, self.num_choices, 1))
-        multiple_choice_token_type_ids = tf.tile(tf.expand_dims(segment_ids, 1), (1, self.num_choices, 1))
+        multiple_choice_inputs_ids = tf.tile(
+            tf.expand_dims(input_ids_1, 1), (1, self.num_choices, 1))
+        multiple_choice_input_mask = tf.tile(
+            tf.expand_dims(input_mask, 1), (1, self.num_choices, 1))
+        multiple_choice_token_type_ids = tf.tile(
+            tf.expand_dims(segment_ids, 1), (1, self.num_choices, 1))
         inputs = {
             "input_ids": multiple_choice_inputs_ids,
             "attention_mask": multiple_choice_input_mask,
@@ -304,10 +337,12 @@ class TFXLNetModelTester:
         }
         result = model(inputs)
 
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.num_choices))
+        self.parent.assertEqual(result.logits.shape,
+                                (self.batch_size, self.num_choices))
         self.parent.assertListEqual(
             [mem.shape for mem in result.mems],
-            [(self.seq_length, self.batch_size * self.num_choices, self.hidden_size)] * self.num_hidden_layers,
+            [(self.seq_length, self.batch_size * self.num_choices,
+             self.hidden_size)] * self.num_hidden_layers,
         )
 
     def prepare_config_and_inputs_for_common(self):
@@ -352,7 +387,8 @@ class TFXLNetModelTest(TFModelTesterMixin, unittest.TestCase):
 
     def setUp(self):
         self.model_tester = TFXLNetModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=XLNetConfig, d_inner=37)
+        self.config_tester = ConfigTester(
+            self, config_class=XLNetConfig, d_inner=37)
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -370,11 +406,13 @@ class TFXLNetModelTest(TFModelTesterMixin, unittest.TestCase):
     def test_xlnet_sequence_classif(self):
         self.model_tester.set_seed()
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_xlnet_sequence_classif(*config_and_inputs)
+        self.model_tester.create_and_check_xlnet_sequence_classif(
+            *config_and_inputs)
 
     def test_xlnet_token_classification(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_xlnet_for_token_classification(*config_and_inputs)
+        self.model_tester.create_and_check_xlnet_for_token_classification(
+            *config_and_inputs)
 
     def test_xlnet_qa(self):
         self.model_tester.set_seed()
@@ -383,7 +421,8 @@ class TFXLNetModelTest(TFModelTesterMixin, unittest.TestCase):
 
     def test_xlnet_for_multiple_choice(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_xlnet_for_multiple_choice(*config_and_inputs)
+        self.model_tester.create_and_check_xlnet_for_multiple_choice(
+            *config_and_inputs)
 
     @slow
     def test_model_from_pretrained(self):
@@ -792,4 +831,5 @@ class TFXLNetModelLanguageGenerationTest(unittest.TestCase):
 
         output_ids = model.generate(input_ids, max_length=200, do_sample=False)
 
-        self.assertListEqual(output_ids[0].numpy().tolist(), expected_output_ids)
+        self.assertListEqual(
+            output_ids[0].numpy().tolist(), expected_output_ids)

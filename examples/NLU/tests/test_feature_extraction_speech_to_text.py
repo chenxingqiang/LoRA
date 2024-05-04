@@ -63,7 +63,8 @@ class Speech2TextFeatureExtractionTester(unittest.TestCase):
         self.batch_size = batch_size
         self.min_seq_length = min_seq_length
         self.max_seq_length = max_seq_length
-        self.seq_length_diff = (self.max_seq_length - self.min_seq_length) // (self.batch_size - 1)
+        self.seq_length_diff = (self.max_seq_length -
+                                self.min_seq_length) // (self.batch_size - 1)
         self.feature_size = feature_size
         self.num_mel_bins = num_mel_bins
         self.padding_value = padding_value
@@ -86,7 +87,8 @@ class Speech2TextFeatureExtractionTester(unittest.TestCase):
             return list(itertools.chain(*list_of_lists))
 
         if equal_length:
-            speech_inputs = [floats_list((self.max_seq_length, self.feature_size)) for _ in range(self.batch_size)]
+            speech_inputs = [floats_list(
+                (self.max_seq_length, self.feature_size)) for _ in range(self.batch_size)]
         else:
             speech_inputs = [
                 floats_list((x, self.feature_size))
@@ -108,39 +110,54 @@ class Speech2TextFeatureExtractionTest(SequenceFeatureExtractionTestMixin, unitt
 
     def test_call(self):
         # Tests that all call wrap to encode_plus and batch_encode_plus
-        feature_extractor = self.feature_extraction_class(**self.feat_extract_tester.prepare_feat_extract_dict())
+        feature_extractor = self.feature_extraction_class(
+            **self.feat_extract_tester.prepare_feat_extract_dict())
         # create three inputs of length 800, 1000, and 1200
         speech_inputs = [floats_list((1, x))[0] for x in range(800, 1400, 200)]
-        np_speech_inputs = [np.asarray(speech_input) for speech_input in speech_inputs]
+        np_speech_inputs = [np.asarray(speech_input)
+                            for speech_input in speech_inputs]
 
         # Test feature size
-        input_features = feature_extractor(np_speech_inputs, padding=True, return_tensors="np").input_features
+        input_features = feature_extractor(
+            np_speech_inputs, padding=True, return_tensors="np").input_features
         self.assertTrue(input_features.ndim == 3)
-        self.assertTrue(input_features.shape[-1] == feature_extractor.feature_size)
+        self.assertTrue(
+            input_features.shape[-1] == feature_extractor.feature_size)
 
         # Test not batched input
-        encoded_sequences_1 = feature_extractor(speech_inputs[0], return_tensors="np").input_features
-        encoded_sequences_2 = feature_extractor(np_speech_inputs[0], return_tensors="np").input_features
-        self.assertTrue(np.allclose(encoded_sequences_1, encoded_sequences_2, atol=1e-3))
+        encoded_sequences_1 = feature_extractor(
+            speech_inputs[0], return_tensors="np").input_features
+        encoded_sequences_2 = feature_extractor(
+            np_speech_inputs[0], return_tensors="np").input_features
+        self.assertTrue(np.allclose(encoded_sequences_1,
+                                    encoded_sequences_2, atol=1e-3))
 
         # Test batched
-        encoded_sequences_1 = feature_extractor(speech_inputs, return_tensors="np").input_features
-        encoded_sequences_2 = feature_extractor(np_speech_inputs, return_tensors="np").input_features
+        encoded_sequences_1 = feature_extractor(
+            speech_inputs, return_tensors="np").input_features
+        encoded_sequences_2 = feature_extractor(
+            np_speech_inputs, return_tensors="np").input_features
         for enc_seq_1, enc_seq_2 in zip(encoded_sequences_1, encoded_sequences_2):
             self.assertTrue(np.allclose(enc_seq_1, enc_seq_2, atol=1e-3))
 
     def test_cepstral_mean_and_variance_normalization(self):
-        feature_extractor = self.feature_extraction_class(**self.feat_extract_tester.prepare_feat_extract_dict())
+        feature_extractor = self.feature_extraction_class(
+            **self.feat_extract_tester.prepare_feat_extract_dict())
         speech_inputs = [floats_list((1, x))[0] for x in range(800, 1400, 200)]
-        inputs = feature_extractor(speech_inputs, padding=True, return_tensors="np", return_attention_mask=True)
+        inputs = feature_extractor(
+            speech_inputs, padding=True, return_tensors="np", return_attention_mask=True)
         input_features = inputs.input_features
         attention_mask = inputs.attention_mask
         fbank_feat_lengths = np.sum(attention_mask == 1, axis=1)
 
         def _check_zero_mean_unit_variance(input_vector):
             self.assertTrue(np.all(np.mean(input_vector, axis=0) < 1e-3))
-            self.assertTrue(np.all(np.abs(np.var(input_vector, axis=0) - 1) < 1e-3))
+            self.assertTrue(
+                np.all(np.abs(np.var(input_vector, axis=0) - 1) < 1e-3))
 
-        _check_zero_mean_unit_variance(input_features[0, : fbank_feat_lengths[0]])
-        _check_zero_mean_unit_variance(input_features[1, : fbank_feat_lengths[1]])
-        _check_zero_mean_unit_variance(input_features[2, : fbank_feat_lengths[2]])
+        _check_zero_mean_unit_variance(
+            input_features[0, : fbank_feat_lengths[0]])
+        _check_zero_mean_unit_variance(
+            input_features[1, : fbank_feat_lengths[1]])
+        _check_zero_mean_unit_variance(
+            input_features[2, : fbank_feat_lengths[2]])

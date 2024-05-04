@@ -76,7 +76,8 @@ class TestTrainerExt(TestCasePlus):
             extra_args_str=extra_args_str,
             predict_with_generate=predict_with_generate,
         )
-        logs = TrainerState.load_from_json(os.path.join(output_dir, "trainer_state.json")).log_history
+        logs = TrainerState.load_from_json(os.path.join(
+            output_dir, "trainer_state.json")).log_history
         eval_metrics = [log for log in logs if "eval_loss" in log.keys()]
 
         first_step_stats = eval_metrics[0]
@@ -85,7 +86,8 @@ class TestTrainerExt(TestCasePlus):
 
             last_step_stats = eval_metrics[-1]
             assert isinstance(last_step_stats["eval_bleu"], float)
-            assert not math.isnan(float(last_step_stats["eval_loss"])), "eval_loss must not be `nan`"
+            assert not math.isnan(
+                float(last_step_stats["eval_loss"])), "eval_loss must not be `nan`"
 
     @require_torch_non_multi_gpu
     def test_run_seq2seq_no_dist(self):
@@ -105,19 +107,22 @@ class TestTrainerExt(TestCasePlus):
     @require_torch_multi_gpu
     @require_fairscale
     def test_run_seq2seq_sharded_ddp(self):
-        self.run_seq2seq_quick(distributed=True, extra_args_str="--sharded_ddp simple")
+        self.run_seq2seq_quick(
+            distributed=True, extra_args_str="--sharded_ddp simple")
 
     # test --sharded_ddp w/ --fp16
     @require_torch_multi_gpu
     @require_fairscale
     def test_run_seq2seq_sharded_ddp_fp16(self):
-        self.run_seq2seq_quick(distributed=True, extra_args_str="--sharded_ddp simple --fp16")
+        self.run_seq2seq_quick(
+            distributed=True, extra_args_str="--sharded_ddp simple --fp16")
 
     # test --sharded_ddp zero_dp_2 w/o --fp16
     @require_torch_multi_gpu
     @require_fairscale
     def test_run_seq2seq_fully_sharded_ddp(self):
-        self.run_seq2seq_quick(distributed=True, extra_args_str="--sharded_ddp zero_dp_2", predict_with_generate=False)
+        self.run_seq2seq_quick(
+            distributed=True, extra_args_str="--sharded_ddp zero_dp_2", predict_with_generate=False)
 
     # test --sharded_ddp zero_dp_2 w/ --fp16
     @require_torch_multi_gpu
@@ -138,10 +143,12 @@ class TestTrainerExt(TestCasePlus):
         # specifically to the problem traced it to self.optimizer.step() - if it's run 2nd time via
         # 2nd main() call it botches the future eval.
         #
-        self.run_seq2seq_quick(distributed=True, extra_args_str="--fp16 --fp16_backend=apex")
+        self.run_seq2seq_quick(
+            distributed=True, extra_args_str="--fp16 --fp16_backend=apex")
         # test 2nd time - was getting eval_loss': nan'
         # to reproduce the problem set distributed=False
-        self.run_seq2seq_quick(distributed=True, extra_args_str="--fp16 --fp16_backend=apex")
+        self.run_seq2seq_quick(
+            distributed=True, extra_args_str="--fp16 --fp16_backend=apex")
 
     @slow
     def test_run_seq2seq_slow(self):
@@ -155,7 +162,8 @@ class TestTrainerExt(TestCasePlus):
         )
 
         # Check metrics
-        logs = TrainerState.load_from_json(os.path.join(output_dir, "trainer_state.json")).log_history
+        logs = TrainerState.load_from_json(os.path.join(
+            output_dir, "trainer_state.json")).log_history
         eval_metrics = [log for log in logs if "eval_loss" in log.keys()]
         first_step_stats = eval_metrics[0]
         last_step_stats = eval_metrics[-1]

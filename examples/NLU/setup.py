@@ -121,7 +121,8 @@ _deps = [
     "soundfile",
     "sphinx-copybutton",
     "sphinx-markdown-tables",
-    "sphinx-rtd-theme==0.4.3",  # sphinx-rtd-theme==0.5.0 introduced big changes in the style.
+    # sphinx-rtd-theme==0.5.0 introduced big changes in the style.
+    "sphinx-rtd-theme==0.4.3",
     "sphinx==3.2.1",
     "starlette",
     "tensorflow-cpu>=2.3",
@@ -143,7 +144,8 @@ _deps = [
 # packaging: "packaging"
 #
 # some of the values are versioned whereas others aren't.
-deps = {b: a for a, b in (re.findall(r"^(([^!=<>]+)(?:[!=<>].*)?$)", x)[0] for x in _deps)}
+deps = {b: a for a, b in (re.findall(
+    r"^(([^!=<>]+)(?:[!=<>].*)?$)", x)[0] for x in _deps)}
 
 # since we save this data in src/transformers/dependency_versions_table.py it can be easily accessed from
 # anywhere. If you need to quickly access the data from this table in a shell, you can do so easily with:
@@ -175,7 +177,8 @@ class DepsTableUpdateCommand(Command):
     description = "build runtime dependency table"
     user_options = [
         # format: (long option, short option, description).
-        ("dep-table-update", None, "updates src/transformers/dependency_versions_table.py"),
+        ("dep-table-update", None,
+         "updates src/transformers/dependency_versions_table.py"),
     ]
 
     def initialize_options(self):
@@ -207,12 +210,14 @@ extras["ja"] = deps_list("fugashi", "ipadic", "unidic_lite", "unidic")
 extras["sklearn"] = deps_list("scikit-learn")
 
 extras["tf"] = deps_list("tensorflow", "onnxconverter-common", "keras2onnx")
-extras["tf-cpu"] = deps_list("tensorflow-cpu", "onnxconverter-common", "keras2onnx")
+extras["tf-cpu"] = deps_list("tensorflow-cpu",
+                             "onnxconverter-common", "keras2onnx")
 
 extras["torch"] = deps_list("torch")
 
 if os.name == "nt":  # windows
-    extras["retrieval"] = deps_list("datasets")  # faiss is not supported on windows
+    # faiss is not supported on windows
+    extras["retrieval"] = deps_list("datasets")
     extras["flax"] = []  # jax is not supported on windows
 else:
     extras["retrieval"] = deps_list("faiss-cpu", "datasets")
@@ -220,7 +225,8 @@ else:
 
 extras["tokenizers"] = deps_list("tokenizers")
 extras["onnxruntime"] = deps_list("onnxruntime", "onnxruntime-tools")
-extras["onnx"] = deps_list("onnxconverter-common", "keras2onnx") + extras["onnxruntime"]
+extras["onnx"] = deps_list("onnxconverter-common",
+                           "keras2onnx") + extras["onnxruntime"]
 extras["modelcreation"] = deps_list("cookiecutter")
 
 extras["serving"] = deps_list("pydantic", "uvicorn", "fastapi", "starlette")
@@ -228,14 +234,17 @@ extras["speech"] = deps_list("soundfile", "torchaudio")
 
 extras["sentencepiece"] = deps_list("sentencepiece", "protobuf")
 extras["testing"] = (
-    deps_list("pytest", "pytest-xdist", "timeout-decorator", "parameterized", "psutil", "datasets", "pytest-sugar")
+    deps_list("pytest", "pytest-xdist", "timeout-decorator",
+              "parameterized", "psutil", "datasets", "pytest-sugar")
     + extras["retrieval"]
     + extras["modelcreation"]
 )
-extras["docs"] = deps_list("recommonmark", "sphinx", "sphinx-markdown-tables", "sphinx-rtd-theme", "sphinx-copybutton")
+extras["docs"] = deps_list("recommonmark", "sphinx",
+                           "sphinx-markdown-tables", "sphinx-rtd-theme", "sphinx-copybutton")
 extras["quality"] = deps_list("black", "isort", "flake8")
 
-extras["all"] = extras["tf"] + extras["torch"] + extras["flax"] + extras["sentencepiece"] + extras["tokenizers"]
+extras["all"] = extras["tf"] + extras["torch"] + \
+    extras["flax"] + extras["sentencepiece"] + extras["tokenizers"]
 
 extras["dev"] = (
     extras["all"]
@@ -264,8 +273,10 @@ extras["torchhub"] = deps_list(
 
 # when modifying the following list, make sure to update src/transformers/dependency_versions_check.py
 install_requires = [
-    deps["dataclasses"] + ";python_version<'3.7'",  # dataclasses for Python versions that don't have it
-    deps["importlib_metadata"] + ";python_version<'3.8'",  # importlib_metadata for Python versions that don't have it
+    # dataclasses for Python versions that don't have it
+    deps["dataclasses"] + ";python_version<'3.7'",
+    # importlib_metadata for Python versions that don't have it
+    deps["importlib_metadata"] + ";python_version<'3.8'",
     deps["filelock"],  # filesystem locks, e.g., to prevent parallel downloads
     deps["numpy"],
     deps["packaging"],  # utilities from PyPA to e.g., compare versions
@@ -278,7 +289,8 @@ install_requires = [
 
 setup(
     name="transformers",
-    version="4.4.2",  # expected format is one of x.y.z.dev0, or x.y.z.rc1 or x.y.z (no to dashes, yes to dots)
+    # expected format is one of x.y.z.dev0, or x.y.z.rc1 or x.y.z (no to dashes, yes to dots)
+    version="4.4.2",
     author="Thomas Wolf, Lysandre Debut, Victor Sanh, Julien Chaumond, Sam Shleifer, Patrick von Platen, Sylvain Gugger, Google AI Language Team Authors, Open AI team Authors, Facebook AI Authors, Carnegie Mellon University Authors",
     author_email="thomas@huggingface.co",
     description="State-of-the-art Natural Language Processing for TensorFlow 2.0 and PyTorch",
@@ -290,7 +302,8 @@ setup(
     package_dir={"": "src"},
     packages=find_packages("src"),
     extras_require=extras,
-    entry_points={"console_scripts": ["transformers-cli=transformers.commands.transformers_cli:main"]},
+    entry_points={"console_scripts": [
+        "transformers-cli=transformers.commands.transformers_cli:main"]},
     python_requires=">=3.6.0",
     install_requires=install_requires,
     classifiers=[

@@ -52,11 +52,13 @@ class RetriBertPreTrainedModel(PreTrainedModel):
     def _init_weights(self, module):
         """ Initialize the weights """
         if isinstance(module, nn.Linear):
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            module.weight.data.normal_(
+                mean=0.0, std=self.config.initializer_range)
             if module.bias is not None:
                 module.bias.data.zero_()
         elif isinstance(module, nn.Embedding):
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            module.weight.data.normal_(
+                mean=0.0, std=self.config.initializer_range)
             if module.padding_idx is not None:
                 module.weight.data[module.padding_idx].zero_()
         elif isinstance(module, nn.LayerNorm):
@@ -94,8 +96,10 @@ class RetriBertModel(RetriBertPreTrainedModel):
         self.bert_query = BertModel(config)
         self.bert_doc = None if config.share_encoders else BertModel(config)
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
-        self.project_query = nn.Linear(config.hidden_size, config.projection_dim, bias=False)
-        self.project_doc = nn.Linear(config.hidden_size, config.projection_dim, bias=False)
+        self.project_query = nn.Linear(
+            config.hidden_size, config.projection_dim, bias=False)
+        self.project_doc = nn.Linear(
+            config.hidden_size, config.projection_dim, bias=False)
 
         self.ce_loss = nn.CrossEntropyLoss(reduction="mean")
 
@@ -115,7 +119,8 @@ class RetriBertModel(RetriBertPreTrainedModel):
             # prepare implicit variables
             device = input_ids.device
             input_shape = input_ids.size()
-            token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=device)
+            token_type_ids = torch.zeros(
+                input_shape, dtype=torch.long, device=device)
             head_mask = [None] * sent_encoder.config.num_hidden_layers
             extended_attention_mask: torch.Tensor = sent_encoder.get_extended_attention_mask(
                 attention_mask, input_shape, device
@@ -139,9 +144,12 @@ class RetriBertModel(RetriBertPreTrainedModel):
             # run encoding and pooling on one mini-batch at a time
             pooled_output_list = []
             for b in range(math.ceil(input_ids.shape[0] / checkpoint_batch_size)):
-                b_embedding_output = embedding_output[b * checkpoint_batch_size : (b + 1) * checkpoint_batch_size]
-                b_attention_mask = extended_attention_mask[b * checkpoint_batch_size : (b + 1) * checkpoint_batch_size]
-                pooled_output = checkpoint.checkpoint(partial_encode, b_embedding_output, b_attention_mask)
+                b_embedding_output = embedding_output[b * checkpoint_batch_size: (
+                    b + 1) * checkpoint_batch_size]
+                b_attention_mask = extended_attention_mask[b * checkpoint_batch_size: (
+                    b + 1) * checkpoint_batch_size]
+                pooled_output = checkpoint.checkpoint(
+                    partial_encode, b_embedding_output, b_attention_mask)
                 pooled_output_list.append(pooled_output)
             return torch.cat(pooled_output_list, dim=0)
 
@@ -207,10 +215,14 @@ class RetriBertModel(RetriBertPreTrainedModel):
             its corresponding document and each document to its corresponding query in the batch
         """
         device = input_ids_query.device
-        q_reps = self.embed_questions(input_ids_query, attention_mask_query, checkpoint_batch_size)
-        a_reps = self.embed_answers(input_ids_doc, attention_mask_doc, checkpoint_batch_size)
+        q_reps = self.embed_questions(
+            input_ids_query, attention_mask_query, checkpoint_batch_size)
+        a_reps = self.embed_answers(
+            input_ids_doc, attention_mask_doc, checkpoint_batch_size)
         compare_scores = torch.mm(q_reps, a_reps.t())
-        loss_qa = self.ce_loss(compare_scores, torch.arange(compare_scores.shape[1]).to(device))
-        loss_aq = self.ce_loss(compare_scores.t(), torch.arange(compare_scores.shape[0]).to(device))
+        loss_qa = self.ce_loss(compare_scores, torch.arange(
+            compare_scores.shape[1]).to(device))
+        loss_aq = self.ce_loss(compare_scores.t(), torch.arange(
+            compare_scores.shape[0]).to(device))
         loss = (loss_qa + loss_aq) / 2
         return loss

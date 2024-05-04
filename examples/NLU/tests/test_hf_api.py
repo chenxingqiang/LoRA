@@ -33,7 +33,8 @@ ENDPOINT_STAGING_BASIC_AUTH = f"https://{USER}:{PASS}@moon-staging.huggingface.c
 
 REPO_NAME = "my-model-{}".format(int(time.time()))
 REPO_NAME_LARGE_FILE = "my-model-largefiles-{}".format(int(time.time()))
-WORKING_REPO_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures/working_repo")
+WORKING_REPO_DIR = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), "fixtures/working_repo")
 LARGE_FILE_14MB = "https://cdn-media.huggingface.co/lfs-largefiles/progit.epub"
 LARGE_FILE_18MB = "https://cdn-media.huggingface.co/lfs-largefiles/progit.pdf"
 
@@ -124,10 +125,14 @@ class HfLargefilesTest(HfApiCommonTest):
         self._api.delete_repo(token=self._token, name=REPO_NAME_LARGE_FILE)
 
     def setup_local_clone(self, REMOTE_URL):
-        REMOTE_URL_AUTH = REMOTE_URL.replace(ENDPOINT_STAGING, ENDPOINT_STAGING_BASIC_AUTH)
-        subprocess.run(["git", "clone", REMOTE_URL_AUTH, WORKING_REPO_DIR], check=True, capture_output=True)
-        subprocess.run(["git", "lfs", "track", "*.pdf"], check=True, cwd=WORKING_REPO_DIR)
-        subprocess.run(["git", "lfs", "track", "*.epub"], check=True, cwd=WORKING_REPO_DIR)
+        REMOTE_URL_AUTH = REMOTE_URL.replace(
+            ENDPOINT_STAGING, ENDPOINT_STAGING_BASIC_AUTH)
+        subprocess.run(["git", "clone", REMOTE_URL_AUTH,
+                        WORKING_REPO_DIR], check=True, capture_output=True)
+        subprocess.run(["git", "lfs", "track", "*.pdf"],
+                       check=True, cwd=WORKING_REPO_DIR)
+        subprocess.run(["git", "lfs", "track", "*.epub"],
+                       check=True, cwd=WORKING_REPO_DIR)
 
     def test_end_to_end_thresh_6M(self):
         REMOTE_URL = self._api.create_repo(
@@ -135,17 +140,22 @@ class HfLargefilesTest(HfApiCommonTest):
         )
         self.setup_local_clone(REMOTE_URL)
 
-        subprocess.run(["wget", LARGE_FILE_18MB], check=True, capture_output=True, cwd=WORKING_REPO_DIR)
+        subprocess.run(["wget", LARGE_FILE_18MB], check=True,
+                       capture_output=True, cwd=WORKING_REPO_DIR)
         subprocess.run(["git", "add", "*"], check=True, cwd=WORKING_REPO_DIR)
-        subprocess.run(["git", "commit", "-m", "commit message"], check=True, cwd=WORKING_REPO_DIR)
+        subprocess.run(["git", "commit", "-m", "commit message"],
+                       check=True, cwd=WORKING_REPO_DIR)
 
         # This will fail as we haven't set up our custom transfer agent yet.
-        failed_process = subprocess.run(["git", "push"], capture_output=True, cwd=WORKING_REPO_DIR)
+        failed_process = subprocess.run(
+            ["git", "push"], capture_output=True, cwd=WORKING_REPO_DIR)
         self.assertEqual(failed_process.returncode, 1)
-        self.assertIn("transformers-cli lfs-enable-largefiles", failed_process.stderr.decode())
+        self.assertIn("transformers-cli lfs-enable-largefiles",
+                      failed_process.stderr.decode())
         # ^ Instructions on how to fix this are included in the error message.
 
-        subprocess.run(["transformers-cli", "lfs-enable-largefiles", WORKING_REPO_DIR], check=True)
+        subprocess.run(
+            ["transformers-cli", "lfs-enable-largefiles", WORKING_REPO_DIR], check=True)
 
         start_time = time.time()
         subprocess.run(["git", "push"], check=True, cwd=WORKING_REPO_DIR)
@@ -154,8 +164,10 @@ class HfLargefilesTest(HfApiCommonTest):
         # To be 100% sure, let's download the resolved file
         pdf_url = f"{REMOTE_URL}/resolve/main/progit.pdf"
         DEST_FILENAME = "uploaded.pdf"
-        subprocess.run(["wget", pdf_url, "-O", DEST_FILENAME], check=True, capture_output=True, cwd=WORKING_REPO_DIR)
-        dest_filesize = os.stat(os.path.join(WORKING_REPO_DIR, DEST_FILENAME)).st_size
+        subprocess.run(["wget", pdf_url, "-O", DEST_FILENAME],
+                       check=True, capture_output=True, cwd=WORKING_REPO_DIR)
+        dest_filesize = os.stat(os.path.join(
+            WORKING_REPO_DIR, DEST_FILENAME)).st_size
         self.assertEqual(dest_filesize, 18685041)
 
     def test_end_to_end_thresh_16M(self):
@@ -165,12 +177,16 @@ class HfLargefilesTest(HfApiCommonTest):
         )
         self.setup_local_clone(REMOTE_URL)
 
-        subprocess.run(["wget", LARGE_FILE_18MB], check=True, capture_output=True, cwd=WORKING_REPO_DIR)
-        subprocess.run(["wget", LARGE_FILE_14MB], check=True, capture_output=True, cwd=WORKING_REPO_DIR)
+        subprocess.run(["wget", LARGE_FILE_18MB], check=True,
+                       capture_output=True, cwd=WORKING_REPO_DIR)
+        subprocess.run(["wget", LARGE_FILE_14MB], check=True,
+                       capture_output=True, cwd=WORKING_REPO_DIR)
         subprocess.run(["git", "add", "*"], check=True, cwd=WORKING_REPO_DIR)
-        subprocess.run(["git", "commit", "-m", "both files in same commit"], check=True, cwd=WORKING_REPO_DIR)
+        subprocess.run(["git", "commit", "-m", "both files in same commit"],
+                       check=True, cwd=WORKING_REPO_DIR)
 
-        subprocess.run(["transformers-cli", "lfs-enable-largefiles", WORKING_REPO_DIR], check=True)
+        subprocess.run(
+            ["transformers-cli", "lfs-enable-largefiles", WORKING_REPO_DIR], check=True)
 
         start_time = time.time()
         subprocess.run(["git", "push"], check=True, cwd=WORKING_REPO_DIR)

@@ -48,14 +48,17 @@ def get_scores(args, preds_path, gold_data_path):
             ground_truths = ast.literal_eval(answer_list)
             answers.append(ground_truths)
     else:
-        references = [line.strip() for line in open(gold_data_path, "r").readlines()]
+        references = [line.strip()
+                      for line in open(gold_data_path, "r").readlines()]
         answers = [[reference] for reference in references]
 
     f1 = em = total = 0
     for prediction, ground_truths in zip(hypos, answers):
         total += 1
-        em += metric_max_over_ground_truths(exact_match_score, prediction, ground_truths)
-        f1 += metric_max_over_ground_truths(f1_score, prediction, ground_truths)
+        em += metric_max_over_ground_truths(exact_match_score,
+                                            prediction, ground_truths)
+        f1 += metric_max_over_ground_truths(f1_score,
+                                            prediction, ground_truths)
 
     em = 100.0 * em / total
     f1 = 100.0 * f1 / total
@@ -67,7 +70,8 @@ def get_scores(args, preds_path, gold_data_path):
 def get_precision_at_k(args, preds_path, gold_data_path):
     k = args.k
     hypos = [line.strip() for line in open(preds_path, "r").readlines()]
-    references = [line.strip() for line in open(gold_data_path, "r").readlines()]
+    references = [line.strip()
+                  for line in open(gold_data_path, "r").readlines()]
 
     em = total = 0
     for hypo, reference in zip(hypos, references):
@@ -129,9 +133,11 @@ def evaluate_batch_e2e(args, rag_model, questions):
             max_length=args.max_length,
             early_stopping=False,
             num_return_sequences=1,
-            bad_words_ids=[[0, 0]],  # BART likes to repeat BOS tokens, dont allow it to generate more than one
+            # BART likes to repeat BOS tokens, dont allow it to generate more than one
+            bad_words_ids=[[0, 0]],
         )
-        answers = rag_model.retriever.generator_tokenizer.batch_decode(outputs, skip_special_tokens=True)
+        answers = rag_model.retriever.generator_tokenizer.batch_decode(
+            outputs, skip_special_tokens=True)
 
         if args.print_predictions:
             for q, a in zip(questions, answers):
@@ -161,7 +167,8 @@ def get_args():
         type=str,
         help="Path to the retrieval index",
     )
-    parser.add_argument("--n_docs", default=5, type=int, help="Number of retrieved docs")
+    parser.add_argument("--n_docs", default=5, type=int,
+                        help="Number of retrieved docs")
     parser.add_argument(
         "--model_name_or_path",
         default=None,
@@ -176,7 +183,8 @@ def get_args():
         type=str,
         help="Evaluation mode, e2e calculates exact match and F1 of the downstream task, retrieval calculates precision@k.",
     )
-    parser.add_argument("--k", default=1, type=int, help="k for the precision@k calculation")
+    parser.add_argument("--k", default=1, type=int,
+                        help="k for the precision@k calculation")
     parser.add_argument(
         "--evaluation_set",
         default=None,
@@ -228,8 +236,10 @@ def get_args():
         type=int,
         help="Number of beams to be used when generating answers",
     )
-    parser.add_argument("--min_length", default=1, type=int, help="Min length of the generated answers")
-    parser.add_argument("--max_length", default=50, type=int, help="Max length of the generated answers")
+    parser.add_argument("--min_length", default=1, type=int,
+                        help="Min length of the generated answers")
+    parser.add_argument("--max_length", default=50, type=int,
+                        help="Max length of the generated answers")
 
     parser.add_argument(
         "--print_predictions",
@@ -274,17 +284,21 @@ def main(args):
 
     for checkpoint in checkpoints:
         if os.path.exists(args.predictions_path) and (not args.recalculate):
-            logger.info("Calculating metrics based on an existing predictions file: {}".format(args.predictions_path))
+            logger.info("Calculating metrics based on an existing predictions file: {}".format(
+                args.predictions_path))
             score_fn(args, args.predictions_path, args.gold_data_path)
             continue
 
         logger.info("***** Running evaluation for {} *****".format(checkpoint))
         logger.info("  Batch size = %d", args.eval_batch_size)
-        logger.info("  Predictions will be stored under {}".format(args.predictions_path))
+        logger.info("  Predictions will be stored under {}".format(
+            args.predictions_path))
 
         if args.model_type.startswith("rag"):
-            retriever = RagRetriever.from_pretrained(checkpoint, **model_kwargs)
-            model = model_class.from_pretrained(checkpoint, retriever=retriever, **model_kwargs)
+            retriever = RagRetriever.from_pretrained(
+                checkpoint, **model_kwargs)
+            model = model_class.from_pretrained(
+                checkpoint, retriever=retriever, **model_kwargs)
             model.retriever.init_retrieval()
         else:
             model = model_class.from_pretrained(checkpoint, **model_kwargs)

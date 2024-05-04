@@ -154,7 +154,8 @@ class FlaxAutoModel(object):
         """
         config = kwargs.pop("config", None)
         if not isinstance(config, PretrainedConfig):
-            config = AutoConfig.from_pretrained(pretrained_model_name_or_path, **kwargs)
+            config = AutoConfig.from_pretrained(
+                pretrained_model_name_or_path, **kwargs)
 
         for config_class, model_class in FLAX_MODEL_MAPPING.items():
             if isinstance(config, config_class):

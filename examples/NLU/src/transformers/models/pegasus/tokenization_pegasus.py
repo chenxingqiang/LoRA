@@ -119,7 +119,8 @@ class PegasusTokenizer(PreTrainedTokenizer):
             additional_special_tokens = additional_special_tokens_extended
         else:
             additional_special_tokens = [mask_token_sent]
-            additional_special_tokens += [f"<unk_{i}>" for i in range(2, self.offset)]
+            additional_special_tokens += [
+                f"<unk_{i}>" for i in range(2, self.offset)]
 
         super().__init__(
             eos_token=eos_token,
@@ -144,7 +145,8 @@ class PegasusTokenizer(PreTrainedTokenizer):
         }
         # entries 2-104 are only used for pretraining and called <mask_1>, <mask_2>, unk_2, ...unk_102
         # mask_token_sent is already added to list -> so start at 1
-        self.encoder.update({i + 3: additional_special_tokens[i] for i in range(1, self.offset - 1)})
+        self.encoder.update(
+            {i + 3: additional_special_tokens[i] for i in range(1, self.offset - 1)})
         self.decoder: Dict[str, int] = {v: k for k, v in self.encoder.items()}
 
     @property
@@ -152,7 +154,8 @@ class PegasusTokenizer(PreTrainedTokenizer):
         return len(self.sp_model) + self.offset
 
     def get_vocab(self) -> Dict[str, int]:
-        vocab = {self.convert_ids_to_tokens(i): i for i in range(self.vocab_size)}
+        vocab = {self.convert_ids_to_tokens(
+            i): i for i in range(self.vocab_size)}
         vocab.update(self.added_tokens_encoder)
         return vocab
 
@@ -203,8 +206,10 @@ class PegasusTokenizer(PreTrainedTokenizer):
         return 1
 
     def _special_token_mask(self, seq):
-        all_special_ids = set(self.all_special_ids)  # call it once instead of inside list comp
-        all_special_ids.remove(self.unk_token_id)  # <unk> is only sometimes special
+        # call it once instead of inside list comp
+        all_special_ids = set(self.all_special_ids)
+        # <unk> is only sometimes special
+        all_special_ids.remove(self.unk_token_id)
 
         assert all_special_ids == set(
             range(len(self.additional_special_tokens) + 3)
@@ -250,10 +255,12 @@ class PegasusTokenizer(PreTrainedTokenizer):
 
     def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
         if not os.path.isdir(save_directory):
-            logger.error("Vocabulary path ({}) should be a directory".format(save_directory))
+            logger.error(
+                "Vocabulary path ({}) should be a directory".format(save_directory))
             return
         out_vocab_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["vocab_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["vocab_file"]
         )
 
         if os.path.abspath(self.vocab_file) != os.path.abspath(out_vocab_file):

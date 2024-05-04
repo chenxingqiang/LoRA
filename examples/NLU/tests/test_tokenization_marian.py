@@ -31,7 +31,8 @@ if is_sentencepiece_available():
 from .test_tokenization_common import TokenizerTesterMixin
 
 
-SAMPLE_SP = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures/test_sentencepiece.model")
+SAMPLE_SP = os.path.join(os.path.dirname(os.path.abspath(
+    __file__)), "fixtures/test_sentencepiece.model")
 
 mock_tokenizer_config = {"target_lang": "fi", "source_lang": "en"}
 zh_code = ">>zh<<"
@@ -53,11 +54,13 @@ class MarianTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 
     def setUp(self):
         super().setUp()
-        vocab = ["</s>", "<unk>", "▁This", "▁is", "▁a", "▁t", "est", "\u0120", "<pad>"]
+        vocab = ["</s>", "<unk>", "▁This", "▁is",
+                 "▁a", "▁t", "est", "\u0120", "<pad>"]
         vocab_tokens = dict(zip(vocab, range(len(vocab))))
         save_dir = Path(self.tmpdirname)
         save_json(vocab_tokens, save_dir / VOCAB_FILES_NAMES["vocab"])
-        save_json(mock_tokenizer_config, save_dir / VOCAB_FILES_NAMES["tokenizer_config_file"])
+        save_json(mock_tokenizer_config, save_dir /
+                  VOCAB_FILES_NAMES["tokenizer_config_file"])
         if not (save_dir / VOCAB_FILES_NAMES["source_spm"]).exists():
             copyfile(SAMPLE_SP, save_dir / VOCAB_FILES_NAMES["source_spm"])
             copyfile(SAMPLE_SP, save_dir / VOCAB_FILES_NAMES["target_spm"])
@@ -75,7 +78,8 @@ class MarianTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
         )
 
     def test_tokenizer_equivalence_en_de(self):
-        en_de_tokenizer = MarianTokenizer.from_pretrained(f"{ORG_NAME}opus-mt-en-de")
+        en_de_tokenizer = MarianTokenizer.from_pretrained(
+            f"{ORG_NAME}opus-mt-en-de")
         batch = en_de_tokenizer(["I am a small frog"], return_tensors=None)
         self.assertIsInstance(batch, BatchEncoding)
         expected = [38, 121, 14, 697, 38848, 0]
@@ -98,6 +102,7 @@ class MarianTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
 
     def test_outputs_can_be_shorter(self):
         tok = self.get_tokenizer()
-        batch_smaller = tok(["I am a tiny frog", "I am a small frog"], padding=True, return_tensors=FRAMEWORK)
+        batch_smaller = tok(["I am a tiny frog", "I am a small frog"],
+                            padding=True, return_tensors=FRAMEWORK)
         self.assertIsInstance(batch_smaller, BatchEncoding)
         self.assertEqual(batch_smaller.input_ids.shape, (2, 10))

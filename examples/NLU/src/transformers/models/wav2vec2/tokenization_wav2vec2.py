@@ -47,7 +47,8 @@ PRETRAINED_VOCAB_FILES_MAP = {
 }
 
 # Wav2Vec2 has no max input length
-PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {"facebook/wav2vec2-base-960h": sys.maxsize}
+PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
+    "facebook/wav2vec2-base-960h": sys.maxsize}
 
 WAV2VEC2_KWARGS_DOCSTRING = r"""
             padding (:obj:`bool`, :obj:`str` or :class:`~transformers.file_utils.PaddingStrategy`, `optional`, defaults to :obj:`False`):
@@ -206,7 +207,8 @@ class Wav2Vec2CTCTokenizer(PreTrainedTokenizer):
             tokens = [token_group[0] for token_group in groupby(tokens)]
 
         # filter self.pad_token which is used as CTC-blank token
-        filtered_tokens = list(filter(lambda token: token != self.pad_token, tokens))
+        filtered_tokens = list(
+            filter(lambda token: token != self.pad_token, tokens))
 
         if spaces_between_special_tokens:
             join_token = " "
@@ -240,7 +242,8 @@ class Wav2Vec2CTCTokenizer(PreTrainedTokenizer):
         same as tokens of the base vocabulary and therefore the function `convert_tokens_to_string` has to be called on
         the whole token list and not individually on added tokens
         """
-        filtered_tokens = self.convert_ids_to_tokens(token_ids, skip_special_tokens=skip_special_tokens)
+        filtered_tokens = self.convert_ids_to_tokens(
+            token_ids, skip_special_tokens=skip_special_tokens)
 
         result = []
         for token in filtered_tokens:
@@ -260,10 +263,12 @@ class Wav2Vec2CTCTokenizer(PreTrainedTokenizer):
 
     def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
         if not os.path.isdir(save_directory):
-            logger.error("Vocabulary path ({}) should be a directory".format(save_directory))
+            logger.error(
+                "Vocabulary path ({}) should be a directory".format(save_directory))
             return
         vocab_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["vocab_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["vocab_file"]
         )
 
         with open(vocab_file, "w", encoding="utf-8") as f:
@@ -434,7 +439,8 @@ class Wav2Vec2Tokenizer(PreTrainedTokenizer):
 
         # zero-mean and unit-variance normalization
         if self.do_normalize:
-            raw_speech = [(x - np.mean(x)) / np.sqrt(np.var(x) + 1e-5) for x in raw_speech]
+            raw_speech = [(x - np.mean(x)) / np.sqrt(np.var(x) + 1e-5)
+                          for x in raw_speech]
 
         # convert into correct format for padding
         encoded_inputs = BatchEncoding({"input_values": raw_speech})
@@ -475,10 +481,12 @@ class Wav2Vec2Tokenizer(PreTrainedTokenizer):
         grouped_tokens = [token_group[0] for token_group in groupby(tokens)]
 
         # filter self.pad_token which is used as CTC-blank token
-        filtered_tokens = list(filter(lambda token: token != self.pad_token, grouped_tokens))
+        filtered_tokens = list(
+            filter(lambda token: token != self.pad_token, grouped_tokens))
 
         # replace delimiter token
-        string = "".join([" " if token == self.word_delimiter_token else token for token in filtered_tokens]).strip()
+        string = "".join(
+            [" " if token == self.word_delimiter_token else token for token in filtered_tokens]).strip()
 
         if self.do_lower_case:
             string = string.lower()
@@ -496,7 +504,8 @@ class Wav2Vec2Tokenizer(PreTrainedTokenizer):
         same as tokens of the base vocabulary and therefore the function `convert_tokens_to_string` has to be called on
         the whole token list and not individually on added tokens
         """
-        filtered_tokens = self.convert_ids_to_tokens(token_ids, skip_special_tokens=skip_special_tokens)
+        filtered_tokens = self.convert_ids_to_tokens(
+            token_ids, skip_special_tokens=skip_special_tokens)
 
         result = []
         for token in filtered_tokens:
@@ -514,10 +523,12 @@ class Wav2Vec2Tokenizer(PreTrainedTokenizer):
 
     def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
         if not os.path.isdir(save_directory):
-            logger.error("Vocabulary path ({}) should be a directory".format(save_directory))
+            logger.error(
+                "Vocabulary path ({}) should be a directory".format(save_directory))
             return
         vocab_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["vocab_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["vocab_file"]
         )
 
         with open(vocab_file, "w", encoding="utf-8") as f:

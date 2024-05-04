@@ -138,7 +138,8 @@ class PreTrainedTokenizerFast(PreTrainedTokenizerBase):
         """
         base_vocab = self._tokenizer.get_vocab(with_added_tokens=False)
         full_vocab = self._tokenizer.get_vocab(with_added_tokens=True)
-        added_vocab = dict((tok, index) for tok, index in full_vocab.items() if tok not in base_vocab)
+        added_vocab = dict((tok, index) for tok,
+                           index in full_vocab.items() if tok not in base_vocab)
         return added_vocab
 
     def __len__(self) -> int:
@@ -200,7 +201,8 @@ class PreTrainedTokenizerFast(PreTrainedTokenizerBase):
             if return_attention_mask:
                 encoding_dict["attention_mask"].append(e.attention_mask)
             if return_special_tokens_mask:
-                encoding_dict["special_tokens_mask"].append(e.special_tokens_mask)
+                encoding_dict["special_tokens_mask"].append(
+                    e.special_tokens_mask)
             if return_offsets_mapping:
                 encoding_dict["offset_mapping"].append(e.offsets)
             if return_length:
@@ -323,7 +325,8 @@ class PreTrainedTokenizerFast(PreTrainedTokenizerBase):
         """
         # Set truncation and padding on the backend tokenizer
         if truncation_strategy != TruncationStrategy.DO_NOT_TRUNCATE:
-            self._tokenizer.enable_truncation(max_length, stride=stride, strategy=truncation_strategy.value)
+            self._tokenizer.enable_truncation(
+                max_length, stride=stride, strategy=truncation_strategy.value)
         else:
             self._tokenizer.no_truncation()
 
@@ -363,7 +366,8 @@ class PreTrainedTokenizerFast(PreTrainedTokenizerBase):
 
         if not isinstance(batch_text_or_text_pairs, list):
             raise TypeError(
-                "batch_text_or_text_pairs has to be a list (got {})".format(type(batch_text_or_text_pairs))
+                "batch_text_or_text_pairs has to be a list (got {})".format(
+                    type(batch_text_or_text_pairs))
             )
 
         # Set the truncation and padding strategy and restore the initial configuration
@@ -411,7 +415,8 @@ class PreTrainedTokenizerFast(PreTrainedTokenizerBase):
         for key in tokens_and_encodings[0][0].keys():
             stack = [e for item, _ in tokens_and_encodings for e in item[key]]
             sanitized_tokens[key] = stack
-        sanitized_encodings = [e for _, item in tokens_and_encodings for e in item]
+        sanitized_encodings = [
+            e for _, item in tokens_and_encodings for e in item]
 
         # If returning overflowing tokens, we need to return a mapping
         # from the batch idx to the original sample
@@ -422,7 +427,8 @@ class PreTrainedTokenizerFast(PreTrainedTokenizerBase):
             sanitized_tokens["overflow_to_sample_mapping"] = overflow_to_sample_mapping
 
         for input_ids in sanitized_tokens["input_ids"]:
-            self._eventual_warn_about_too_long_sequence(input_ids, max_length, verbose)
+            self._eventual_warn_about_too_long_sequence(
+                input_ids, max_length, verbose)
         return BatchEncoding(sanitized_tokens, sanitized_encodings, tensor_type=return_tensors)
 
     def _encode_plus(
@@ -473,13 +479,15 @@ class PreTrainedTokenizerFast(PreTrainedTokenizerBase):
         if return_tensors is None and not return_overflowing_tokens:
             batched_output = BatchEncoding(
                 {
-                    key: value[0] if len(value) > 0 and isinstance(value[0], list) else value
+                    key: value[0] if len(value) > 0 and isinstance(
+                        value[0], list) else value
                     for key, value in batched_output.items()
                 },
                 batched_output.encodings,
             )
 
-        self._eventual_warn_about_too_long_sequence(batched_output["input_ids"], max_length, verbose)
+        self._eventual_warn_about_too_long_sequence(
+            batched_output["input_ids"], max_length, verbose)
 
         return batched_output
 
@@ -493,11 +501,13 @@ class PreTrainedTokenizerFast(PreTrainedTokenizerBase):
         clean_up_tokenization_spaces: bool = True,
         **kwargs
     ) -> str:
-        self._decode_use_source_tokenizer = kwargs.pop("use_source_tokenizer", False)
+        self._decode_use_source_tokenizer = kwargs.pop(
+            "use_source_tokenizer", False)
 
         if isinstance(token_ids, int):
             token_ids = [token_ids]
-        text = self._tokenizer.decode(token_ids, skip_special_tokens=skip_special_tokens)
+        text = self._tokenizer.decode(
+            token_ids, skip_special_tokens=skip_special_tokens)
 
         if clean_up_tokenization_spaces:
             clean_text = self.clean_up_tokenization(text)
@@ -522,7 +532,8 @@ class PreTrainedTokenizerFast(PreTrainedTokenizerBase):
 
         if legacy_format:
             added_tokens_file = os.path.join(
-                save_directory, (filename_prefix + "-" if filename_prefix else "") + ADDED_TOKENS_FILE
+                save_directory, (filename_prefix +
+                                 "-" if filename_prefix else "") + ADDED_TOKENS_FILE
             )
             added_vocab = self.get_added_vocab()
             if added_vocab:
@@ -530,11 +541,13 @@ class PreTrainedTokenizerFast(PreTrainedTokenizerBase):
                     out_str = json.dumps(added_vocab, ensure_ascii=False)
                     f.write(out_str)
 
-            vocab_files = self.save_vocabulary(save_directory, filename_prefix=filename_prefix)
+            vocab_files = self.save_vocabulary(
+                save_directory, filename_prefix=filename_prefix)
             file_names = file_names + vocab_files + (added_tokens_file,)
         else:
             tokenizer_file = os.path.join(
-                save_directory, (filename_prefix + "-" if filename_prefix else "") + TOKENIZER_FILE
+                save_directory, (filename_prefix +
+                                 "-" if filename_prefix else "") + TOKENIZER_FILE
             )
             self.backend_tokenizer.save(tokenizer_file)
             file_names = file_names + (tokenizer_file,)

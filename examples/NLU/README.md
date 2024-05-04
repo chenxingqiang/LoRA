@@ -4,10 +4,11 @@ This folder contains the implementation of LoRA in RoBERTa and DeBERTa V2 using 
 
 **LoRA: Low-Rank Adaptation of Large Language Models** <br>
 *Edward J. Hu\*, Yelong Shen\*, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen* <br>
-Paper: https://arxiv.org/abs/2106.09685 <br>
+Paper: <https://arxiv.org/abs/2106.09685> <br>
 
 ## Adapting to the GLUE Benchmark
-Our experiments on the GLUE benchmark are run on 4 NVIDIA Tesla V100 GPU cards out of a DGX-1. The results may vary due to different GPU models, drivers, CUDA SDK versions, floating-point precisions, and random seeds. 
+
+Our experiments on the GLUE benchmark are run on 4 NVIDIA Tesla V100 GPU cards out of a DGX-1. The results may vary due to different GPU models, drivers, CUDA SDK versions, floating-point precisions, and random seeds.
 We report below the dev set results, taking the medium over 5 runs:
 
 <p>
@@ -34,20 +35,29 @@ Here are the GLUE benchmark test set results for DeBERTa XXL 1.5B (no ensemble):
 |   | STSB     |[3.4 MB](https://github.com/msft-edward/LoRA_private/releases/download/RoBERTa-base/roberta_base_lora_stsb.bin)  |[7.1 MB](https://github.com/msft-edward/LoRA_private/releases/download/RoBERTa-large/roberta_large_lora_stsb.bin)  |[27.1 MB](https://github.com/msft-edward/LoRA_private/releases/download/DeBERTa/deberta_v2_xxlarge_lora_mnli.bin)  |
 
 ## Steps to reproduce our results
+
 ### Create and activate conda env
+
 ```console
 conda env create -f environment.yml
 ```
+
 ### Install the pre-requisites
+
 lora:
+
 ```console
 pip install -e ..
 ```
+
 NLU:
+
 ```console
 pip install -e .
 ```
+
 ### Start the experiments
+
 ```console
 deberta_v2_xxlarge_mnli.sh
 deberta_v2_xxlarge_sst2.sh
@@ -58,13 +68,15 @@ deberta_v2_xxlarge_qqp.sh
 deberta_v2_xxlarge_rte.sh
 deberta_v2_xxlarge_stsb.sh
 ```
+
 For MRPC, RTE, and STSB, you need to download and start from the LoRA-adapted MNLI checkpoint and change the path accordingly in the shell script.
 
-Attention: xxlarge-mnli is the LoRA-adapted model from our first MNLI experiments, instead of https://huggingface.co/microsoft/deberta-v2-xxlarge-mnli.
+Attention: xxlarge-mnli is the LoRA-adapted model from our first MNLI experiments, instead of <https://huggingface.co/microsoft/deberta-v2-xxlarge-mnli>.
 
 We also provide the shell scripts for roberta-base and roberta-large ( {roberta_large|roberta_base}_{task name}.sh ).
 
 ### Evaluate the checkpoints
+
 ```console
 python -m torch.distributed.launch --nproc_per_node=1 examples/text-classification/run_glue.py \
 --model_name_or_path microsoft/deberta-v2-xxlarge \
@@ -78,12 +90,14 @@ python -m torch.distributed.launch --nproc_per_node=1 examples/text-classificati
 ```
 
 ### Enable Cutoff/R-drop for data augmentation
+
 ```console
 mnli.cutoff.sh
 mnli.rdrop.sh
 ```
 
 ## Citation
+
 ```
 @misc{hu2021lora,
     title={LoRA: Low-Rank Adaptation of Large Language Models},

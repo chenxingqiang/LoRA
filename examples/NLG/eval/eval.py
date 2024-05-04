@@ -1,4 +1,20 @@
-__author__='thiagocastroferreira'
+from tabulate import tabulate
+from razdel import tokenize
+from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
+from metrics.bleurt.bleurt import score as bleurt_score
+from metrics.chrF import computeChrF
+from bert_score import score
+import re
+import subprocess
+import nltk
+import logging
+import pyter
+import os
+import copy
+import codecs
+import argparse
+import sys
+__author__ = 'thiagocastroferreira'
 
 """
 Author: Organizers of the 2nd WebNLG Challenge
@@ -37,24 +53,6 @@ Description:
             python3 eval.py -R data/ru/reference -H data/ru/hypothesis -lng ru -nr 1 -m bleu,meteor,chrf++,ter,bert
 """
 
-import sys
-import argparse
-import codecs
-import copy
-import os
-import pyter
-import logging
-import nltk
-import subprocess
-import re
-
-from bert_score import score
-from metrics.chrF import computeChrF
-from metrics.bleurt.bleurt import score as bleurt_score
-
-from nltk.translate.bleu_score import corpus_bleu, SmoothingFunction
-from razdel import tokenize
-from tabulate import tabulate
 
 BLEU_PATH = 'metrics/multi-bleu-detok.perl'
 METEOR_PATH = 'metrics/meteor-1.5/meteor-1.5.jar'
@@ -79,9 +77,11 @@ def parse(refs_path, hyps_path, num_refs, lng='en'):
     references_tok = copy.copy(references)
     for i, refs in enumerate(references_tok):
         if lng == 'ru':
-            references_tok[i] = [' '.join([_.text for _ in tokenize(ref)]) for ref in refs]
+            references_tok[i] = [
+                ' '.join([_.text for _ in tokenize(ref)]) for ref in refs]
         else:
-            references_tok[i] = [' '.join(nltk.word_tokenize(ref)) for ref in refs]
+            references_tok[i] = [
+                ' '.join(nltk.word_tokenize(ref)) for ref in refs]
 
     # hypothesis
     with codecs.open(hyps_path, 'r', 'utf-8') as f:
@@ -90,14 +90,16 @@ def parse(refs_path, hyps_path, num_refs, lng='en'):
     # hypothesis tokenized
     hypothesis_tok = copy.copy(hypothesis)
     if lng == 'ru':
-        hypothesis_tok = [' '.join([_.text for _ in tokenize(hyp)]) for hyp in hypothesis_tok]
+        hypothesis_tok = [' '.join([_.text for _ in tokenize(hyp)])
+                          for hyp in hypothesis_tok]
     else:
-        hypothesis_tok = [' '.join(nltk.word_tokenize(hyp)) for hyp in hypothesis_tok]
-
+        hypothesis_tok = [' '.join(nltk.word_tokenize(hyp))
+                          for hyp in hypothesis_tok]
 
     logging.info('FINISHING TO PARSE INPUTS...')
     print('FINISHING TO PARSE INPUTS...')
     return references, references_tok, hypothesis, hypothesis_tok
+
 
 def bleu_score(refs_path, hyps_path, num_refs):
     logging.info('STARTING TO COMPUTE BLEU...')
@@ -109,12 +111,14 @@ def bleu_score(refs_path, hyps_path, num_refs):
         else:
             ref_files.append(refs_path + str(i))
 
-    command = 'perl {0} {1} < {2}'.format(BLEU_PATH, ' '.join(ref_files), hyps_path)
+    command = 'perl {0} {1} < {2}'.format(
+        BLEU_PATH, ' '.join(ref_files), hyps_path)
     result = subprocess.check_output(command, shell=True)
     try:
         bleu = float(re.findall('BLEU = (.+?),', str(result))[0])
     except:
-        logging.error('ERROR ON COMPUTING METEOR. MAKE SURE YOU HAVE PERL INSTALLED GLOBALLY ON YOUR MACHINE.')
+        logging.error(
+            'ERROR ON COMPUTING METEOR. MAKE SURE YOU HAVE PERL INSTALLED GLOBALLY ON YOUR MACHINE.')
         print('ERROR ON COMPUTING METEOR. MAKE SURE YOU HAVE PERL INSTALLED GLOBALLY ON YOUR MACHINE.')
         bleu = -1
     logging.info('FINISHING TO COMPUTE BLEU...')
@@ -153,11 +157,13 @@ def meteor_score(references, hypothesis, num_refs, lng='en'):
 
     try:
         command = 'java -Xmx2G -jar {0} '.format(METEOR_PATH)
-        command += '{0} {1} -l {2} -norm -r {3}'.format(hyps_tmp, refs_tmp, lng, num_refs)
+        command += '{0} {1} -l {2} -norm -r {3}'.format(
+            hyps_tmp, refs_tmp, lng, num_refs)
         result = subprocess.check_output(command, shell=True)
         meteor = result.split(b'\n')[-2].split()[-1]
     except:
-        logging.error('ERROR ON COMPUTING METEOR. MAKE SURE YOU HAVE JAVA INSTALLED GLOBALLY ON YOUR MACHINE.')
+        logging.error(
+            'ERROR ON COMPUTING METEOR. MAKE SURE YOU HAVE JAVA INSTALLED GLOBALLY ON YOUR MACHINE.')
         print('ERROR ON COMPUTING METEOR. MAKE SURE YOU HAVE JAVA INSTALLED GLOBALLY ON YOUR MACHINE.')
         meteor = -1
 
@@ -198,7 +204,8 @@ def chrF_score(references, hypothesis, num_refs, nworder, ncorder, beta):
     htxt = codecs.open(hyps_tmp, 'r', 'utf-8')
 
     try:
-        totalF, averageTotalF, totalPrec, totalRec = computeChrF(rtxt, htxt, nworder, ncorder, beta, None)
+        totalF, averageTotalF, totalPrec, totalRec = computeChrF(
+            rtxt, htxt, nworder, ncorder, beta, None)
     except:
         logging.error('ERROR ON COMPUTING CHRF++.')
         print('ERROR ON COMPUTING CHRF++.')
@@ -254,7 +261,8 @@ def bert_score_(references, hypothesis, lng='en'):
         P, R, F1 = 0, 0, 0
     return P, R, F1
 
-def bleurt(references, hypothesis, num_refs, checkpoint = "metrics/bleurt/bleurt-base-128"):
+
+def bleurt(references, hypothesis, num_refs, checkpoint="metrics/bleurt/bleurt-base-128"):
     refs, cands = [], []
     for i, hyp in enumerate(hypothesis):
         for ref in references[i][:num_refs]:
@@ -263,16 +271,18 @@ def bleurt(references, hypothesis, num_refs, checkpoint = "metrics/bleurt/bleurt
 
     scorer = bleurt_score.BleurtScorer(checkpoint)
     scores = scorer.score(refs, cands)
-    scores = [max(scores[i:i+num_refs]) for i in range(0, len(scores), num_refs)]
+    scores = [max(scores[i:i+num_refs])
+              for i in range(0, len(scores), num_refs)]
     return round(sum(scores) / len(scores), 2)
 
 
-def run(refs_path, hyps_path, num_refs, lng='en', metrics='bleu,meteor,chrf++,ter,bert,bleurt',ncorder=6, nworder=2, beta=2):
+def run(refs_path, hyps_path, num_refs, lng='en', metrics='bleu,meteor,chrf++,ter,bert,bleurt', ncorder=6, nworder=2, beta=2):
     metrics = metrics.lower().split(',')
-    references, references_tok, hypothesis, hypothesis_tok = parse(refs_path, hyps_path, num_refs, lng)
-    
+    references, references_tok, hypothesis, hypothesis_tok = parse(
+        refs_path, hyps_path, num_refs, lng)
+
     result = {}
-    
+
     logging.info('STARTING EVALUATION...')
     if 'bleu' in metrics:
         bleu = bleu_score(refs_path, hyps_path, num_refs)
@@ -281,10 +291,12 @@ def run(refs_path, hyps_path, num_refs, lng='en', metrics='bleu,meteor,chrf++,te
         b = bleu_nltk(references_tok, hypothesis_tok)
         result['bleu_nltk'] = b
     if 'meteor' in metrics:
-        meteor = meteor_score(references_tok, hypothesis_tok, num_refs, lng=lng)
+        meteor = meteor_score(
+            references_tok, hypothesis_tok, num_refs, lng=lng)
         result['meteor'] = meteor
     if 'chrf++' in metrics:
-        chrf, _, _, _ = chrF_score(references, hypothesis, num_refs, nworder, ncorder, beta)
+        chrf, _, _, _ = chrF_score(
+            references, hypothesis, num_refs, nworder, ncorder, beta)
         result['chrf++'] = chrf
     if 'ter' in metrics:
         ter = ter_score(references_tok, hypothesis_tok, num_refs)
@@ -298,7 +310,7 @@ def run(refs_path, hyps_path, num_refs, lng='en', metrics='bleu,meteor,chrf++,te
         s = bleurt(references, hypothesis, num_refs)
         result['bleurt'] = s
     logging.info('FINISHING EVALUATION...')
-    
+
     return result
 
 
@@ -307,14 +319,22 @@ if __name__ == '__main__':
     logging.basicConfig(filename='eval.log', level=logging.INFO, format=FORMAT)
 
     argParser = argparse.ArgumentParser()
-    argParser.add_argument("-R", "--reference", help="reference translation", required=True)
-    argParser.add_argument("-H", "--hypothesis", help="hypothesis translation", required=True)
-    argParser.add_argument("-lng", "--language", help="evaluated language", default='en')
-    argParser.add_argument("-nr", "--num_refs", help="number of references", type=int, default=4)
-    argParser.add_argument("-m", "--metrics", help="evaluation metrics to be computed", default='bleu,meteor,ter,chrf++,bert,bleurt')
-    argParser.add_argument("-nc", "--ncorder", help="chrF metric: character n-gram order (default=6)", type=int, default=6)
-    argParser.add_argument("-nw", "--nworder", help="chrF metric: word n-gram order (default=2)", type=int, default=2)
-    argParser.add_argument("-b", "--beta", help="chrF metric: beta parameter (default=2)", type=float, default=2.0)
+    argParser.add_argument("-R", "--reference",
+                           help="reference translation", required=True)
+    argParser.add_argument("-H", "--hypothesis",
+                           help="hypothesis translation", required=True)
+    argParser.add_argument("-lng", "--language",
+                           help="evaluated language", default='en')
+    argParser.add_argument("-nr", "--num_refs",
+                           help="number of references", type=int, default=4)
+    argParser.add_argument("-m", "--metrics", help="evaluation metrics to be computed",
+                           default='bleu,meteor,ter,chrf++,bert,bleurt')
+    argParser.add_argument(
+        "-nc", "--ncorder", help="chrF metric: character n-gram order (default=6)", type=int, default=6)
+    argParser.add_argument(
+        "-nw", "--nworder", help="chrF metric: word n-gram order (default=2)", type=int, default=2)
+    argParser.add_argument(
+        "-b", "--beta", help="chrF metric: beta parameter (default=2)", type=float, default=2.0)
 
     args = argParser.parse_args()
 
@@ -323,15 +343,16 @@ if __name__ == '__main__':
     hyps_path = args.hypothesis
     lng = args.language
     num_refs = args.num_refs
-    metrics = args.metrics#.lower().split(',')
+    metrics = args.metrics  # .lower().split(',')
 
     nworder = args.nworder
     ncorder = args.ncorder
     beta = args.beta
     logging.info('FINISHING TO READ INPUTS...')
 
-    result = run(refs_path=refs_path, hyps_path=hyps_path, num_refs=num_refs, lng=lng, metrics=metrics, ncorder=ncorder, nworder=nworder, beta=beta)
-    
+    result = run(refs_path=refs_path, hyps_path=hyps_path, num_refs=num_refs,
+                 lng=lng, metrics=metrics, ncorder=ncorder, nworder=nworder, beta=beta)
+
     metrics = metrics.lower().split(',')
     headers, values = [], []
     if 'bleu' in metrics:

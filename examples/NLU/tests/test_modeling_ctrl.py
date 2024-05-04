@@ -66,26 +66,32 @@ class CTRLModelTester:
         self.pad_token_id = self.vocab_size - 1
 
     def prepare_config_and_inputs(self):
-        input_ids = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+        input_ids = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size)
 
         input_mask = None
         if self.use_input_mask:
-            input_mask = random_attention_mask([self.batch_size, self.seq_length])
+            input_mask = random_attention_mask(
+                [self.batch_size, self.seq_length])
 
         token_type_ids = None
         if self.use_token_type_ids:
-            token_type_ids = ids_tensor([self.batch_size, self.seq_length], self.type_vocab_size)
+            token_type_ids = ids_tensor(
+                [self.batch_size, self.seq_length], self.type_vocab_size)
 
         mc_token_ids = None
         if self.use_mc_token_ids:
-            mc_token_ids = ids_tensor([self.batch_size, self.num_choices], self.seq_length)
+            mc_token_ids = ids_tensor(
+                [self.batch_size, self.num_choices], self.seq_length)
 
         sequence_labels = None
         token_labels = None
         choice_labels = None
         if self.use_labels:
-            sequence_labels = ids_tensor([self.batch_size], self.type_sequence_label_size)
-            token_labels = ids_tensor([self.batch_size, self.seq_length], self.num_labels)
+            sequence_labels = ids_tensor(
+                [self.batch_size], self.type_sequence_label_size)
+            token_labels = ids_tensor(
+                [self.batch_size, self.seq_length], self.num_labels)
             choice_labels = ids_tensor([self.batch_size], self.num_choices)
 
         config = CTRLConfig(
@@ -104,7 +110,8 @@ class CTRLModelTester:
             pad_token_id=self.pad_token_id,
         )
 
-        head_mask = ids_tensor([self.num_hidden_layers, self.num_attention_heads], 2)
+        head_mask = ids_tensor(
+            [self.num_hidden_layers, self.num_attention_heads], 2)
 
         return (
             config,
@@ -126,7 +133,8 @@ class CTRLModelTester:
         model(input_ids, token_type_ids=token_type_ids, head_mask=head_mask)
         model(input_ids, token_type_ids=token_type_ids)
         result = model(input_ids)
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, self.seq_length, self.hidden_size))
+        self.parent.assertEqual(result.last_hidden_state.shape,
+                                (self.batch_size, self.seq_length, self.hidden_size))
         self.parent.assertEqual(len(result.past_key_values), config.n_layer)
 
     def create_and_check_lm_head_model(self, config, input_ids, input_mask, head_mask, token_type_ids, *args):
@@ -134,9 +142,11 @@ class CTRLModelTester:
         model.to(torch_device)
         model.eval()
 
-        result = model(input_ids, token_type_ids=token_type_ids, labels=input_ids)
+        result = model(input_ids, token_type_ids=token_type_ids,
+                       labels=input_ids)
         self.parent.assertEqual(result.loss.shape, ())
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -153,7 +163,8 @@ class CTRLModelTester:
             choice_labels,
         ) = config_and_inputs
 
-        inputs_dict = {"input_ids": input_ids, "token_type_ids": token_type_ids, "head_mask": head_mask}
+        inputs_dict = {"input_ids": input_ids,
+                       "token_type_ids": token_type_ids, "head_mask": head_mask}
 
         return config, inputs_dict
 
@@ -162,16 +173,21 @@ class CTRLModelTester:
         model = CTRLForSequenceClassification(config)
         model.to(torch_device)
         model.eval()
-        sequence_labels = ids_tensor([self.batch_size], self.type_sequence_label_size)
-        result = model(input_ids, token_type_ids=token_type_ids, labels=sequence_labels)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.num_labels))
+        sequence_labels = ids_tensor(
+            [self.batch_size], self.type_sequence_label_size)
+        result = model(input_ids, token_type_ids=token_type_ids,
+                       labels=sequence_labels)
+        self.parent.assertEqual(result.logits.shape,
+                                (self.batch_size, self.num_labels))
 
 
 @require_torch
 class CTRLModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase):
 
-    all_model_classes = (CTRLModel, CTRLLMHeadModel, CTRLForSequenceClassification) if is_torch_available() else ()
-    all_generative_model_classes = (CTRLLMHeadModel,) if is_torch_available() else ()
+    all_model_classes = (CTRLModel, CTRLLMHeadModel,
+                         CTRLForSequenceClassification) if is_torch_available() else ()
+    all_generative_model_classes = (
+        CTRLLMHeadModel,) if is_torch_available() else ()
     test_pruning = True
     test_torchscript = False
     test_resize_embeddings = False
@@ -179,7 +195,8 @@ class CTRLModelTest(ModelTesterMixin, GenerationTesterMixin, unittest.TestCase):
 
     def setUp(self):
         self.model_tester = CTRLModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=CTRLConfig, n_embd=37)
+        self.config_tester = ConfigTester(
+            self, config_class=CTRLConfig, n_embd=37)
 
     def test_config(self):
         self.config_tester.run_common_tests()

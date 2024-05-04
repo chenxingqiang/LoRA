@@ -26,8 +26,10 @@ from .user import UserCommands
 
 
 def main():
-    parser = ArgumentParser("Transformers CLI tool", usage="transformers-cli <command> [<args>]")
-    commands_parser = parser.add_subparsers(help="transformers-cli command helpers")
+    parser = ArgumentParser("Transformers CLI tool",
+                            usage="transformers-cli <command> [<args>]")
+    commands_parser = parser.add_subparsers(
+        help="transformers-cli command helpers")
 
     # Register commands
     ConvertCommand.register_subcommand(commands_parser)

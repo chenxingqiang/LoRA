@@ -70,7 +70,8 @@ if is_tf_available():
     ]
 
 if is_flax_available():
-    _import_structure["modeling_flax_bert"] = ["FlaxBertForMaskedLM", "FlaxBertModel"]
+    _import_structure["modeling_flax_bert"] = [
+        "FlaxBertForMaskedLM", "FlaxBertModel"]
 
 
 if TYPE_CHECKING:

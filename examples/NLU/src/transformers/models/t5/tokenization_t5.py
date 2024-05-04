@@ -104,10 +104,12 @@ class T5Tokenizer(PreTrainedTokenizer):
     ):
         # Add extra_ids to the special token list
         if extra_ids > 0 and additional_special_tokens is None:
-            additional_special_tokens = ["<extra_id_{}>".format(i) for i in range(extra_ids)]
+            additional_special_tokens = [
+                "<extra_id_{}>".format(i) for i in range(extra_ids)]
         elif extra_ids > 0 and additional_special_tokens is not None:
             # Check that we have the right number of extra_id special tokens
-            extra_tokens = len(set(filter(lambda x: bool("extra_id" in x), additional_special_tokens)))
+            extra_tokens = len(
+                set(filter(lambda x: bool("extra_id" in x), additional_special_tokens)))
             if extra_tokens != extra_ids:
                 raise ValueError(
                     f"Both extra_ids ({extra_ids}) and additional_special_tokens ({additional_special_tokens}) are provided to T5Tokenizer. "
@@ -134,7 +136,8 @@ class T5Tokenizer(PreTrainedTokenizer):
         return self.sp_model.get_piece_size() + self._extra_ids
 
     def get_vocab(self):
-        vocab = {self.convert_ids_to_tokens(i): i for i in range(self.vocab_size)}
+        vocab = {self.convert_ids_to_tokens(
+            i): i for i in range(self.vocab_size)}
         vocab.update(self.added_tokens_encoder)
         return vocab
 
@@ -267,7 +270,8 @@ class T5Tokenizer(PreTrainedTokenizer):
         for token in tokens:
             # make sure that special tokens are not decoded using sentencepiece model
             if token in self.all_special_tokens:
-                out_string += self.sp_model.decode_pieces(current_sub_tokens) + token + " "
+                out_string += self.sp_model.decode_pieces(
+                    current_sub_tokens) + token + " "
                 current_sub_tokens = []
             else:
                 current_sub_tokens.append(token)
@@ -276,10 +280,12 @@ class T5Tokenizer(PreTrainedTokenizer):
 
     def save_vocabulary(self, save_directory: str, filename_prefix: Optional[str] = None) -> Tuple[str]:
         if not os.path.isdir(save_directory):
-            logger.error("Vocabulary path ({}) should be a directory".format(save_directory))
+            logger.error(
+                "Vocabulary path ({}) should be a directory".format(save_directory))
             return
         out_vocab_file = os.path.join(
-            save_directory, (filename_prefix + "-" if filename_prefix else "") + VOCAB_FILES_NAMES["vocab_file"]
+            save_directory, (filename_prefix + "-" if filename_prefix else "") +
+            VOCAB_FILES_NAMES["vocab_file"]
         )
 
         if os.path.abspath(self.vocab_file) != os.path.abspath(out_vocab_file):

@@ -32,7 +32,8 @@ class QAPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
     ]  # Models tested without the @slow decorator
     large_models = []  # Models tested with the @slow decorator
     valid_inputs = [
-        {"question": "Where was HuggingFace founded ?", "context": "HuggingFace was founded in Paris."},
+        {"question": "Where was HuggingFace founded ?",
+         "context": "HuggingFace was founded in Paris."},
         {
             "question": "In what field is HuggingFace working ?",
             "context": "HuggingFace is a startup based in New-York founded in Paris which is trying to solve NLP.",
@@ -53,7 +54,8 @@ class QAPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
     def _test_pipeline(self, nlp: Pipeline):
         output_keys = {"score", "answer", "start", "end"}
         valid_inputs = [
-            {"question": "Where was HuggingFace founded ?", "context": "HuggingFace was founded in Paris."},
+            {"question": "Where was HuggingFace founded ?",
+             "context": "HuggingFace was founded in Paris."},
             {
                 "question": "In what field is HuggingFace working ?",
                 "context": "HuggingFace is a startup based in New-York founded in Paris which is trying to solve NLP.",
@@ -120,7 +122,8 @@ class QAPipelineTests(CustomInputPipelineCommonMixin, unittest.TestCase):
         self.assertEqual(len(normalized), 1)
         self.assertEqual({type(el) for el in normalized}, {SquadExample})
 
-        normalized = qa([{"question": Q, "context": C}, {"question": Q, "context": C}])
+        normalized = qa([{"question": Q, "context": C},
+                        {"question": Q, "context": C}])
         self.assertEqual(type(normalized), list)
         self.assertEqual(len(normalized), 2)
         self.assertEqual({type(el) for el in normalized}, {SquadExample})

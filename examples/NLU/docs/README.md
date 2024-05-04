@@ -106,7 +106,6 @@ mostly written in ReStructuredText
 ([Sphinx simple documentation](https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html),
 [Sourceforge complete documentation](https://docutils.sourceforge.io/docs/ref/rst/restructuredtext.html)).
 
-
 ### Adding a new tutorial
 
 Adding a new tutorial or section is done in two steps:
@@ -125,20 +124,21 @@ When adding a new model:
 - Create a file `xxx.rst` under `./source/model_doc` (don't hesitate to copy an existing file as template).
 - Link that file in `./source/index.rst` on the `model_doc` toc-tree.
 - Write a short overview of the model:
-    - Overview with paper & authors
-    - Paper abstract
-    - Tips and tricks and how to use it best
+  - Overview with paper & authors
+  - Paper abstract
+  - Tips and tricks and how to use it best
 - Add the classes that should be linked in the model. This generally includes the configuration, the tokenizer, and
   every model of that class (the base model, alongside models with additional heads), both in PyTorch and TensorFlow.
   The order is generally:
-    - Configuration,
-    - Tokenizer
-    - PyTorch base model
-    - PyTorch head models
-    - TensorFlow base model
-    - TensorFlow head models
+  - Configuration,
+  - Tokenizer
+  - PyTorch base model
+  - PyTorch head models
+  - TensorFlow base model
+  - TensorFlow head models
 
 These classes should be added using the RST syntax. Usually as follows:
+
 ```
 XXXConfig
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -274,14 +274,17 @@ Sub-section 1
 ReST allows the use of any characters to designate different section levels, as long as they are used consistently within the same document. For details see [sections doc](https://www.sphinx-doc.org/en/master/usage/restructuredtext/basics.html#sections). Because there is no standard different documents often end up using different characters for the same levels which makes it very difficult to know which character to use when creating a new section.
 
 Specifically, if when running `make docs` you get an error like:
+
 ```
 docs/source/main_classes/trainer.rst:127:Title level inconsistent:
 ```
+
 you picked an inconsistent character for some of the levels.
 
 But how do you know which characters you must use for an already existing level or when adding a new level?
 
 You can use this helper script:
+
 ```
 perl -ne '/^(.)\1{100,}/ && do { $h{$1}=++$c if !$h{$1} }; END { %h = reverse %h ; print "$_ $h{$_}\n" for sort keys %h}' docs/source/main_classes/trainer.rst
 1 -
@@ -297,4 +300,4 @@ So using this particular example's output -- if your current section's header us
 
 If you needed to add yet another sub-level, then pick a character that is not used already. That is you must pick a character that is not in the output of that script.
 
-Here is the full list of characters that can be used in this context: `= - ` : ' " ~ ^ _ * + # < >`
+Here is the full list of characters that can be used in this context: `= -` : ' " ~ ^ _ * + # < >`

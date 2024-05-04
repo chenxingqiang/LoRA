@@ -127,7 +127,8 @@ class Speech2TextTokenizer(PreTrainedTokenizer):
             self.lang_codes = lang_codes
             self.langs = LANGUAGES[lang_codes]
             self.lang_tokens = [f"<lang:{lang}>" for lang in self.langs]
-            self.lang_code_to_id = {lang: self.sp_model.PieceToId(f"<lang:{lang}>") for lang in self.langs}
+            self.lang_code_to_id = {lang: self.sp_model.PieceToId(
+                f"<lang:{lang}>") for lang in self.langs}
 
             self._additional_special_tokens = self.lang_tokens
             self._tgt_lang = tgt_lang if tgt_lang is not None else self.langs[0]
@@ -229,10 +230,12 @@ class Speech2TextTokenizer(PreTrainedTokenizer):
         save_dir = Path(save_directory)
         assert save_dir.is_dir(), f"{save_directory} should be a directory"
         vocab_save_path = save_dir / (
-            (filename_prefix + "-" if filename_prefix else "") + self.vocab_files_names["vocab_file"]
+            (filename_prefix + "-" if filename_prefix else "") +
+            self.vocab_files_names["vocab_file"]
         )
         spm_save_path = save_dir / (
-            (filename_prefix + "-" if filename_prefix else "") + self.vocab_files_names["spm_file"]
+            (filename_prefix + "-" if filename_prefix else "") +
+            self.vocab_files_names["spm_file"]
         )
 
         save_json(self.encoder, vocab_save_path)

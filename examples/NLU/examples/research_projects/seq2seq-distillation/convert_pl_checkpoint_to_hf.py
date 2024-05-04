@@ -16,7 +16,7 @@ logger = get_logger(__name__)
 
 def remove_prefix(text: str, prefix: str):
     if text.startswith(prefix):
-        return text[len(prefix) :]
+        return text[len(prefix):]
     return text  # or whatever
 
 
@@ -56,7 +56,8 @@ def convert_pl_to_hf(pl_ckpt_path: str, hf_src_model_dir: str, save_path: str) -
     if len(ckpt_files) > 1:
         logger.info(f"averaging the weights of {ckpt_files}")
 
-    state_dicts = [sanitize(torch.load(x, map_location="cpu")["state_dict"]) for x in ckpt_files]
+    state_dicts = [sanitize(torch.load(x, map_location="cpu")[
+                            "state_dict"]) for x in ckpt_files]
     state_dict = average_state_dicts(state_dicts)
 
     missing, unexpected = hf_model.load_state_dict(state_dict, strict=False)

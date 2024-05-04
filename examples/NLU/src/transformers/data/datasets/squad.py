@@ -56,7 +56,8 @@ class SquadDataTrainingArguments:
     )
     doc_stride: int = field(
         default=128,
-        metadata={"help": "When splitting up a long document into chunks, how much stride to take between chunks."},
+        metadata={
+            "help": "When splitting up a long document into chunks, how much stride to take between chunks."},
     )
     max_query_length: int = field(
         default=64,
@@ -90,7 +91,8 @@ class SquadDataTrainingArguments:
             "help": "language id of input for language-specific xlm models (see tokenization_xlm.PRETRAINED_INIT_CONFIGURATION)"
         },
     )
-    threads: int = field(default=1, metadata={"help": "multiple threads for converting example to features"})
+    threads: int = field(default=1, metadata={
+                         "help": "multiple threads for converting example to features"})
 
 
 class Split(Enum):
@@ -120,7 +122,8 @@ class SquadDataset(Dataset):
     ):
         self.args = args
         self.is_language_sensitive = is_language_sensitive
-        self.processor = SquadV2Processor() if args.version_2_with_negative else SquadV1Processor()
+        self.processor = SquadV2Processor(
+        ) if args.version_2_with_negative else SquadV1Processor()
         if isinstance(mode, str):
             try:
                 mode = Split[mode]
@@ -153,7 +156,8 @@ class SquadDataset(Dataset):
                 self.dataset = self.old_features.get("dataset", None)
                 self.examples = self.old_features.get("examples", None)
                 logger.info(
-                    f"Loading features from cached file {cached_features_file} [took %.3f s]", time.time() - start
+                    f"Loading features from cached file {cached_features_file} [took %.3f s]", time.time(
+                    ) - start
                 )
 
                 if self.dataset is None or self.examples is None:
@@ -162,9 +166,11 @@ class SquadDataset(Dataset):
                     )
             else:
                 if mode == Split.dev:
-                    self.examples = self.processor.get_dev_examples(args.data_dir)
+                    self.examples = self.processor.get_dev_examples(
+                        args.data_dir)
                 else:
-                    self.examples = self.processor.get_train_examples(args.data_dir)
+                    self.examples = self.processor.get_train_examples(
+                        args.data_dir)
 
                 self.features, self.dataset = squad_convert_examples_to_features(
                     examples=self.examples,
@@ -179,12 +185,14 @@ class SquadDataset(Dataset):
 
                 start = time.time()
                 torch.save(
-                    {"features": self.features, "dataset": self.dataset, "examples": self.examples},
+                    {"features": self.features, "dataset": self.dataset,
+                     "examples": self.examples},
                     cached_features_file,
                 )
                 # ^ This seems to take a lot of time so I want to investigate why and how we can improve.
                 logger.info(
-                    "Saving features into cached file %s [took %.3f s]", cached_features_file, time.time() - start
+                    "Saving features into cached file %s [took %.3f s]", cached_features_file, time.time(
+                    ) - start
                 )
 
     def __len__(self):
@@ -215,11 +223,15 @@ class SquadDataset(Dataset):
             if self.args.version_2_with_negative:
                 inputs.update({"is_impossible": is_impossible})
             if self.is_language_sensitive:
-                inputs.update({"langs": (torch.ones(input_ids.shape, dtype=torch.int64) * self.args.lang_id)})
+                inputs.update(
+                    {"langs": (torch.ones(input_ids.shape, dtype=torch.int64) * self.args.lang_id)})
 
         if self.mode == Split.train:
-            start_positions = torch.tensor(feature.start_position, dtype=torch.long)
-            end_positions = torch.tensor(feature.end_position, dtype=torch.long)
-            inputs.update({"start_positions": start_positions, "end_positions": end_positions})
+            start_positions = torch.tensor(
+                feature.start_position, dtype=torch.long)
+            end_positions = torch.tensor(
+                feature.end_position, dtype=torch.long)
+            inputs.update({"start_positions": start_positions,
+                           "end_positions": end_positions})
 
         return inputs

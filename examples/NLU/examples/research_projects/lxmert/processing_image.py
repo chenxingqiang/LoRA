@@ -42,7 +42,8 @@ class ResizeShortestEdge:
         for img in imgs:
             h, w = img.shape[:2]
             # later: provide list and randomly choose index for resize
-            size = np.random.randint(self.short_edge_length[0], self.short_edge_length[1] + 1)
+            size = np.random.randint(
+                self.short_edge_length[0], self.short_edge_length[1] + 1)
             if size == 0:
                 return img
             scale = size * 1.0 / min(h, w)
@@ -62,8 +63,10 @@ class ResizeShortestEdge:
                 pil_image = pil_image.resize((neww, newh), Image.BILINEAR)
                 img = np.asarray(pil_image)
             else:
-                img = img.permute(2, 0, 1).unsqueeze(0)  # 3, 0, 1)  # hw(c) -> nchw
-                img = F.interpolate(img, (newh, neww), mode=self.interp_method, align_corners=False).squeeze(0)
+                # 3, 0, 1)  # hw(c) -> nchw
+                img = img.permute(2, 0, 1).unsqueeze(0)
+                img = F.interpolate(
+                    img, (newh, neww), mode=self.interp_method, align_corners=False).squeeze(0)
             img_augs.append(img)
 
         return img_augs
@@ -71,14 +74,17 @@ class ResizeShortestEdge:
 
 class Preprocess:
     def __init__(self, cfg):
-        self.aug = ResizeShortestEdge([cfg.INPUT.MIN_SIZE_TEST, cfg.INPUT.MIN_SIZE_TEST], cfg.INPUT.MAX_SIZE_TEST)
+        self.aug = ResizeShortestEdge(
+            [cfg.INPUT.MIN_SIZE_TEST, cfg.INPUT.MIN_SIZE_TEST], cfg.INPUT.MAX_SIZE_TEST)
         self.input_format = cfg.INPUT.FORMAT
         self.size_divisibility = cfg.SIZE_DIVISIBILITY
         self.pad_value = cfg.PAD_VALUE
         self.max_image_size = cfg.INPUT.MAX_SIZE_TEST
         self.device = cfg.MODEL.DEVICE
-        self.pixel_std = torch.tensor(cfg.MODEL.PIXEL_STD).to(self.device).view(len(cfg.MODEL.PIXEL_STD), 1, 1)
-        self.pixel_mean = torch.tensor(cfg.MODEL.PIXEL_MEAN).to(self.device).view(len(cfg.MODEL.PIXEL_STD), 1, 1)
+        self.pixel_std = torch.tensor(cfg.MODEL.PIXEL_STD).to(
+            self.device).view(len(cfg.MODEL.PIXEL_STD), 1, 1)
+        self.pixel_mean = torch.tensor(cfg.MODEL.PIXEL_MEAN).to(
+            self.device).view(len(cfg.MODEL.PIXEL_STD), 1, 1)
         self.normalizer = lambda x: (x - self.pixel_mean) / self.pixel_std
 
     def pad(self, images):
@@ -107,7 +113,8 @@ class Preprocess:
                 elif not isinstance(images[i], torch.Tensor):
                     images.insert(
                         i,
-                        torch.as_tensor(img_tensorize(images.pop(i), input_format=self.input_format))
+                        torch.as_tensor(img_tensorize(
+                            images.pop(i), input_format=self.input_format))
                         .to(self.device)
                         .float(),
                     )

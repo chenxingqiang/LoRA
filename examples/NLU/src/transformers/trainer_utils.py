@@ -54,7 +54,7 @@ def set_seed(seed: int):
         seed (:obj:`int`): The seed to set.
     """
     os.environ['PYTHONHASHSEED'] = str(seed)
-    os.environ['CUBLAS_WORKSPACE_CONFIG']=':16:8'
+    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':16:8'
     random.seed(seed)
     np.random.seed(seed)
     if is_torch_available():
@@ -156,7 +156,8 @@ def default_compute_objective(metrics: Dict[str, float]) -> float:
     loss = metrics.pop("eval_loss", None)
     _ = metrics.pop("epoch", None)
     # Remove speed metrics
-    speed_metrics = [m for m in metrics.keys() if m.endswith("_runtime") or m.endswith("_samples_per_second")]
+    speed_metrics = [m for m in metrics.keys() if m.endswith(
+        "_runtime") or m.endswith("_samples_per_second")]
     for sm in speed_metrics:
         _ = metrics.pop(sm, None)
     return loss if len(metrics) == 0 else sum(metrics.values())
@@ -177,7 +178,8 @@ def default_hp_space_optuna(trial) -> Dict[str, float]:
 def default_hp_space_ray(trial) -> Dict[str, float]:
     from .integrations import is_ray_tune_available
 
-    assert is_ray_tune_available(), "This function needs ray installed: `pip " "install ray[tune]`"
+    assert is_ray_tune_available(
+    ), "This function needs ray installed: `pip " "install ray[tune]`"
     from ray import tune
 
     return {
@@ -384,15 +386,19 @@ class TrainerMemoryTracker:
         if self.torch is not None:
             mem_cur = self.torch.cuda.memory_allocated()
             # this is the difference between the start and the end allocated memory
-            self.gpu[self.cur_stage]["alloc"] = mem_cur - self.gpu[self.cur_stage]["alloc"]  # can be negative
+            self.gpu[self.cur_stage]["alloc"] = mem_cur - \
+                self.gpu[self.cur_stage]["alloc"]  # can be negative
             # this is the difference if any between the start and the peak
-            self.gpu[self.cur_stage]["peaked"] = max(0, self.torch.cuda.max_memory_allocated() - mem_cur)
+            self.gpu[self.cur_stage]["peaked"] = max(
+                0, self.torch.cuda.max_memory_allocated() - mem_cur)
 
         # cpu
         cpu_mem_used_delta, cpu_mem_used_peak = tracemalloc.get_traced_memory()
         tracemalloc.stop()  # reset accounting
-        self.cpu[self.cur_stage]["alloc"] = cpu_mem_used_delta  # can be negative
-        self.cpu[self.cur_stage]["peaked"] = max(0, cpu_mem_used_peak - cpu_mem_used_delta)
+        # can be negative
+        self.cpu[self.cur_stage]["alloc"] = cpu_mem_used_delta
+        self.cpu[self.cur_stage]["peaked"] = max(
+            0, cpu_mem_used_peak - cpu_mem_used_delta)
 
         # reset - cycle finished
         self.cur_stage = None

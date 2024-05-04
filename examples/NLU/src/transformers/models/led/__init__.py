@@ -40,7 +40,8 @@ if is_torch_available():
 
 
 if is_tf_available():
-    _import_structure["modeling_tf_led"] = ["TFLEDForConditionalGeneration", "TFLEDModel", "TFLEDPreTrainedModel"]
+    _import_structure["modeling_tf_led"] = [
+        "TFLEDForConditionalGeneration", "TFLEDModel", "TFLEDPreTrainedModel"]
 
 
 if TYPE_CHECKING:

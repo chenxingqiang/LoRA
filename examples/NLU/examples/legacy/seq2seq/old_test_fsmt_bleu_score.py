@@ -34,7 +34,8 @@ class ModelEvalTester(unittest.TestCase):
         return FSMTTokenizer.from_pretrained(mname)
 
     def get_model(self, mname):
-        model = FSMTForConditionalGeneration.from_pretrained(mname).to(torch_device)
+        model = FSMTForConditionalGeneration.from_pretrained(
+            mname).to(torch_device)
         if torch_device == "cuda":
             model.half()
         return model
@@ -58,7 +59,8 @@ class ModelEvalTester(unittest.TestCase):
         src_sentences = bleu_data[pair]["src"]
         tgt_sentences = bleu_data[pair]["tgt"]
 
-        batch = tokenizer(src_sentences, return_tensors="pt", truncation=True, padding="longest").to(torch_device)
+        batch = tokenizer(src_sentences, return_tensors="pt",
+                          truncation=True, padding="longest").to(torch_device)
         outputs = model.generate(
             input_ids=batch.input_ids,
             num_beams=8,

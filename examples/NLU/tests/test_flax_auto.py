@@ -56,7 +56,8 @@ class FlaxAutoModelTest(unittest.TestCase):
         for model_name in ["bert-base-cased", "bert-large-uncased"]:
             tokenizer = AutoTokenizer.from_pretrained(model_name)
             model = FlaxBertModel.from_pretrained(model_name)
-            tokens = tokenizer("Do you support jax jitted function?", return_tensors=TensorType.JAX)
+            tokens = tokenizer(
+                "Do you support jax jitted function?", return_tensors=TensorType.JAX)
 
             @jax.jit
             def eval(**kwargs):
@@ -69,7 +70,8 @@ class FlaxAutoModelTest(unittest.TestCase):
         for model_name in ["roberta-base", "roberta-large"]:
             tokenizer = AutoTokenizer.from_pretrained(model_name)
             model = FlaxRobertaModel.from_pretrained(model_name)
-            tokens = tokenizer("Do you support jax jitted function?", return_tensors=TensorType.JAX)
+            tokens = tokenizer(
+                "Do you support jax jitted function?", return_tensors=TensorType.JAX)
 
             @jax.jit
             def eval(**kwargs):

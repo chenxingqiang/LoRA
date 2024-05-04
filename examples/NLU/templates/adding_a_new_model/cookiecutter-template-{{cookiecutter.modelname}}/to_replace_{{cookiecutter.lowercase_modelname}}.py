@@ -1,33 +1,33 @@
-## Copyright 2020 The HuggingFace Team. All rights reserved.
+# Copyright 2020 The HuggingFace Team. All rights reserved.
 ##
-## Licensed under the Apache License, Version 2.0 (the "License");
-## you may not use this file except in compliance with the License.
-## You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
 ##
-##     http://www.apache.org/licenses/LICENSE-2.0
+# http://www.apache.org/licenses/LICENSE-2.0
 ##
-## Unless required by applicable law or agreed to in writing, software
-## distributed under the License is distributed on an "AS IS" BASIS,
-## WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-## See the License for the specific language governing permissions and
-## limitations under the License.
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-## This file is made so that specific statements may be copied inside existing files. This is useful to copy
-## import statements in __init__.py, or to complete model lists in the AUTO files.
+# This file is made so that specific statements may be copied inside existing files. This is useful to copy
+# import statements in __init__.py, or to complete model lists in the AUTO files.
 ##
-## It is to be used as such:
-## Put '# To replace in: "FILE_PATH"' in order to indicate the contents will be copied in the file at path FILE_PATH
-## Put '# Below: "STATEMENT"' in order to copy the contents below **the first occurence** of that line in the file at FILE_PATH
-## Put '# Replace with:' followed by the lines containing the content to define the content
-## End a statement with '# End.'. If starting a new statement without redefining the FILE_PATH, it will continue pasting
-## content in that file.
+# It is to be used as such:
+# Put '# To replace in: "FILE_PATH"' in order to indicate the contents will be copied in the file at path FILE_PATH
+# Put '# Below: "STATEMENT"' in order to copy the contents below **the first occurence** of that line in the file at FILE_PATH
+# Put '# Replace with:' followed by the lines containing the content to define the content
+# End a statement with '# End.'. If starting a new statement without redefining the FILE_PATH, it will continue pasting
+# content in that file.
 ##
-## Put '## COMMENT' to comment on the file.
+# Put '## COMMENT' to comment on the file.
 
 # To replace in: "src/transformers/__init__.py"
 # Below: "    # PyTorch models structure" if generating PyTorch
 # Replace with:
-{% if cookiecutter.is_encoder_decoder_model == "False" %}
+{ % if cookiecutter.is_encoder_decoder_model == "False" % }
     _import_structure["models.{{cookiecutter.lowercase_modelname}}"].extend(
         [
             "{{cookiecutter.uppercase_modelname}}_PRETRAINED_MODEL_ARCHIVE_LIST",
@@ -43,7 +43,7 @@
             "load_tf_weights_in_{{cookiecutter.lowercase_modelname}}",
         ]
     )
-{% else %}
+{ % else % }
     _import_structure["models.{{cookiecutter.lowercase_modelname}}"].extend(
         [
             "{{cookiecutter.uppercase_modelname}}_PRETRAINED_MODEL_ARCHIVE_LIST",
@@ -54,12 +54,12 @@
             "{{cookiecutter.camelcase_modelname}}Model",
         ]
     )
-{% endif -%}
+{ % endif - %}
 # End.
 
 # Below: "    # TensorFlow models structure" if generating TensorFlow
 # Replace with:
-{% if cookiecutter.is_encoder_decoder_model == "False" %}
+{ % if cookiecutter.is_encoder_decoder_model == "False" % }
     _import_structure["models.{{cookiecutter.lowercase_modelname}}"].extend(
         [
             "TF_{{cookiecutter.uppercase_modelname}}_PRETRAINED_MODEL_ARCHIVE_LIST",
@@ -74,7 +74,7 @@
             "TF{{cookiecutter.camelcase_modelname}}PreTrainedModel",
         ]
     )
-{% else %}
+{ % else % }
     _import_structure["models.{{cookiecutter.lowercase_modelname}}"].extend(
         [
             "TF{{cookiecutter.camelcase_modelname}}ForConditionalGeneration",
@@ -82,12 +82,13 @@
             "TF{{cookiecutter.camelcase_modelname}}PreTrainedModel",
         ]
     )
-{% endif -%}
+{ % endif - %}
 # End.
 
 # Below: "    # Fast tokenizers"
 # Replace with:
-    _import_structure["models.{{cookiecutter.lowercase_modelname}}"].append("{{cookiecutter.camelcase_modelname}}TokenizerFast")
+    _import_structure["models.{{cookiecutter.lowercase_modelname}}"].append(
+        "{{cookiecutter.camelcase_modelname}}TokenizerFast")
 # End.
 
 # Below: "    # Models"
@@ -98,7 +99,7 @@
 # To replace in: "src/transformers/__init__.py"
 # Below: "    if is_torch_available():" if generating PyTorch
 # Replace with:
-{% if cookiecutter.is_encoder_decoder_model == "False" %}
+{ % if cookiecutter.is_encoder_decoder_model == "False" % }
         from .models.{{cookiecutter.lowercase_modelname}} import (
             {{cookiecutter.uppercase_modelname}}_PRETRAINED_MODEL_ARCHIVE_LIST,
             {{cookiecutter.camelcase_modelname}}ForMaskedLM,
@@ -112,7 +113,7 @@
             {{cookiecutter.camelcase_modelname}}PreTrainedModel,
             load_tf_weights_in_{{cookiecutter.lowercase_modelname}},
         )
-{% else %}
+{ % else % }
         from .models.{{cookiecutter.lowercase_modelname}} import (
             {{cookiecutter.uppercase_modelname}}_PRETRAINED_MODEL_ARCHIVE_LIST,
             {{cookiecutter.camelcase_modelname}}ForConditionalGeneration,
@@ -121,12 +122,12 @@
             {{cookiecutter.camelcase_modelname}}ForSequenceClassification,
             {{cookiecutter.camelcase_modelname}}Model,
         )
-{% endif -%}
+{ % endif - %}
 # End.
 
 # Below: "    if is_tf_available():" if generating TensorFlow
 # Replace with:
-{% if cookiecutter.is_encoder_decoder_model == "False" %}
+{ % if cookiecutter.is_encoder_decoder_model == "False" % }
         from .models.{{cookiecutter.lowercase_modelname}} import (
             TF_{{cookiecutter.uppercase_modelname}}_PRETRAINED_MODEL_ARCHIVE_LIST,
             TF{{cookiecutter.camelcase_modelname}}ForMaskedLM,
@@ -139,13 +140,13 @@
             TF{{cookiecutter.camelcase_modelname}}Model,
             TF{{cookiecutter.camelcase_modelname}}PreTrainedModel,
         )
-{% else %}
+{ % else % }
         from .models.{{cookiecutter.lowercase_modelname}} import (
             TF{{cookiecutter.camelcase_modelname}}ForConditionalGeneration,
             TF{{cookiecutter.camelcase_modelname}}Model,
             TF{{cookiecutter.camelcase_modelname}}PreTrainedModel,
         )
-{% endif -%}
+{ % endif - %}
 # End.
 
 # Below: "    if is_tokenizers_available():"

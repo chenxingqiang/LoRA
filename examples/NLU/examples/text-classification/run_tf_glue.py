@@ -75,9 +75,12 @@ def get_tfds(
     else:
         tfds_name = task_name
 
-    ds, info = tfds.load("glue/" + tfds_name, split=mode.value, with_info=True, data_dir=data_dir)
-    ds = glue_convert_examples_to_features(ds, tokenizer, max_seq_length, task_name)
-    ds = ds.apply(tf.data.experimental.assert_cardinality(info.splits[mode.value].num_examples))
+    ds, info = tfds.load("glue/" + tfds_name, split=mode.value,
+                         with_info=True, data_dir=data_dir)
+    ds = glue_convert_examples_to_features(
+        ds, tokenizer, max_seq_length, task_name)
+    ds = ds.apply(tf.data.experimental.assert_cardinality(
+        info.splits[mode.value].num_examples))
 
     return ds
 
@@ -95,8 +98,10 @@ class GlueDataTrainingArguments:
     the command line.
     """
 
-    task_name: str = field(metadata={"help": "The name of the task to train on: " + ", ".join(glue_processors.keys())})
-    data_dir: Optional[str] = field(default=None, metadata={"help": "The input/output data dir for TFDS."})
+    task_name: str = field(metadata={
+                           "help": "The name of the task to train on: " + ", ".join(glue_processors.keys())})
+    data_dir: Optional[str] = field(
+        default=None, metadata={"help": "The input/output data dir for TFDS."})
     max_seq_length: int = field(
         default=128,
         metadata={
@@ -119,7 +124,8 @@ class ModelArguments:
     """
 
     model_name_or_path: str = field(
-        metadata={"help": "Path to pretrained model or model identifier from huggingface.co/models"}
+        metadata={
+            "help": "Path to pretrained model or model identifier from huggingface.co/models"}
     )
     config_name: Optional[str] = field(
         default=None, metadata={"help": "Pretrained config name or path if not the same as model_name"}
@@ -127,12 +133,14 @@ class ModelArguments:
     tokenizer_name: Optional[str] = field(
         default=None, metadata={"help": "Pretrained tokenizer name or path if not the same as model_name"}
     )
-    use_fast: bool = field(default=False, metadata={"help": "Set this flag to use fast tokenization."})
+    use_fast: bool = field(default=False, metadata={
+                           "help": "Set this flag to use fast tokenization."})
     # If you want to tweak more attributes on your tokenizer, you should do it in a distinct script,
     # or just modify its tokenizer_config.json.
     cache_dir: Optional[str] = field(
         default=None,
-        metadata={"help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
+        metadata={
+            "help": "Where do you want to store the pretrained models downloaded from huggingface.co"},
     )
 
 
@@ -140,7 +148,8 @@ def main():
     # See all possible arguments in src/transformers/training_args.py
     # or by passing the --help flag to this script.
     # We now keep distinct sets of args, for a cleaner separation of concerns.
-    parser = HfArgumentParser((ModelArguments, GlueDataTrainingArguments, TFTrainingArguments))
+    parser = HfArgumentParser(
+        (ModelArguments, GlueDataTrainingArguments, TFTrainingArguments))
     model_args, data_args, training_args = parser.parse_args_into_dataclasses()
 
     if (
@@ -168,7 +177,8 @@ def main():
     logger.info("Training/evaluation parameters %s", training_args)
 
     try:
-        num_labels = glue_tasks_num_labels["mnli" if data_args.task_name == "mnli-mm" else data_args.task_name]
+        num_labels = glue_tasks_num_labels["mnli" if data_args.task_name ==
+                                           "mnli-mm" else data_args.task_name]
         output_mode = glue_output_modes[data_args.task_name]
     except KeyError:
         raise ValueError("Task not found: %s" % (data_args.task_name))
@@ -249,7 +259,8 @@ def main():
         logger.info("*** Evaluate ***")
 
         result = trainer.evaluate()
-        output_eval_file = os.path.join(training_args.output_dir, "eval_results.txt")
+        output_eval_file = os.path.join(
+            training_args.output_dir, "eval_results.txt")
 
         with open(output_eval_file, "w") as writer:
             logger.info("***** Eval results *****")

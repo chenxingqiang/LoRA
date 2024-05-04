@@ -65,26 +65,32 @@ class TFCTRLModelTester(object):
         self.pad_token_id = self.vocab_size - 1
 
     def prepare_config_and_inputs(self):
-        input_ids = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+        input_ids = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size)
 
         input_mask = None
         if self.use_input_mask:
-            input_mask = ids_tensor([self.batch_size, self.seq_length], vocab_size=2)
+            input_mask = ids_tensor(
+                [self.batch_size, self.seq_length], vocab_size=2)
 
         token_type_ids = None
         if self.use_token_type_ids:
-            token_type_ids = ids_tensor([self.batch_size, self.seq_length], self.type_vocab_size)
+            token_type_ids = ids_tensor(
+                [self.batch_size, self.seq_length], self.type_vocab_size)
 
         mc_token_ids = None
         if self.use_mc_token_ids:
-            mc_token_ids = ids_tensor([self.batch_size, self.num_choices], self.seq_length)
+            mc_token_ids = ids_tensor(
+                [self.batch_size, self.num_choices], self.seq_length)
 
         sequence_labels = None
         token_labels = None
         choice_labels = None
         if self.use_labels:
-            sequence_labels = ids_tensor([self.batch_size], self.type_sequence_label_size)
-            token_labels = ids_tensor([self.batch_size, self.seq_length], self.num_labels)
+            sequence_labels = ids_tensor(
+                [self.batch_size], self.type_sequence_label_size)
+            token_labels = ids_tensor(
+                [self.batch_size, self.seq_length], self.num_labels)
             choice_labels = ids_tensor([self.batch_size], self.num_choices)
 
         config = CTRLConfig(
@@ -103,7 +109,8 @@ class TFCTRLModelTester(object):
             pad_token_id=self.pad_token_id,
         )
 
-        head_mask = ids_tensor([self.num_hidden_layers, self.num_attention_heads], 2)
+        head_mask = ids_tensor(
+            [self.num_hidden_layers, self.num_attention_heads], 2)
 
         return (
             config,
@@ -119,7 +126,8 @@ class TFCTRLModelTester(object):
 
     def create_and_check_ctrl_model(self, config, input_ids, input_mask, head_mask, token_type_ids, *args):
         model = TFCTRLModel(config=config)
-        inputs = {"input_ids": input_ids, "attention_mask": input_mask, "token_type_ids": token_type_ids}
+        inputs = {"input_ids": input_ids, "attention_mask": input_mask,
+                  "token_type_ids": token_type_ids}
         result = model(inputs)
 
         inputs = [input_ids, None, input_mask]  # None is the input for 'past'
@@ -127,19 +135,23 @@ class TFCTRLModelTester(object):
 
         result = model(input_ids)
 
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, self.seq_length, self.hidden_size))
+        self.parent.assertEqual(result.last_hidden_state.shape,
+                                (self.batch_size, self.seq_length, self.hidden_size))
 
     def create_and_check_ctrl_lm_head(self, config, input_ids, input_mask, head_mask, token_type_ids, *args):
         model = TFCTRLLMHeadModel(config=config)
-        inputs = {"input_ids": input_ids, "attention_mask": input_mask, "token_type_ids": token_type_ids}
+        inputs = {"input_ids": input_ids, "attention_mask": input_mask,
+                  "token_type_ids": token_type_ids}
         result = model(inputs)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
 
     def create_and_check_ctrl_for_sequence_classification(
         self, config, input_ids, input_mask, head_mask, token_type_ids, *args
     ):
         config.num_labels = self.num_labels
-        sequence_labels = ids_tensor([self.batch_size], self.type_sequence_label_size)
+        sequence_labels = ids_tensor(
+            [self.batch_size], self.type_sequence_label_size)
         inputs = {
             "input_ids": input_ids,
             "token_type_ids": token_type_ids,
@@ -147,7 +159,8 @@ class TFCTRLModelTester(object):
         }
         model = TFCTRLForSequenceClassification(config)
         result = model(inputs)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.num_labels))
+        self.parent.assertEqual(result.logits.shape,
+                                (self.batch_size, self.num_labels))
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -164,21 +177,25 @@ class TFCTRLModelTester(object):
             choice_labels,
         ) = config_and_inputs
 
-        inputs_dict = {"input_ids": input_ids, "token_type_ids": token_type_ids, "attention_mask": input_mask}
+        inputs_dict = {"input_ids": input_ids,
+                       "token_type_ids": token_type_ids, "attention_mask": input_mask}
         return config, inputs_dict
 
 
 @require_tf
 class TFCTRLModelTest(TFModelTesterMixin, unittest.TestCase):
 
-    all_model_classes = (TFCTRLModel, TFCTRLLMHeadModel, TFCTRLForSequenceClassification) if is_tf_available() else ()
-    all_generative_model_classes = (TFCTRLLMHeadModel,) if is_tf_available() else ()
+    all_model_classes = (TFCTRLModel, TFCTRLLMHeadModel,
+                         TFCTRLForSequenceClassification) if is_tf_available() else ()
+    all_generative_model_classes = (
+        TFCTRLLMHeadModel,) if is_tf_available() else ()
     test_head_masking = False
     test_onnx = False
 
     def setUp(self):
         self.model_tester = TFCTRLModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=CTRLConfig, n_embd=37)
+        self.config_tester = ConfigTester(
+            self, config_class=CTRLConfig, n_embd=37)
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -193,7 +210,8 @@ class TFCTRLModelTest(TFModelTesterMixin, unittest.TestCase):
 
     def test_ctrl_sequence_classification_model(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_ctrl_for_sequence_classification(*config_and_inputs)
+        self.model_tester.create_and_check_ctrl_for_sequence_classification(
+            *config_and_inputs)
 
     def test_model_common_attributes(self):
         config, inputs_dict = self.model_tester.prepare_config_and_inputs_for_common()
@@ -202,7 +220,8 @@ class TFCTRLModelTest(TFModelTesterMixin, unittest.TestCase):
 
         for model_class in self.all_model_classes:
             model = model_class(config)
-            assert isinstance(model.get_input_embeddings(), tf.keras.layers.Layer)
+            assert isinstance(model.get_input_embeddings(),
+                              tf.keras.layers.Layer)
 
             if model_class in list_lm_models:
                 x = model.get_output_embeddings()
@@ -234,7 +253,8 @@ class TFCTRLModelLanguageGenerationTest(unittest.TestCase):
     @slow
     def test_lm_generate_ctrl(self):
         model = TFCTRLLMHeadModel.from_pretrained("ctrl")
-        input_ids = tf.convert_to_tensor([[11859, 0, 1611, 8]], dtype=tf.int32)  # Legal the president is
+        input_ids = tf.convert_to_tensor(
+            [[11859, 0, 1611, 8]], dtype=tf.int32)  # Legal the president is
         expected_output_ids = [
             11859,
             0,
@@ -259,4 +279,5 @@ class TFCTRLModelLanguageGenerationTest(unittest.TestCase):
         ]  # Legal the president is a good guy and I don't want to lose my job. \n \n I have a
 
         output_ids = model.generate(input_ids, do_sample=False)
-        self.assertListEqual(output_ids[0].numpy().tolist(), expected_output_ids)
+        self.assertListEqual(
+            output_ids[0].numpy().tolist(), expected_output_ids)

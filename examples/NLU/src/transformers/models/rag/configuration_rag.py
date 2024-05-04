@@ -137,8 +137,10 @@ class RagConfig(PretrainedConfig):
 
         from ..auto.configuration_auto import AutoConfig
 
-        self.question_encoder = AutoConfig.for_model(question_encoder_model_type, **question_encoder_config)
-        self.generator = AutoConfig.for_model(decoder_model_type, **decoder_config)
+        self.question_encoder = AutoConfig.for_model(
+            question_encoder_model_type, **question_encoder_config)
+        self.generator = AutoConfig.for_model(
+            decoder_model_type, **decoder_config)
 
         self.reduce_loss = reduce_loss
         self.label_smoothing = label_smoothing
@@ -167,7 +169,8 @@ class RagConfig(PretrainedConfig):
         self.use_cache = use_cache
 
         if self.forced_eos_token_id is None:
-            self.forced_eos_token_id = getattr(self.generator, "forced_eos_token_id", None)
+            self.forced_eos_token_id = getattr(
+                self.generator, "forced_eos_token_id", None)
 
     @classmethod
     def from_question_encoder_generator_configs(

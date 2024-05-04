@@ -12,13 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
-
-SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
-sys.path.append(SRC_DIR)
-
-
 from transformers import (
     AutoConfig,
     AutoModel,
@@ -28,9 +21,15 @@ from transformers import (
     AutoTokenizer,
     add_start_docstrings,
 )
+import os
+import sys
+
+SRC_DIR = os.path.join(os.path.dirname(__file__), "src")
+sys.path.append(SRC_DIR)
 
 
-dependencies = ["torch", "numpy", "tokenizers", "filelock", "requests", "tqdm", "regex", "sentencepiece", "sacremoses", "importlib_metadata"]
+dependencies = ["torch", "numpy", "tokenizers", "filelock", "requests",
+                "tqdm", "regex", "sentencepiece", "sacremoses", "importlib_metadata"]
 
 
 @add_start_docstrings(AutoConfig.__doc__)

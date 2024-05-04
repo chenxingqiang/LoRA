@@ -44,7 +44,8 @@ class TokenClassificationArgumentHandler(ArgumentHandler):
             if isinstance(offset_mapping, list) and isinstance(offset_mapping[0], tuple):
                 offset_mapping = [offset_mapping]
             if len(offset_mapping) != batch_size:
-                raise ValueError("offset_mapping should have the same batch size as the input")
+                raise ValueError(
+                    "offset_mapping should have the same batch size as the input")
         return inputs, offset_mapping
 
 
@@ -158,13 +159,15 @@ class TokenClassificationPipeline(Pipeline):
                     return_offsets_mapping=self.tokenizer.is_fast,
                 )
                 if self.tokenizer.is_fast:
-                    offset_mapping = tokens.pop("offset_mapping").cpu().numpy()[0]
+                    offset_mapping = tokens.pop(
+                        "offset_mapping").cpu().numpy()[0]
                 elif offset_mappings:
                     offset_mapping = offset_mappings[i]
                 else:
                     offset_mapping = None
 
-                special_tokens_mask = tokens.pop("special_tokens_mask").cpu().numpy()[0]
+                special_tokens_mask = tokens.pop(
+                    "special_tokens_mask").cpu().numpy()[0]
 
                 # Forward
                 if self.framework == "tf":
@@ -192,14 +195,16 @@ class TokenClassificationPipeline(Pipeline):
                 if offset_mapping is not None:
                     start_ind, end_ind = offset_mapping[idx]
                     word_ref = sentence[start_ind:end_ind]
-                    word = self.tokenizer.convert_ids_to_tokens([int(input_ids[idx])])[0]
+                    word = self.tokenizer.convert_ids_to_tokens(
+                        [int(input_ids[idx])])[0]
                     is_subword = len(word_ref) != len(word)
 
                     if int(input_ids[idx]) == self.tokenizer.unk_token_id:
                         word = word_ref
                         is_subword = False
                 else:
-                    word = self.tokenizer.convert_ids_to_tokens(int(input_ids[idx]))
+                    word = self.tokenizer.convert_ids_to_tokens(
+                        int(input_ids[idx]))
 
                     start_ind = None
                     end_ind = None
@@ -270,7 +275,8 @@ class TokenClassificationPipeline(Pipeline):
             if not entity_group_disagg:
                 entity_group_disagg += [entity]
                 if is_last_idx:
-                    entity_groups += [self.group_sub_entities(entity_group_disagg)]
+                    entity_groups += [
+                        self.group_sub_entities(entity_group_disagg)]
                 continue
 
             # If the current entity is similar and adjacent to the previous entity, append it to the disaggregated entity group
@@ -278,27 +284,32 @@ class TokenClassificationPipeline(Pipeline):
             # Shouldn't merge if both entities are B-type
             if (
                 (
-                    entity["entity"].split("-")[-1] == entity_group_disagg[-1]["entity"].split("-")[-1]
+                    entity["entity"].split(
+                        "-")[-1] == entity_group_disagg[-1]["entity"].split("-")[-1]
                     and entity["entity"].split("-")[0] != "B"
                 )
                 and entity["index"] == entity_group_disagg[-1]["index"] + 1
             ) or is_subword:
                 # Modify subword type to be previous_type
                 if is_subword:
-                    entity["entity"] = entity_group_disagg[-1]["entity"].split("-")[-1]
-                    entity["score"] = np.nan  # set ignored scores to nan and use np.nanmean
+                    entity["entity"] = entity_group_disagg[-1]["entity"].split(
+                        "-")[-1]
+                    # set ignored scores to nan and use np.nanmean
+                    entity["score"] = np.nan
 
                 entity_group_disagg += [entity]
                 # Group the entities at the last entity
                 if is_last_idx:
-                    entity_groups += [self.group_sub_entities(entity_group_disagg)]
+                    entity_groups += [
+                        self.group_sub_entities(entity_group_disagg)]
             # If the current entity is different from the previous entity, aggregate the disaggregated entity group
             else:
                 entity_groups += [self.group_sub_entities(entity_group_disagg)]
                 entity_group_disagg = [entity]
                 # If it's the last entity, add it to the entity groups
                 if is_last_idx:
-                    entity_groups += [self.group_sub_entities(entity_group_disagg)]
+                    entity_groups += [
+                        self.group_sub_entities(entity_group_disagg)]
 
         return entity_groups
 

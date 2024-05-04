@@ -72,11 +72,14 @@ class StudentModelArguments:
 
 @dataclass
 class DataTrainingArguments:
-    data_file: str = field(metadata={"help": "Text file with one unlabeled instance per line."})
-    class_names_file: str = field(metadata={"help": "Text file with one class name per line."})
+    data_file: str = field(
+        metadata={"help": "Text file with one unlabeled instance per line."})
+    class_names_file: str = field(
+        metadata={"help": "Text file with one class name per line."})
     use_fast_tokenizer: bool = field(
         default=True,
-        metadata={"help": "Whether to use one of the fast tokenizer (backed by the Rust tokenizers library) or not."},
+        metadata={
+            "help": "Whether to use one of the fast tokenizer (backed by the Rust tokenizers library) or not."},
     )
 
 
@@ -84,7 +87,8 @@ class DataTrainingArguments:
 class DistillTrainingArguments(TrainingArguments):
     output_dir: Optional[str] = field(
         default=None,
-        metadata={"help": "The output directory where the model predictions and checkpoints will be written."},
+        metadata={
+            "help": "The output directory where the model predictions and checkpoints will be written."},
     )
     per_device_train_batch_size: int = field(
         default=32, metadata={"help": "Batch size per GPU/TPU core/CPU for training."}
@@ -92,8 +96,10 @@ class DistillTrainingArguments(TrainingArguments):
     per_device_eval_batch_size: int = field(
         default=128, metadata={"help": "Batch size per GPU/TPU core/CPU for evaluation."}
     )
-    num_train_epochs: float = field(default=1.0, metadata={"help": "Total number of training epochs to perform."})
-    do_train: bool = field(default=True, metadata={"help": "Whether to run training of student model."})
+    num_train_epochs: float = field(
+        default=1.0, metadata={"help": "Total number of training epochs to perform."})
+    do_train: bool = field(default=True, metadata={
+                           "help": "Whether to run training of student model."})
     do_eval: bool = field(
         default=True,
         metadata={
@@ -117,10 +123,12 @@ class DistillTrainingArguments(TrainingArguments):
 class DistillationTrainer(Trainer):
     def compute_loss(self, model, inputs, return_outputs=False):
         target_p = inputs["labels"]
-        outputs = model(inputs["input_ids"], attention_mask=inputs["attention_mask"])
+        outputs = model(inputs["input_ids"],
+                        attention_mask=inputs["attention_mask"])
         logits = outputs[0]
 
-        loss = -torch.sum(target_p * logits.log_softmax(dim=-1), axis=-1).mean()
+        loss = -torch.sum(target_p *
+                          logits.log_softmax(dim=-1), axis=-1).mean()
 
         if return_outputs:
             return loss, outputs
@@ -152,7 +160,8 @@ def get_entailment_id(config):
     for label, ind in config.label2id.items():
         if label.lower().startswith("entail"):
             return ind
-    logging.warning("Could not identify entailment dimension from teacher config label2id. Setting to -1.")
+    logging.warning(
+        "Could not identify entailment dimension from teacher config label2id. Setting to -1.")
     return -1
 
 
@@ -176,14 +185,16 @@ def get_teacher_predictions(
     if not no_cuda and torch.cuda.is_available():
         model = nn.DataParallel(model.cuda())
         batch_size *= len(model.device_ids)
-    tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=use_fast_tokenizer)
+    tokenizer = AutoTokenizer.from_pretrained(
+        model_path, use_fast=use_fast_tokenizer)
 
-    premises, hypotheses = get_premise_hypothesis_pairs(examples, class_names, hypothesis_template)
+    premises, hypotheses = get_premise_hypothesis_pairs(
+        examples, class_names, hypothesis_template)
     logits = []
 
     for i in tqdm(range(0, len(premises), batch_size)):
-        batch_premises = premises[i : i + batch_size]
-        batch_hypotheses = hypotheses[i : i + batch_size]
+        batch_premises = premises[i: i + batch_size]
+        batch_hypotheses = hypotheses[i: i + batch_size]
 
         encodings = tokenizer(
             batch_premises,
@@ -201,7 +212,8 @@ def get_teacher_predictions(
     entail_id = get_entailment_id(model_config)
     contr_id = -1 if entail_id == 0 else 0
     logits = torch.cat(logits, dim=0)  # N*K x 3
-    nli_logits = logits.reshape(len(examples), len(class_names), -1)[..., [contr_id, entail_id]]  # N x K x 2
+    nli_logits = logits.reshape(len(examples), len(
+        class_names), -1)[..., [contr_id, entail_id]]  # N x K x 2
 
     if multi_label:
         # softmax over (contr, entail) logits for each class independently
@@ -215,7 +227,8 @@ def get_teacher_predictions(
 
 def main():
     parser = HfArgumentParser(
-        (DataTrainingArguments, TeacherModelArguments, StudentModelArguments, DistillTrainingArguments),
+        (DataTrainingArguments, TeacherModelArguments,
+         StudentModelArguments, DistillTrainingArguments),
         description=DESCRIPTION,
     )
 
@@ -249,7 +262,8 @@ def main():
         datefmt="%m/%d/%Y %H:%M:%S",
         handlers=[logging.StreamHandler(sys.stdout)],
     )
-    logger.setLevel(logging.INFO if is_main_process(training_args.local_rank) else logging.WARN)
+    logger.setLevel(logging.INFO if is_main_process(
+        training_args.local_rank) else logging.WARN)
 
     # Log on each process the small summary:
     logger.warning(
@@ -302,7 +316,8 @@ def main():
     model = AutoModelForSequenceClassification.from_pretrained(
         student_args.student_name_or_path, num_labels=len(class_names)
     )
-    tokenizer = AutoTokenizer.from_pretrained(student_args.student_name_or_path, use_fast=data_args.use_fast_tokenizer)
+    tokenizer = AutoTokenizer.from_pretrained(
+        student_args.student_name_or_path, use_fast=data_args.use_fast_tokenizer)
     model.config.id2label = {i: label for i, label in enumerate(class_names)}
     model.config.label2id = {label: i for i, label in enumerate(class_names)}
 
@@ -312,7 +327,8 @@ def main():
 
     def compute_metrics(p, return_outputs=False):
         preds = p.predictions.argmax(-1)
-        proxy_labels = p.label_ids.argmax(-1)  # "label_ids" are actually distributions
+        # "label_ids" are actually distributions
+        proxy_labels = p.label_ids.argmax(-1)
         return {"agreement": (preds == proxy_labels).mean().item()}
 
     trainer = DistillationTrainer(
@@ -329,7 +345,8 @@ def main():
 
     if training_args.do_eval:
         agreement = trainer.evaluate(eval_dataset=dataset)["eval_agreement"]
-        logger.info(f"Agreement of student and teacher predictions: {agreement * 100:0.2f}%")
+        logger.info(
+            f"Agreement of student and teacher predictions: {agreement * 100:0.2f}%")
 
     trainer.save_model()
 

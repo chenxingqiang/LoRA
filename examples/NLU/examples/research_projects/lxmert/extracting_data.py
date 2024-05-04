@@ -46,7 +46,8 @@ class Extract:
         outputfile = None
         subset_list = None
         batch_size = 1
-        opts, args = getopt.getopt(argv, "i:o:b:s", ["inputdir=", "outfile=", "batch_size=", "subset_list="])
+        opts, args = getopt.getopt(
+            argv, "i:o:b:s", ["inputdir=", "outfile=", "batch_size=", "subset_list="])
         for opt, arg in opts:
             if opt in ("-i", "--inputdir"):
                 inputdir = arg
@@ -57,11 +58,14 @@ class Extract:
             elif opt in ("-s", "--subset_list"):
                 subset_list = arg
 
-        assert inputdir is not None  # and os.path.isdir(inputdir), f"{inputdir}"
-        assert outputfile is not None and not os.path.isfile(outputfile), f"{outputfile}"
+        # and os.path.isdir(inputdir), f"{inputdir}"
+        assert inputdir is not None
+        assert outputfile is not None and not os.path.isfile(
+            outputfile), f"{outputfile}"
         if subset_list is not None:
             with open(os.path.realpath(subset_list)) as f:
-                self.subset_list = set(map(lambda x: self._vqa_file_split()[0], tryload(f)))
+                self.subset_list = set(
+                    map(lambda x: self._vqa_file_split()[0], tryload(f)))
         else:
             self.subset_list = None
 
@@ -71,7 +75,8 @@ class Extract:
         self.inputdir = os.path.realpath(inputdir)
         self.outputfile = os.path.realpath(outputfile)
         self.preprocess = Preprocess(self.config)
-        self.model = GeneralizedRCNN.from_pretrained("unc-nlp/frcnn-vg-finetuned", config=self.config)
+        self.model = GeneralizedRCNN.from_pretrained(
+            "unc-nlp/frcnn-vg-finetuned", config=self.config)
         self.batch = batch_size if batch_size != 0 else 1
         self.schema = DEFAULT_SCHEMA
 
@@ -98,7 +103,8 @@ class Extract:
     def __call__(self):
         # make writer
         if not TEST:
-            writer = datasets.ArrowWriter(features=self.schema, path=self.outputfile)
+            writer = datasets.ArrowWriter(
+                features=self.schema, path=self.outputfile)
         # do file generator
         for i, (img_ids, filepaths) in enumerate(self.file_generator):
             images, sizes, scales_yx = self.preprocess(filepaths)
@@ -122,7 +128,8 @@ class Extract:
             # finalizer the writer
         if not TEST:
             num_examples, num_bytes = writer.finalize()
-            print(f"Success! You wrote {num_examples} entry(s) and {num_bytes >> 20} mb")
+            print(
+                f"Success! You wrote {num_examples} entry(s) and {num_bytes >> 20} mb")
 
 
 def tryload(stream):

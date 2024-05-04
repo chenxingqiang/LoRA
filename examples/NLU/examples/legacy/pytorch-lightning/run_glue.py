@@ -36,16 +36,19 @@ class GLUETransformer(BaseTransformer):
         return self.model(**inputs)
 
     def training_step(self, batch, batch_idx):
-        inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": batch[3]}
+        inputs = {"input_ids": batch[0],
+                  "attention_mask": batch[1], "labels": batch[3]}
 
         if self.config.model_type not in ["distilbert", "bart"]:
-            inputs["token_type_ids"] = batch[2] if self.config.model_type in ["bert", "xlnet", "albert"] else None
+            inputs["token_type_ids"] = batch[2] if self.config.model_type in [
+                "bert", "xlnet", "albert"] else None
 
         outputs = self(**inputs)
         loss = outputs[0]
 
         lr_scheduler = self.trainer.lr_schedulers[0]["scheduler"]
-        tensorboard_logs = {"loss": loss, "rate": lr_scheduler.get_last_lr()[-1]}
+        tensorboard_logs = {"loss": loss,
+                            "rate": lr_scheduler.get_last_lr()[-1]}
         return {"loss": loss, "log": tensorboard_logs}
 
     def prepare_data(self):
@@ -57,9 +60,11 @@ class GLUETransformer(BaseTransformer):
         for mode in ["train", "dev"]:
             cached_features_file = self._feature_file(mode)
             if os.path.exists(cached_features_file) and not args.overwrite_cache:
-                logger.info("Loading features from cached file %s", cached_features_file)
+                logger.info("Loading features from cached file %s",
+                            cached_features_file)
             else:
-                logger.info("Creating features from dataset file at %s", args.data_dir)
+                logger.info(
+                    "Creating features from dataset file at %s", args.data_dir)
                 examples = (
                     processor.get_dev_examples(args.data_dir)
                     if mode == "dev"
@@ -72,7 +77,8 @@ class GLUETransformer(BaseTransformer):
                     label_list=self.labels,
                     output_mode=args.glue_output_mode,
                 )
-                logger.info("Saving features into cached file %s", cached_features_file)
+                logger.info("Saving features into cached file %s",
+                            cached_features_file)
                 torch.save(features, cached_features_file)
 
     def get_dataloader(self, mode: str, batch_size: int, shuffle: bool = False) -> DataLoader:
@@ -82,27 +88,36 @@ class GLUETransformer(BaseTransformer):
         mode = "dev" if mode == "test" else mode
 
         cached_features_file = self._feature_file(mode)
-        logger.info("Loading features from cached file %s", cached_features_file)
+        logger.info("Loading features from cached file %s",
+                    cached_features_file)
         features = torch.load(cached_features_file)
-        all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
-        all_attention_mask = torch.tensor([f.attention_mask for f in features], dtype=torch.long)
-        all_token_type_ids = torch.tensor([f.token_type_ids for f in features], dtype=torch.long)
+        all_input_ids = torch.tensor(
+            [f.input_ids for f in features], dtype=torch.long)
+        all_attention_mask = torch.tensor(
+            [f.attention_mask for f in features], dtype=torch.long)
+        all_token_type_ids = torch.tensor(
+            [f.token_type_ids for f in features], dtype=torch.long)
         if self.hparams.glue_output_mode == "classification":
-            all_labels = torch.tensor([f.label for f in features], dtype=torch.long)
+            all_labels = torch.tensor(
+                [f.label for f in features], dtype=torch.long)
         elif self.hparams.glue_output_mode == "regression":
-            all_labels = torch.tensor([f.label for f in features], dtype=torch.float)
+            all_labels = torch.tensor(
+                [f.label for f in features], dtype=torch.float)
 
         return DataLoader(
-            TensorDataset(all_input_ids, all_attention_mask, all_token_type_ids, all_labels),
+            TensorDataset(all_input_ids, all_attention_mask,
+                          all_token_type_ids, all_labels),
             batch_size=batch_size,
             shuffle=shuffle,
         )
 
     def validation_step(self, batch, batch_idx):
-        inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": batch[3]}
+        inputs = {"input_ids": batch[0],
+                  "attention_mask": batch[1], "labels": batch[3]}
 
         if self.config.model_type not in ["distilbert", "bart"]:
-            inputs["token_type_ids"] = batch[2] if self.config.model_type in ["bert", "xlnet", "albert"] else None
+            inputs["token_type_ids"] = batch[2] if self.config.model_type in [
+                "bert", "xlnet", "albert"] else None
 
         outputs = self(**inputs)
         tmp_eval_loss, logits = outputs[:2]
@@ -112,7 +127,8 @@ class GLUETransformer(BaseTransformer):
         return {"val_loss": tmp_eval_loss.detach().cpu(), "pred": preds, "target": out_label_ids}
 
     def _eval_end(self, outputs) -> tuple:
-        val_loss_mean = torch.stack([x["val_loss"] for x in outputs]).mean().detach().cpu().item()
+        val_loss_mean = torch.stack(
+            [x["val_loss"] for x in outputs]).mean().detach().cpu().item()
         preds = np.concatenate([x["pred"] for x in outputs], axis=0)
 
         if self.hparams.glue_output_mode == "classification":
@@ -124,7 +140,8 @@ class GLUETransformer(BaseTransformer):
         out_label_list = [[] for _ in range(out_label_ids.shape[0])]
         preds_list = [[] for _ in range(out_label_ids.shape[0])]
 
-        results = {**{"val_loss": val_loss_mean}, **compute_metrics(self.hparams.task, preds, out_label_ids)}
+        results = {**{"val_loss": val_loss_mean}, **
+                   compute_metrics(self.hparams.task, preds, out_label_ids)}
 
         ret = {k: v for k, v in results.items()}
         ret["log"] = results
@@ -192,7 +209,8 @@ def main():
 
     # Optionally, predict on dev set and write to output_dir
     if args.do_predict:
-        checkpoints = list(sorted(glob.glob(os.path.join(args.output_dir, "checkpoint-epoch=*.ckpt"), recursive=True)))
+        checkpoints = list(sorted(glob.glob(os.path.join(
+            args.output_dir, "checkpoint-epoch=*.ckpt"), recursive=True)))
         model = model.load_from_checkpoint(checkpoints[-1])
         return trainer.test(model)
 

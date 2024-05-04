@@ -46,7 +46,8 @@ if is_torch_available():
     ]
 
 if is_tf_available():
-    _import_structure["modeling_tf_pegasus"] = ["TFPegasusForConditionalGeneration", "TFPegasusModel"]
+    _import_structure["modeling_tf_pegasus"] = [
+        "TFPegasusForConditionalGeneration", "TFPegasusModel"]
 
 
 if TYPE_CHECKING:

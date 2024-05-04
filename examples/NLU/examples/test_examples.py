@@ -264,7 +264,8 @@ class ExamplesTests(TestCasePlus):
         stream_handler = logging.StreamHandler(sys.stdout)
         logger.addHandler(stream_handler)
 
-        testargs = ["run_generation.py", "--prompt=Hello", "--length=10", "--seed=42"]
+        testargs = ["run_generation.py",
+                    "--prompt=Hello", "--length=10", "--seed=42"]
 
         if is_cuda_and_apex_available():
             testargs.append("--fp16")

@@ -59,7 +59,8 @@ class LfsCommands(BaseTransformersCLICommand):
         enable_parser = parser.add_parser(
             "lfs-enable-largefiles", help="Configure your repository to enable upload of files > 5GB."
         )
-        enable_parser.add_argument("path", type=str, help="Local path to repository you want to configure.")
+        enable_parser.add_argument(
+            "path", type=str, help="Local path to repository you want to configure.")
         enable_parser.set_defaults(func=lambda args: LfsEnableCommand(args))
 
         upload_parser = parser.add_parser(
@@ -81,7 +82,8 @@ class LfsEnableCommand:
             "git config lfs.customtransfer.multipart.path transformers-cli".split(), check=True, cwd=local_path
         )
         subprocess.run(
-            f"git config lfs.customtransfer.multipart.args {LFS_MULTIPART_UPLOAD_COMMAND}".split(),
+            f"git config lfs.customtransfer.multipart.args {LFS_MULTIPART_UPLOAD_COMMAND}".split(
+            ),
             check=True,
             cwd=local_path,
         )
@@ -136,7 +138,8 @@ class FileSlice(AbstractContextManager):
         if self.n_seen >= self.read_limit:
             return b""
         remaining_amount = self.read_limit - self.n_seen
-        data = self.f.read(remaining_amount if n < 0 else min(n, remaining_amount))
+        data = self.f.read(remaining_amount if n <
+                           0 else min(n, remaining_amount))
         self.n_seen += len(data)
         return data
 
@@ -157,7 +160,8 @@ class LfsUploadCommand:
         # This tells the process useful information about the configuration.
         init_msg = json.loads(sys.stdin.readline().strip())
         if not (init_msg.get("event") == "init" and init_msg.get("operation") == "upload"):
-            write_msg({"error": {"code": 32, "message": "Wrong lfs init operation"}})
+            write_msg(
+                {"error": {"code": 32, "message": "Wrong lfs init operation"}})
             sys.exit(1)
 
         # The transfer process should use the information it needs from the

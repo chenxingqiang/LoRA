@@ -24,8 +24,10 @@ from transformers.testing_utils import require_sentencepiece, require_tokenizers
 from .test_tokenization_common import TokenizerTesterMixin
 
 
-SAMPLE_VOCAB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures/test_sentencepiece.model")
-SAMPLE_BPE_VOCAB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures/test_sentencepiece_bpe.model")
+SAMPLE_VOCAB = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), "fixtures/test_sentencepiece.model")
+SAMPLE_BPE_VOCAB = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), "fixtures/test_sentencepiece_bpe.model")
 
 FRAMEWORK = "pt" if is_torch_available() else "tf"
 
@@ -48,7 +50,8 @@ class CamembertTokenizationTest(TokenizerTesterMixin, unittest.TestCase):
     def test_rust_and_python_bpe_tokenizers(self):
         tokenizer = CamembertTokenizer(SAMPLE_BPE_VOCAB)
         tokenizer.save_pretrained(self.tmpdirname)
-        rust_tokenizer = CamembertTokenizerFast.from_pretrained(self.tmpdirname)
+        rust_tokenizer = CamembertTokenizerFast.from_pretrained(
+            self.tmpdirname)
 
         sequence = "I was born in 92000, and this is falsé."
 

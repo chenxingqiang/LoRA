@@ -89,9 +89,11 @@ class LayoutLMModelTester:
         self.range_bbox = range_bbox
 
     def prepare_config_and_inputs(self):
-        input_ids = ids_tensor([self.batch_size, self.seq_length], self.vocab_size)
+        input_ids = ids_tensor(
+            [self.batch_size, self.seq_length], self.vocab_size)
 
-        bbox = ids_tensor([self.batch_size, self.seq_length, 4], self.range_bbox)
+        bbox = ids_tensor(
+            [self.batch_size, self.seq_length, 4], self.range_bbox)
         # Ensure that bbox is legal
         for i in range(bbox.shape[0]):
             for j in range(bbox.shape[1]):
@@ -106,18 +108,22 @@ class LayoutLMModelTester:
 
         input_mask = None
         if self.use_input_mask:
-            input_mask = ids_tensor([self.batch_size, self.seq_length], vocab_size=2)
+            input_mask = ids_tensor(
+                [self.batch_size, self.seq_length], vocab_size=2)
 
         token_type_ids = None
         if self.use_token_type_ids:
-            token_type_ids = ids_tensor([self.batch_size, self.seq_length], self.type_vocab_size)
+            token_type_ids = ids_tensor(
+                [self.batch_size, self.seq_length], self.type_vocab_size)
 
         sequence_labels = None
         token_labels = None
         choice_labels = None
         if self.use_labels:
-            sequence_labels = ids_tensor([self.batch_size], self.type_sequence_label_size)
-            token_labels = ids_tensor([self.batch_size, self.seq_length], self.num_labels)
+            sequence_labels = ids_tensor(
+                [self.batch_size], self.type_sequence_label_size)
+            token_labels = ids_tensor(
+                [self.batch_size, self.seq_length], self.num_labels)
             choice_labels = ids_tensor([self.batch_size], self.num_choices)
 
         config = LayoutLMConfig(
@@ -142,11 +148,14 @@ class LayoutLMModelTester:
         model = LayoutLMModel(config=config)
         model.to(torch_device)
         model.eval()
-        result = model(input_ids, bbox, attention_mask=input_mask, token_type_ids=token_type_ids)
+        result = model(input_ids, bbox, attention_mask=input_mask,
+                       token_type_ids=token_type_ids)
         result = model(input_ids, bbox, token_type_ids=token_type_ids)
         result = model(input_ids, bbox)
-        self.parent.assertEqual(result.last_hidden_state.shape, (self.batch_size, self.seq_length, self.hidden_size))
-        self.parent.assertEqual(result.pooler_output.shape, (self.batch_size, self.hidden_size))
+        self.parent.assertEqual(result.last_hidden_state.shape,
+                                (self.batch_size, self.seq_length, self.hidden_size))
+        self.parent.assertEqual(
+            result.pooler_output.shape, (self.batch_size, self.hidden_size))
 
     def create_and_check_for_masked_lm(
         self, config, input_ids, bbox, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
@@ -154,8 +163,10 @@ class LayoutLMModelTester:
         model = LayoutLMForMaskedLM(config=config)
         model.to(torch_device)
         model.eval()
-        result = model(input_ids, bbox, attention_mask=input_mask, token_type_ids=token_type_ids, labels=token_labels)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
+        result = model(input_ids, bbox, attention_mask=input_mask,
+                       token_type_ids=token_type_ids, labels=token_labels)
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.seq_length, self.vocab_size))
 
     def create_and_check_for_sequence_classification(
         self, config, input_ids, bbox, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
@@ -167,7 +178,8 @@ class LayoutLMModelTester:
         result = model(
             input_ids, bbox, attention_mask=input_mask, token_type_ids=token_type_ids, labels=sequence_labels
         )
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.num_labels))
+        self.parent.assertEqual(result.logits.shape,
+                                (self.batch_size, self.num_labels))
 
     def create_and_check_for_token_classification(
         self, config, input_ids, bbox, token_type_ids, input_mask, sequence_labels, token_labels, choice_labels
@@ -176,8 +188,10 @@ class LayoutLMModelTester:
         model = LayoutLMForTokenClassification(config=config)
         model.to(torch_device)
         model.eval()
-        result = model(input_ids, bbox, attention_mask=input_mask, token_type_ids=token_type_ids, labels=token_labels)
-        self.parent.assertEqual(result.logits.shape, (self.batch_size, self.seq_length, self.num_labels))
+        result = model(input_ids, bbox, attention_mask=input_mask,
+                       token_type_ids=token_type_ids, labels=token_labels)
+        self.parent.assertEqual(
+            result.logits.shape, (self.batch_size, self.seq_length, self.num_labels))
 
     def prepare_config_and_inputs_for_common(self):
         config_and_inputs = self.prepare_config_and_inputs()
@@ -216,7 +230,8 @@ class LayoutLMModelTest(ModelTesterMixin, unittest.TestCase):
 
     def setUp(self):
         self.model_tester = LayoutLMModelTester(self)
-        self.config_tester = ConfigTester(self, config_class=LayoutLMConfig, hidden_size=37)
+        self.config_tester = ConfigTester(
+            self, config_class=LayoutLMConfig, hidden_size=37)
 
     def test_config(self):
         self.config_tester.run_common_tests()
@@ -237,11 +252,13 @@ class LayoutLMModelTest(ModelTesterMixin, unittest.TestCase):
 
     def test_for_sequence_classification(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_for_sequence_classification(*config_and_inputs)
+        self.model_tester.create_and_check_for_sequence_classification(
+            *config_and_inputs)
 
     def test_for_token_classification(self):
         config_and_inputs = self.model_tester.prepare_config_and_inputs()
-        self.model_tester.create_and_check_for_token_classification(*config_and_inputs)
+        self.model_tester.create_and_check_for_token_classification(
+            *config_and_inputs)
 
 
 def prepare_layoutlm_batch_inputs():
@@ -262,25 +279,31 @@ def prepare_layoutlm_batch_inputs():
 class LayoutLMModelIntegrationTest(unittest.TestCase):
     @slow
     def test_forward_pass_no_head(self):
-        model = LayoutLMModel.from_pretrained("microsoft/layoutlm-base-uncased").to(torch_device)
+        model = LayoutLMModel.from_pretrained(
+            "microsoft/layoutlm-base-uncased").to(torch_device)
 
         input_ids, attention_mask, bbox, token_type_ids, labels = prepare_layoutlm_batch_inputs()
 
         # forward pass
-        outputs = model(input_ids=input_ids, bbox=bbox, attention_mask=attention_mask, token_type_ids=token_type_ids)
+        outputs = model(input_ids=input_ids, bbox=bbox,
+                        attention_mask=attention_mask, token_type_ids=token_type_ids)
 
         # test the sequence output on [0, :3, :3]
         expected_slice = torch.tensor(
-            [[0.1785, -0.1947, -0.0425], [-0.3254, -0.2807, 0.2553], [-0.5391, -0.3322, 0.3364]],
+            [[0.1785, -0.1947, -0.0425], [-0.3254, -0.2807, 0.2553],
+                [-0.5391, -0.3322, 0.3364]],
             device=torch_device,
         )
 
-        self.assertTrue(torch.allclose(outputs.last_hidden_state[0, :3, :3], expected_slice, atol=1e-3))
+        self.assertTrue(torch.allclose(
+            outputs.last_hidden_state[0, :3, :3], expected_slice, atol=1e-3))
 
         # test the pooled output on [1, :3]
-        expected_slice = torch.tensor([-0.6580, -0.0214, 0.8552], device=torch_device)
+        expected_slice = torch.tensor(
+            [-0.6580, -0.0214, 0.8552], device=torch_device)
 
-        self.assertTrue(torch.allclose(outputs.pooler_output[1, :3], expected_slice, atol=1e-3))
+        self.assertTrue(torch.allclose(
+            outputs.pooler_output[1, :3], expected_slice, atol=1e-3))
 
     @slow
     def test_forward_pass_sequence_classification(self):

@@ -184,7 +184,8 @@ class SequenceFeatureExtractor(FeatureExtractionMixin):
                 processed_features[key] = to_py_obj(value)
 
         # Convert padding_strategy in PaddingStrategy
-        padding_strategy, max_length, _ = self._get_padding_strategies(padding=padding, max_length=max_length)
+        padding_strategy, max_length, _ = self._get_padding_strategies(
+            padding=padding, max_length=max_length)
 
         required_input = processed_features[self.model_input_names[0]]
         if required_input and not isinstance(required_input[0], (list, tuple)):
@@ -258,27 +259,33 @@ class SequenceFeatureExtractor(FeatureExtractionMixin):
             max_length = len(required_input)
 
         if max_length is not None and pad_to_multiple_of is not None and (max_length % pad_to_multiple_of != 0):
-            max_length = ((max_length // pad_to_multiple_of) + 1) * pad_to_multiple_of
+            max_length = ((max_length // pad_to_multiple_of) +
+                          1) * pad_to_multiple_of
 
-        needs_to_be_padded = padding_strategy != PaddingStrategy.DO_NOT_PAD and len(required_input) != max_length
+        needs_to_be_padded = padding_strategy != PaddingStrategy.DO_NOT_PAD and len(
+            required_input) != max_length
 
         if needs_to_be_padded:
             difference = max_length - len(required_input)
-            padding_vector = self.feature_size * [self.padding_value] if self.feature_size > 1 else self.padding_value
+            padding_vector = self.feature_size * \
+                [self.padding_value] if self.feature_size > 1 else self.padding_value
             if self.padding_side == "right":
                 if return_attention_mask:
-                    processed_features["attention_mask"] = [1] * len(required_input) + [0] * difference
+                    processed_features["attention_mask"] = [
+                        1] * len(required_input) + [0] * difference
                 processed_features[self.model_input_names[0]] = required_input + [
                     padding_vector for _ in range(difference)
                 ]
             elif self.padding_side == "left":
                 if return_attention_mask:
-                    processed_features["attention_mask"] = [0] * difference + [1] * len(required_input)
+                    processed_features["attention_mask"] = [
+                        0] * difference + [1] * len(required_input)
                 processed_features[self.model_input_names[0]] = [
                     padding_vector for _ in range(difference)
                 ] + required_input
             else:
-                raise ValueError("Invalid padding strategy:" + str(self.padding_side))
+                raise ValueError("Invalid padding strategy:" +
+                                 str(self.padding_side))
         elif return_attention_mask and "attention_mask" not in processed_features:
             processed_features["attention_mask"] = [1] * len(required_input)
 
@@ -292,7 +299,8 @@ class SequenceFeatureExtractor(FeatureExtractionMixin):
         # Get padding strategy
         if padding is not False:
             if padding is True:
-                padding_strategy = PaddingStrategy.LONGEST  # Default to pad to the longest sequence in the batch
+                # Default to pad to the longest sequence in the batch
+                padding_strategy = PaddingStrategy.LONGEST
             elif not isinstance(padding, PaddingStrategy):
                 padding_strategy = PaddingStrategy(padding)
             elif isinstance(padding, PaddingStrategy):

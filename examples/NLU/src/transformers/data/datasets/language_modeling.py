@@ -57,9 +57,11 @@ class TextDataset(Dataset):
             ),
             FutureWarning,
         )
-        assert os.path.isfile(file_path), f"Input file path {file_path} not found"
+        assert os.path.isfile(
+            file_path), f"Input file path {file_path} not found"
 
-        block_size = block_size - tokenizer.num_special_tokens_to_add(pair=False)
+        block_size = block_size - \
+            tokenizer.num_special_tokens_to_add(pair=False)
 
         directory, filename = os.path.split(file_path)
         cached_features_file = os.path.join(
@@ -81,21 +83,26 @@ class TextDataset(Dataset):
                 with open(cached_features_file, "rb") as handle:
                     self.examples = pickle.load(handle)
                 logger.info(
-                    f"Loading features from cached file {cached_features_file} [took %.3f s]", time.time() - start
+                    f"Loading features from cached file {cached_features_file} [took %.3f s]", time.time(
+                    ) - start
                 )
 
             else:
-                logger.info(f"Creating features from dataset file at {directory}")
+                logger.info(
+                    f"Creating features from dataset file at {directory}")
 
                 self.examples = []
                 with open(file_path, encoding="utf-8") as f:
                     text = f.read()
 
-                tokenized_text = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))
+                tokenized_text = tokenizer.convert_tokens_to_ids(
+                    tokenizer.tokenize(text))
 
-                for i in range(0, len(tokenized_text) - block_size + 1, block_size):  # Truncate in block of block_size
+                # Truncate in block of block_size
+                for i in range(0, len(tokenized_text) - block_size + 1, block_size):
                     self.examples.append(
-                        tokenizer.build_inputs_with_special_tokens(tokenized_text[i : i + block_size])
+                        tokenizer.build_inputs_with_special_tokens(
+                            tokenized_text[i: i + block_size])
                     )
                 # Note that we are losing the last truncated example here for the sake of simplicity (no padding)
                 # If your dataset is small, first you should look for a bigger one :-) and second you
@@ -103,9 +110,11 @@ class TextDataset(Dataset):
 
                 start = time.time()
                 with open(cached_features_file, "wb") as handle:
-                    pickle.dump(self.examples, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                    pickle.dump(self.examples, handle,
+                                protocol=pickle.HIGHEST_PROTOCOL)
                 logger.info(
-                    "Saving features into cached file %s [took %.3f s]", cached_features_file, time.time() - start
+                    "Saving features into cached file %s [took %.3f s]", cached_features_file, time.time(
+                    ) - start
                 )
 
     def __len__(self):
@@ -127,18 +136,22 @@ class LineByLineTextDataset(Dataset):
             ),
             FutureWarning,
         )
-        assert os.path.isfile(file_path), f"Input file path {file_path} not found"
+        assert os.path.isfile(
+            file_path), f"Input file path {file_path} not found"
         # Here, we do not cache the features, operating under the assumption
         # that we will soon use fast multithreaded tokenizers from the
         # `tokenizers` repo everywhere =)
         logger.info("Creating features from dataset file at %s", file_path)
 
         with open(file_path, encoding="utf-8") as f:
-            lines = [line for line in f.read().splitlines() if (len(line) > 0 and not line.isspace())]
+            lines = [line for line in f.read().splitlines() if (
+                len(line) > 0 and not line.isspace())]
 
-        batch_encoding = tokenizer(lines, add_special_tokens=True, truncation=True, max_length=block_size)
+        batch_encoding = tokenizer(
+            lines, add_special_tokens=True, truncation=True, max_length=block_size)
         self.examples = batch_encoding["input_ids"]
-        self.examples = [{"input_ids": torch.tensor(e, dtype=torch.long)} for e in self.examples]
+        self.examples = [{"input_ids": torch.tensor(
+            e, dtype=torch.long)} for e in self.examples]
 
     def __len__(self):
         return len(self.examples)
@@ -159,7 +172,8 @@ class LineByLineWithRefDataset(Dataset):
             ),
             FutureWarning,
         )
-        assert os.path.isfile(file_path), f"Input file path {file_path} not found"
+        assert os.path.isfile(
+            file_path), f"Input file path {file_path} not found"
         assert os.path.isfile(ref_path), f"Ref file path {file_path} not found"
         # Here, we do not cache the features, operating under the assumption
         # that we will soon use fast multithreaded tokenizers from the
@@ -168,19 +182,24 @@ class LineByLineWithRefDataset(Dataset):
         logger.info("Use ref segment results at %s", ref_path)
         with open(file_path, encoding="utf-8") as f:
             data = f.readlines()  # use this method to avoid delimiter '\u2029' to split a line
-        data = [line.strip() for line in data if len(line) > 0 and not line.isspace()]
+        data = [line.strip() for line in data if len(line)
+                > 0 and not line.isspace()]
         # Get ref inf from file
         with open(ref_path, encoding="utf-8") as f:
-            ref = [json.loads(line) for line in f.read().splitlines() if (len(line) > 0 and not line.isspace())]
+            ref = [json.loads(line) for line in f.read().splitlines() if (
+                len(line) > 0 and not line.isspace())]
         assert len(data) == len(ref)
 
-        batch_encoding = tokenizer(data, add_special_tokens=True, truncation=True, max_length=block_size)
+        batch_encoding = tokenizer(
+            data, add_special_tokens=True, truncation=True, max_length=block_size)
         self.examples = batch_encoding["input_ids"]
-        self.examples = [{"input_ids": torch.tensor(e, dtype=torch.long)} for e in self.examples]
+        self.examples = [{"input_ids": torch.tensor(
+            e, dtype=torch.long)} for e in self.examples]
 
         n = len(self.examples)
         for i in range(n):
-            self.examples[i]["chinese_ref"] = torch.tensor(ref[i], dtype=torch.long)
+            self.examples[i]["chinese_ref"] = torch.tensor(
+                ref[i], dtype=torch.long)
 
     def __len__(self):
         return len(self.examples)
@@ -202,7 +221,8 @@ class LineByLineWithSOPTextDataset(Dataset):
             FutureWarning,
         )
         assert os.path.isdir(file_dir)
-        logger.info(f"Creating features from dataset file folder at {file_dir}")
+        logger.info(
+            f"Creating features from dataset file folder at {file_dir}")
         self.examples = []
         # TODO: randomness could apply a random seed, ex. rng = random.Random(random_seed)
         # file path looks like ./dataset/wiki_1, ./dataset/wiki_2
@@ -219,12 +239,14 @@ class LineByLineWithSOPTextDataset(Dataset):
                     elif "</doc>" in line:
                         article_open = False
                         document = [
-                            tokenizer.convert_tokens_to_ids(tokenizer.tokenize(line))
+                            tokenizer.convert_tokens_to_ids(
+                                tokenizer.tokenize(line))
                             for line in article_lines[1:]
                             if (len(line) > 0 and not line.isspace())
                         ]
 
-                        examples = self.create_examples_from_document(document, block_size, tokenizer)
+                        examples = self.create_examples_from_document(
+                            document, block_size, tokenizer)
                         self.examples.extend(examples)
                         article_lines = []
                     else:
@@ -237,7 +259,8 @@ class LineByLineWithSOPTextDataset(Dataset):
         """Creates examples for a single document."""
 
         # Account for special tokens
-        max_num_tokens = block_size - tokenizer.num_special_tokens_to_add(pair=True)
+        max_num_tokens = block_size - \
+            tokenizer.num_special_tokens_to_add(pair=True)
 
         # We *usually* want to fill up the entire sequence since we are padding
         # to `block_size` anyways, so short sequences are generally wasted
@@ -300,7 +323,8 @@ class LineByLineWithSOPTextDataset(Dataset):
                             total_length = len(tokens_a) + len(tokens_b)
                             if total_length <= max_num_tokens:
                                 break
-                            trunc_tokens = tokens_a if len(tokens_a) > len(tokens_b) else tokens_b
+                            trunc_tokens = tokens_a if len(
+                                tokens_a) > len(tokens_b) else tokens_b
                             assert len(trunc_tokens) >= 1
                             # We want to sometimes truncate from the front and sometimes from the
                             # back to add more randomness and avoid biases.
@@ -314,9 +338,11 @@ class LineByLineWithSOPTextDataset(Dataset):
                     assert len(tokens_b) >= 1
 
                     # add special tokens
-                    input_ids = tokenizer.build_inputs_with_special_tokens(tokens_a, tokens_b)
+                    input_ids = tokenizer.build_inputs_with_special_tokens(
+                        tokens_a, tokens_b)
                     # add token type ids, 0 for sentence a, 1 for sentence b
-                    token_type_ids = tokenizer.create_token_type_ids_from_sequences(tokens_a, tokens_b)
+                    token_type_ids = tokenizer.create_token_type_ids_from_sequences(
+                        tokens_a, tokens_b)
 
                     example = {
                         "input_ids": torch.tensor(input_ids, dtype=torch.long),
@@ -356,9 +382,11 @@ class TextDatasetForNextSentencePrediction(Dataset):
             ),
             FutureWarning,
         )
-        assert os.path.isfile(file_path), f"Input file path {file_path} not found"
+        assert os.path.isfile(
+            file_path), f"Input file path {file_path} not found"
 
-        self.block_size = block_size - tokenizer.num_special_tokens_to_add(pair=True)
+        self.block_size = block_size - \
+            tokenizer.num_special_tokens_to_add(pair=True)
         self.short_seq_probability = short_seq_probability
         self.nsp_probability = nsp_probability
 
@@ -397,10 +425,12 @@ class TextDatasetForNextSentencePrediction(Dataset):
                 with open(cached_features_file, "rb") as handle:
                     self.examples = pickle.load(handle)
                 logger.info(
-                    f"Loading features from cached file {cached_features_file} [took %.3f s]", time.time() - start
+                    f"Loading features from cached file {cached_features_file} [took %.3f s]", time.time(
+                    ) - start
                 )
             else:
-                logger.info(f"Creating features from dataset file at {directory}")
+                logger.info(
+                    f"Creating features from dataset file at {directory}")
 
                 self.documents = [[]]
                 with open(file_path, encoding="utf-8") as f:
@@ -418,22 +448,26 @@ class TextDatasetForNextSentencePrediction(Dataset):
                         if tokens:
                             self.documents[-1].append(tokens)
 
-                logger.info(f"Creating examples from {len(self.documents)} documents.")
+                logger.info(
+                    f"Creating examples from {len(self.documents)} documents.")
                 self.examples = []
                 for doc_index, document in enumerate(self.documents):
                     self.create_examples_from_document(document, doc_index)
 
                 start = time.time()
                 with open(cached_features_file, "wb") as handle:
-                    pickle.dump(self.examples, handle, protocol=pickle.HIGHEST_PROTOCOL)
+                    pickle.dump(self.examples, handle,
+                                protocol=pickle.HIGHEST_PROTOCOL)
                 logger.info(
-                    "Saving features into cached file %s [took %.3f s]", cached_features_file, time.time() - start
+                    "Saving features into cached file %s [took %.3f s]", cached_features_file, time.time(
+                    ) - start
                 )
 
     def create_examples_from_document(self, document: List[List[int]], doc_index: int):
         """Creates examples for a single document."""
 
-        max_num_tokens = self.block_size - self.tokenizer.num_special_tokens_to_add(pair=True)
+        max_num_tokens = self.block_size - \
+            self.tokenizer.num_special_tokens_to_add(pair=True)
 
         # We *usually* want to fill up the entire sequence since we are padding
         # to `block_size` anyways, so short sequences are generally wasted
@@ -477,12 +511,14 @@ class TextDatasetForNextSentencePrediction(Dataset):
                         # the random document is not the same as the document
                         # we're processing.
                         for _ in range(10):
-                            random_document_index = random.randint(0, len(self.documents) - 1)
+                            random_document_index = random.randint(
+                                0, len(self.documents) - 1)
                             if random_document_index != doc_index:
                                 break
 
                         random_document = self.documents[random_document_index]
-                        random_start = random.randint(0, len(random_document) - 1)
+                        random_start = random.randint(
+                            0, len(random_document) - 1)
                         for j in range(random_start, len(random_document)):
                             tokens_b.extend(random_document[j])
                             if len(tokens_b) >= target_b_length:
@@ -501,9 +537,11 @@ class TextDatasetForNextSentencePrediction(Dataset):
                     assert len(tokens_b) >= 1
 
                     # add special tokens
-                    input_ids = self.tokenizer.build_inputs_with_special_tokens(tokens_a, tokens_b)
+                    input_ids = self.tokenizer.build_inputs_with_special_tokens(
+                        tokens_a, tokens_b)
                     # add token type ids, 0 for sentence a, 1 for sentence b
-                    token_type_ids = self.tokenizer.create_token_type_ids_from_sequences(tokens_a, tokens_b)
+                    token_type_ids = self.tokenizer.create_token_type_ids_from_sequences(
+                        tokens_a, tokens_b)
 
                     example = {
                         "input_ids": torch.tensor(input_ids, dtype=torch.long),

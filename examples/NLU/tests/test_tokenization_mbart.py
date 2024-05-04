@@ -22,7 +22,8 @@ from transformers.testing_utils import require_sentencepiece, require_tokenizers
 from .test_tokenization_common import TokenizerTesterMixin
 
 
-SAMPLE_VOCAB = os.path.join(os.path.dirname(os.path.abspath(__file__)), "fixtures/test_sentencepiece.model")
+SAMPLE_VOCAB = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), "fixtures/test_sentencepiece.model")
 
 
 if is_torch_available():
@@ -136,7 +137,8 @@ class MBartEnroIntegrationTest(unittest.TestCase):
         "Şeful ONU declară că nu există o soluţie militară în Siria",
         'Secretarul General Ban Ki-moon declară că răspunsul său la intensificarea sprijinului militar al Rusiei pentru Siria este că "nu există o soluţie militară" la conflictul de aproape cinci ani şi că noi arme nu vor face decât să înrăutăţească violenţele şi mizeria pentru milioane de oameni.',
     ]
-    expected_src_tokens = [8274, 127873, 25916, 7, 8622, 2071, 438, 67485, 53, 187895, 23, 51712, 2, EN_CODE]
+    expected_src_tokens = [8274, 127873, 25916, 7, 8622,
+                           2071, 438, 67485, 53, 187895, 23, 51712, 2, EN_CODE]
 
     @classmethod
     def setUpClass(cls):
@@ -157,9 +159,11 @@ class MBartEnroIntegrationTest(unittest.TestCase):
 
     def test_enro_tokenizer_decode_ignores_language_codes(self):
         self.assertIn(RO_CODE, self.tokenizer.all_special_ids)
-        generated_ids = [RO_CODE, 884, 9019, 96, 9, 916, 86792, 36, 18743, 15596, 5, 2]
+        generated_ids = [RO_CODE, 884, 9019, 96,
+                         9, 916, 86792, 36, 18743, 15596, 5, 2]
         result = self.tokenizer.decode(generated_ids, skip_special_tokens=True)
-        expected_romanian = self.tokenizer.decode(generated_ids[1:], skip_special_tokens=True)
+        expected_romanian = self.tokenizer.decode(
+            generated_ids[1:], skip_special_tokens=True)
         self.assertEqual(result, expected_romanian)
         self.assertNotIn(self.tokenizer.eos_token, result)
 
@@ -167,28 +171,33 @@ class MBartEnroIntegrationTest(unittest.TestCase):
         src_text = ["this is gunna be a long sentence " * 20]
         assert isinstance(src_text[0], str)
         desired_max_length = 10
-        ids = self.tokenizer(src_text, max_length=desired_max_length, truncation=True).input_ids[0]
+        ids = self.tokenizer(
+            src_text, max_length=desired_max_length, truncation=True).input_ids[0]
         self.assertEqual(ids[-2], 2)
         self.assertEqual(ids[-1], EN_CODE)
         self.assertEqual(len(ids), desired_max_length)
 
     def test_mask_token(self):
-        self.assertListEqual(self.tokenizer.convert_tokens_to_ids(["<mask>", "ar_AR"]), [250026, 250001])
+        self.assertListEqual(self.tokenizer.convert_tokens_to_ids(
+            ["<mask>", "ar_AR"]), [250026, 250001])
 
     def test_special_tokens_unaffacted_by_save_load(self):
         tmpdirname = tempfile.mkdtemp()
         original_special_tokens = self.tokenizer.fairseq_tokens_to_ids
         self.tokenizer.save_pretrained(tmpdirname)
         new_tok = MBartTokenizer.from_pretrained(tmpdirname)
-        self.assertDictEqual(new_tok.fairseq_tokens_to_ids, original_special_tokens)
+        self.assertDictEqual(new_tok.fairseq_tokens_to_ids,
+                             original_special_tokens)
 
     @require_torch
     def test_batch_fairseq_parity(self):
         batch = self.tokenizer(self.src_text, padding=True)
         with self.tokenizer.as_target_tokenizer():
-            targets = self.tokenizer(self.tgt_text, padding=True, return_tensors="pt")
+            targets = self.tokenizer(
+                self.tgt_text, padding=True, return_tensors="pt")
         labels = targets["input_ids"]
-        batch["decoder_input_ids"] = shift_tokens_right(labels, self.tokenizer.pad_token_id).tolist()
+        batch["decoder_input_ids"] = shift_tokens_right(
+            labels, self.tokenizer.pad_token_id).tolist()
 
         # fairseq batch: https://gist.github.com/sshleifer/cba08bc2109361a74ac3760a7e30e4f4
         assert batch.input_ids[1][-2:] == [2, EN_CODE]
@@ -210,7 +219,8 @@ class MBartEnroIntegrationTest(unittest.TestCase):
                 return_tensors="pt",
             )
         labels = targets["input_ids"]
-        batch["decoder_input_ids"] = shift_tokens_right(labels, self.tokenizer.pad_token_id)
+        batch["decoder_input_ids"] = shift_tokens_right(
+            labels, self.tokenizer.pad_token_id)
 
         self.assertIsInstance(batch, BatchEncoding)
 
@@ -221,14 +231,18 @@ class MBartEnroIntegrationTest(unittest.TestCase):
         self.assertEqual(2, batch.decoder_input_ids[0, -1])  # EOS
         # Test that special tokens are reset
         self.assertEqual(self.tokenizer.prefix_tokens, [])
-        self.assertEqual(self.tokenizer.suffix_tokens, [self.tokenizer.eos_token_id, EN_CODE])
+        self.assertEqual(self.tokenizer.suffix_tokens, [
+                         self.tokenizer.eos_token_id, EN_CODE])
 
     def test_seq2seq_max_length(self):
-        batch = self.tokenizer(self.src_text, padding=True, truncation=True, max_length=3, return_tensors="pt")
+        batch = self.tokenizer(self.src_text, padding=True,
+                               truncation=True, max_length=3, return_tensors="pt")
         with self.tokenizer.as_target_tokenizer():
-            targets = self.tokenizer(self.tgt_text, padding=True, truncation=True, max_length=10, return_tensors="pt")
+            targets = self.tokenizer(
+                self.tgt_text, padding=True, truncation=True, max_length=10, return_tensors="pt")
         labels = targets["input_ids"]
-        batch["decoder_input_ids"] = shift_tokens_right(labels, self.tokenizer.pad_token_id)
+        batch["decoder_input_ids"] = shift_tokens_right(
+            labels, self.tokenizer.pad_token_id)
 
         self.assertEqual(batch.input_ids.shape[1], 3)
         self.assertEqual(batch.decoder_input_ids.shape[1], 10)

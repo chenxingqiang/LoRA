@@ -63,16 +63,19 @@ class TrainerUtilsTest(unittest.TestCase):
         ]
 
         predictions = np.random.normal(size=(num_samples, 13))
-        gatherer = DistributedTensorGatherer(world_size=world_size, num_samples=num_samples)
+        gatherer = DistributedTensorGatherer(
+            world_size=world_size, num_samples=num_samples)
         for indices in input_indices:
             gatherer.add_arrays(predictions[indices])
         result = gatherer.finalize()
         self.assertTrue(np.array_equal(result, predictions))
 
         # With nested tensors
-        gatherer = DistributedTensorGatherer(world_size=world_size, num_samples=num_samples)
+        gatherer = DistributedTensorGatherer(
+            world_size=world_size, num_samples=num_samples)
         for indices in input_indices:
-            gatherer.add_arrays([predictions[indices], [predictions[indices], predictions[indices]]])
+            gatherer.add_arrays(
+                [predictions[indices], [predictions[indices], predictions[indices]]])
         result = gatherer.finalize()
         self.assertTrue(isinstance(result, list))
         self.assertTrue(len(result), 2)
@@ -87,7 +90,8 @@ class TrainerUtilsTest(unittest.TestCase):
         num_labels = 12
         random_logits = torch.randn(4, 5, num_labels)
         random_labels = torch.randint(0, num_labels, (4, 5))
-        loss = torch.nn.functional.cross_entropy(random_logits.view(-1, num_labels), random_labels.view(-1))
+        loss = torch.nn.functional.cross_entropy(
+            random_logits.view(-1, num_labels), random_labels.view(-1))
         model_output = SequenceClassifierOutput(logits=random_logits)
         label_smoothed_loss = LabelSmoother(0.1)(model_output, random_labels)
         log_probs = -torch.nn.functional.log_softmax(random_logits, dim=-1)
@@ -99,7 +103,8 @@ class TrainerUtilsTest(unittest.TestCase):
         random_labels[2, 1] = -100
         random_labels[2, 3] = -100
 
-        loss = torch.nn.functional.cross_entropy(random_logits.view(-1, num_labels), random_labels.view(-1))
+        loss = torch.nn.functional.cross_entropy(
+            random_logits.view(-1, num_labels), random_labels.view(-1))
         model_output = SequenceClassifierOutput(logits=random_logits)
         label_smoothed_loss = LabelSmoother(0.1)(model_output, random_labels)
         log_probs = -torch.nn.functional.log_softmax(random_logits, dim=-1)
@@ -107,7 +112,8 @@ class TrainerUtilsTest(unittest.TestCase):
         log_probs[0, 1] = 0.0
         log_probs[2, 1] = 0.0
         log_probs[2, 3] = 0.0
-        expected_loss = (1 - epsilon) * loss + epsilon * log_probs.sum() / (num_labels * 17)
+        expected_loss = (1 - epsilon) * loss + epsilon * \
+            log_probs.sum() / (num_labels * 17)
         self.assertTrue(torch.allclose(label_smoothed_loss, expected_loss))
 
     def test_group_by_length(self):
@@ -128,15 +134,19 @@ class TrainerUtilsTest(unittest.TestCase):
         # Put one bigger than the others to check it ends up in first position
         lengths[32] = 50
 
-        indices_process_0 = list(DistributedLengthGroupedSampler(lengths, 4, 2, 0, lengths=lengths))
-        indices_process_1 = list(DistributedLengthGroupedSampler(lengths, 4, 2, 1, lengths=lengths))
+        indices_process_0 = list(DistributedLengthGroupedSampler(
+            lengths, 4, 2, 0, lengths=lengths))
+        indices_process_1 = list(DistributedLengthGroupedSampler(
+            lengths, 4, 2, 1, lengths=lengths))
         # The biggest element should be first
         self.assertEqual(lengths[indices_process_0[0]], 50)
         # The indices should be a permutation of range(100)
-        self.assertEqual(list(sorted(indices_process_0 + indices_process_1)), list(range(100)))
+        self.assertEqual(
+            list(sorted(indices_process_0 + indices_process_1)), list(range(100)))
 
     def test_get_parameter_names(self):
-        model = torch.nn.Sequential(TstLayer(128), torch.nn.ModuleList([TstLayer(128), TstLayer(128)]))
+        model = torch.nn.Sequential(
+            TstLayer(128), torch.nn.ModuleList([TstLayer(128), TstLayer(128)]))
         # fmt: off
         self.assertEqual(
             get_parameter_names(model, [torch.nn.LayerNorm]),
@@ -148,8 +158,10 @@ class TrainerUtilsTest(unittest.TestCase):
         batch_size = 16
         for length in [23, 64, 123]:
             dataset = list(range(length))
-            shard1 = DistributedSamplerWithLoop(dataset, batch_size, num_replicas=2, rank=0)
-            shard2 = DistributedSamplerWithLoop(dataset, batch_size, num_replicas=2, rank=1)
+            shard1 = DistributedSamplerWithLoop(
+                dataset, batch_size, num_replicas=2, rank=0)
+            shard2 = DistributedSamplerWithLoop(
+                dataset, batch_size, num_replicas=2, rank=1)
 
             # Set seeds
             shard1.set_epoch(0)
@@ -167,14 +179,17 @@ class TrainerUtilsTest(unittest.TestCase):
                 total += [sample1, sample2]
 
             self.assertEqual(set(total[:length]), set(dataset))
-            self.assertEqual(set(total[length:]), set(total[: (len(total) - length)]))
+            self.assertEqual(set(total[length:]), set(
+                total[: (len(total) - length)]))
 
     def test_sequential_distributed_sampler(self):
         batch_size = 16
         for length in [23, 64, 123]:
             dataset = list(range(length))
-            shard1 = SequentialDistributedSampler(dataset, num_replicas=2, rank=0)
-            shard2 = SequentialDistributedSampler(dataset, num_replicas=2, rank=1)
+            shard1 = SequentialDistributedSampler(
+                dataset, num_replicas=2, rank=0)
+            shard2 = SequentialDistributedSampler(
+                dataset, num_replicas=2, rank=1)
 
             # Sample
             samples1 = list(shard1)
@@ -183,11 +198,14 @@ class TrainerUtilsTest(unittest.TestCase):
             total = samples1 + samples2
 
             self.assertListEqual(total[:length], dataset)
-            self.assertListEqual(total[length:], dataset[: (len(total) - length)])
+            self.assertListEqual(
+                total[length:], dataset[: (len(total) - length)])
 
             # With a batch_size passed
-            shard1 = SequentialDistributedSampler(dataset, num_replicas=2, rank=0, batch_size=batch_size)
-            shard2 = SequentialDistributedSampler(dataset, num_replicas=2, rank=1, batch_size=batch_size)
+            shard1 = SequentialDistributedSampler(
+                dataset, num_replicas=2, rank=0, batch_size=batch_size)
+            shard2 = SequentialDistributedSampler(
+                dataset, num_replicas=2, rank=1, batch_size=batch_size)
 
             # Sample
             samples1 = list(shard1)
@@ -199,4 +217,5 @@ class TrainerUtilsTest(unittest.TestCase):
             total = samples1 + samples2
 
             self.assertListEqual(total[:length], dataset)
-            self.assertListEqual(total[length:], dataset[: (len(total) - length)])
+            self.assertListEqual(
+                total[length:], dataset[: (len(total) - length)])

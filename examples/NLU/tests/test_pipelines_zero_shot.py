@@ -25,13 +25,19 @@ class ZeroShotClassificationPipelineTests(CustomInputPipelineCommonMixin, unitte
     small_models = [
         "sshleifer/tiny-distilbert-base-uncased-finetuned-sst-2-english"
     ]  # Models tested without the @slow decorator
-    large_models = ["roberta-large-mnli"]  # Models tested with the @slow decorator
+    # Models tested with the @slow decorator
+    large_models = ["roberta-large-mnli"]
     valid_inputs = [
-        {"sequences": "Who are you voting for in 2020?", "candidate_labels": "politics"},
-        {"sequences": "Who are you voting for in 2020?", "candidate_labels": ["politics"]},
-        {"sequences": "Who are you voting for in 2020?", "candidate_labels": "politics, public health"},
-        {"sequences": "Who are you voting for in 2020?", "candidate_labels": ["politics", "public health"]},
-        {"sequences": ["Who are you voting for in 2020?"], "candidate_labels": "politics"},
+        {"sequences": "Who are you voting for in 2020?",
+            "candidate_labels": "politics"},
+        {"sequences": "Who are you voting for in 2020?",
+            "candidate_labels": ["politics"]},
+        {"sequences": "Who are you voting for in 2020?",
+            "candidate_labels": "politics, public health"},
+        {"sequences": "Who are you voting for in 2020?",
+            "candidate_labels": ["politics", "public health"]},
+        {"sequences": ["Who are you voting for in 2020?"],
+            "candidate_labels": "politics"},
         {
             "sequences": "Who are you voting for in 2020?",
             "candidate_labels": "politics",
@@ -66,11 +72,16 @@ class ZeroShotClassificationPipelineTests(CustomInputPipelineCommonMixin, unitte
     def _test_pipeline(self, nlp: Pipeline):
         output_keys = {"sequence", "labels", "scores"}
         valid_mono_inputs = [
-            {"sequences": "Who are you voting for in 2020?", "candidate_labels": "politics"},
-            {"sequences": "Who are you voting for in 2020?", "candidate_labels": ["politics"]},
-            {"sequences": "Who are you voting for in 2020?", "candidate_labels": "politics, public health"},
-            {"sequences": "Who are you voting for in 2020?", "candidate_labels": ["politics", "public health"]},
-            {"sequences": ["Who are you voting for in 2020?"], "candidate_labels": "politics"},
+            {"sequences": "Who are you voting for in 2020?",
+                "candidate_labels": "politics"},
+            {"sequences": "Who are you voting for in 2020?",
+                "candidate_labels": ["politics"]},
+            {"sequences": "Who are you voting for in 2020?",
+                "candidate_labels": "politics, public health"},
+            {"sequences": "Who are you voting for in 2020?",
+                "candidate_labels": ["politics", "public health"]},
+            {"sequences": ["Who are you voting for in 2020?"],
+                "candidate_labels": "politics"},
             {
                 "sequences": "Who are you voting for in 2020?",
                 "candidate_labels": "politics",
@@ -118,7 +129,8 @@ class ZeroShotClassificationPipelineTests(CustomInputPipelineCommonMixin, unitte
         multi_result = nlp(**valid_multi_input)
         self.assertIsInstance(multi_result, list)
         self.assertIsInstance(multi_result[0], dict)
-        self.assertEqual(len(multi_result), len(valid_multi_input["sequences"]))
+        self.assertEqual(len(multi_result), len(
+            valid_multi_input["sequences"]))
 
         for result in multi_result:
             for key in output_keys:
@@ -162,6 +174,7 @@ class ZeroShotClassificationPipelineTests(CustomInputPipelineCommonMixin, unitte
                 for key in output:
                     if key == "scores":
                         for output_score, expected_score in zip(output[key], expected_output[key]):
-                            self.assertAlmostEqual(output_score, expected_score, places=2)
+                            self.assertAlmostEqual(
+                                output_score, expected_score, places=2)
                     else:
                         self.assertEqual(output[key], expected_output[key])

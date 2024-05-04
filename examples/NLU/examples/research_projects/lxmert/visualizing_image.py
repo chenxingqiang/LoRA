@@ -128,10 +128,12 @@ class SingleImageViz:
         attr_ids = attr_ids[sorted_idxs] if attr_ids is not None else None
         attr_scores = attr_scores[sorted_idxs] if attr_scores is not None else None
 
-        assigned_colors = [self._random_color(maximum=1) for _ in range(len(boxes))]
+        assigned_colors = [self._random_color(
+            maximum=1) for _ in range(len(boxes))]
         assigned_colors = [assigned_colors[idx] for idx in sorted_idxs]
         if obj_ids is not None:
-            labels = self._create_text_labels_attr(obj_ids, obj_scores, attr_ids, attr_scores)
+            labels = self._create_text_labels_attr(
+                obj_ids, obj_scores, attr_ids, attr_scores)
             for i in range(len(boxes)):
                 color = assigned_colors[i]
                 self.add_box(boxes[i], color)
@@ -149,7 +151,8 @@ class SingleImageViz:
                 text_pos = (x0, y1)
 
         height_ratio = (y1 - y0) / np.sqrt(self.height * self.width)
-        lighter_color = self._change_color_brightness(color, brightness_factor=0.7)
+        lighter_color = self._change_color_brightness(
+            color, brightness_factor=0.7)
         font_size = np.clip((height_ratio - 0.02) / 0.08 + 1, 1.2, 2)
         font_size *= 0.75 * self.font_size
 
@@ -217,7 +220,8 @@ class SingleImageViz:
             if labels is None:
                 labels = ["{:.0f}%".format(s * 100) for s in scores]
             else:
-                labels = ["{} {:.0f}%".format(li, s * 100) for li, s in zip(labels, scores)]
+                labels = ["{} {:.0f}%".format(li, s * 100)
+                          for li, s in zip(labels, scores)]
         return labels
 
     def _random_color(self, maximum=255):
@@ -248,7 +252,8 @@ class SingleImageViz:
         try:
             import numexpr as ne  # fuse them with numexpr
 
-            visualized_image = ne.evaluate("img * (1 - alpha / 255.0) + rgb * (alpha / 255.0)")
+            visualized_image = ne.evaluate(
+                "img * (1 - alpha / 255.0) + rgb * (alpha / 255.0)")
         except ImportError:
             alpha = alpha.astype("float32") / 255.0
             visualized_image = img * (1 - alpha) + rgb * alpha
@@ -259,10 +264,12 @@ class SingleImageViz:
         assert brightness_factor >= -1.0 and brightness_factor <= 1.0
         color = mplc.to_rgb(color)
         polygon_color = colorsys.rgb_to_hls(*mplc.to_rgb(color))
-        modified_lightness = polygon_color[1] + (brightness_factor * polygon_color[1])
+        modified_lightness = polygon_color[1] + \
+            (brightness_factor * polygon_color[1])
         modified_lightness = 0.0 if modified_lightness < 0.0 else modified_lightness
         modified_lightness = 1.0 if modified_lightness > 1.0 else modified_lightness
-        modified_color = colorsys.hls_to_rgb(polygon_color[0], modified_lightness, polygon_color[2])
+        modified_color = colorsys.hls_to_rgb(
+            polygon_color[0], modified_lightness, polygon_color[2])
         return modified_color
 
 

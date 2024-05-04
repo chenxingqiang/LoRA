@@ -56,11 +56,14 @@ class TestTokenizationBart(TokenizerTesterMixin, unittest.TestCase):
             "<unk>",
         ]
         vocab_tokens = dict(zip(vocab, range(len(vocab))))
-        merges = ["#version: 0.2", "\u0120 l", "\u0120l o", "\u0120lo w", "e r", ""]
+        merges = ["#version: 0.2", "\u0120 l",
+                  "\u0120l o", "\u0120lo w", "e r", ""]
         self.special_tokens_map = {"unk_token": "<unk>"}
 
-        self.vocab_file = os.path.join(self.tmpdirname, VOCAB_FILES_NAMES["vocab_file"])
-        self.merges_file = os.path.join(self.tmpdirname, VOCAB_FILES_NAMES["merges_file"])
+        self.vocab_file = os.path.join(
+            self.tmpdirname, VOCAB_FILES_NAMES["vocab_file"])
+        self.merges_file = os.path.join(
+            self.tmpdirname, VOCAB_FILES_NAMES["merges_file"])
         with open(self.vocab_file, "w", encoding="utf-8") as fp:
             fp.write(json.dumps(vocab_tokens) + "\n")
         with open(self.merges_file, "w", encoding="utf-8") as fp:
@@ -87,11 +90,13 @@ class TestTokenizationBart(TokenizerTesterMixin, unittest.TestCase):
 
     @require_torch
     def test_prepare_batch(self):
-        src_text = ["A long paragraph for summarization.", "Another paragraph for summarization."]
+        src_text = ["A long paragraph for summarization.",
+                    "Another paragraph for summarization."]
         expected_src_tokens = [0, 250, 251, 17818, 13, 39186, 1938, 4, 2]
 
         for tokenizer in [self.default_tokenizer, self.default_tokenizer_fast]:
-            batch = tokenizer(src_text, max_length=len(expected_src_tokens), padding=True, return_tensors="pt")
+            batch = tokenizer(src_text, max_length=len(
+                expected_src_tokens), padding=True, return_tensors="pt")
             self.assertIsInstance(batch, BatchEncoding)
 
             self.assertEqual((2, 9), batch.input_ids.shape)
@@ -102,7 +107,8 @@ class TestTokenizationBart(TokenizerTesterMixin, unittest.TestCase):
 
     @require_torch
     def test_prepare_batch_empty_target_text(self):
-        src_text = ["A long paragraph for summarization.", "Another paragraph for summarization."]
+        src_text = ["A long paragraph for summarization.",
+                    "Another paragraph for summarization."]
         for tokenizer in [self.default_tokenizer, self.default_tokenizer_fast]:
             batch = tokenizer(src_text, padding=True, return_tensors="pt")
             # check if input_ids are returned and no labels
@@ -119,7 +125,8 @@ class TestTokenizationBart(TokenizerTesterMixin, unittest.TestCase):
         ]
         for tokenizer in [self.default_tokenizer, self.default_tokenizer_fast]:
             with tokenizer.as_target_tokenizer():
-                targets = tokenizer(tgt_text, max_length=32, padding="max_length", return_tensors="pt")
+                targets = tokenizer(tgt_text, max_length=32,
+                                    padding="max_length", return_tensors="pt")
             self.assertEqual(32, targets["input_ids"].shape[1])
 
     @require_torch
@@ -144,10 +151,14 @@ class TestTokenizationBart(TokenizerTesterMixin, unittest.TestCase):
                 targets = tokenizer(tgt_text, return_tensors="pt")
             input_ids = inputs["input_ids"]
             labels = targets["input_ids"]
-            self.assertTrue((input_ids[:, 0] == tokenizer.bos_token_id).all().item())
-            self.assertTrue((labels[:, 0] == tokenizer.bos_token_id).all().item())
-            self.assertTrue((input_ids[:, -1] == tokenizer.eos_token_id).all().item())
-            self.assertTrue((labels[:, -1] == tokenizer.eos_token_id).all().item())
+            self.assertTrue(
+                (input_ids[:, 0] == tokenizer.bos_token_id).all().item())
+            self.assertTrue(
+                (labels[:, 0] == tokenizer.bos_token_id).all().item())
+            self.assertTrue(
+                (input_ids[:, -1] == tokenizer.eos_token_id).all().item())
+            self.assertTrue(
+                (labels[:, -1] == tokenizer.eos_token_id).all().item())
 
     def test_pretokenized_inputs(self):
         pass
@@ -155,31 +166,44 @@ class TestTokenizationBart(TokenizerTesterMixin, unittest.TestCase):
     def test_embeded_special_tokens(self):
         for tokenizer, pretrained_name, kwargs in self.tokenizers_list:
             with self.subTest("{} ({})".format(tokenizer.__class__.__name__, pretrained_name)):
-                tokenizer_r = self.rust_tokenizer_class.from_pretrained(pretrained_name, **kwargs)
-                tokenizer_p = self.tokenizer_class.from_pretrained(pretrained_name, **kwargs)
+                tokenizer_r = self.rust_tokenizer_class.from_pretrained(
+                    pretrained_name, **kwargs)
+                tokenizer_p = self.tokenizer_class.from_pretrained(
+                    pretrained_name, **kwargs)
                 sentence = "A, <mask> AllenNLP sentence."
-                tokens_r = tokenizer_r.encode_plus(sentence, add_special_tokens=True, return_token_type_ids=True)
-                tokens_p = tokenizer_p.encode_plus(sentence, add_special_tokens=True, return_token_type_ids=True)
+                tokens_r = tokenizer_r.encode_plus(
+                    sentence, add_special_tokens=True, return_token_type_ids=True)
+                tokens_p = tokenizer_p.encode_plus(
+                    sentence, add_special_tokens=True, return_token_type_ids=True)
 
                 # token_type_ids should put 0 everywhere
-                self.assertEqual(sum(tokens_r["token_type_ids"]), sum(tokens_p["token_type_ids"]))
+                self.assertEqual(sum(tokens_r["token_type_ids"]), sum(
+                    tokens_p["token_type_ids"]))
 
                 # attention_mask should put 1 everywhere, so sum over length should be 1
                 self.assertEqual(
-                    sum(tokens_r["attention_mask"]) / len(tokens_r["attention_mask"]),
-                    sum(tokens_p["attention_mask"]) / len(tokens_p["attention_mask"]),
+                    sum(tokens_r["attention_mask"]) /
+                    len(tokens_r["attention_mask"]),
+                    sum(tokens_p["attention_mask"]) /
+                    len(tokens_p["attention_mask"]),
                 )
 
-                tokens_r_str = tokenizer_r.convert_ids_to_tokens(tokens_r["input_ids"])
-                tokens_p_str = tokenizer_p.convert_ids_to_tokens(tokens_p["input_ids"])
+                tokens_r_str = tokenizer_r.convert_ids_to_tokens(
+                    tokens_r["input_ids"])
+                tokens_p_str = tokenizer_p.convert_ids_to_tokens(
+                    tokens_p["input_ids"])
 
                 # Rust correctly handles the space before the mask while python doesnt
-                self.assertSequenceEqual(tokens_p["input_ids"], [0, 250, 6, 50264, 3823, 487, 21992, 3645, 4, 2])
-                self.assertSequenceEqual(tokens_r["input_ids"], [0, 250, 6, 50264, 3823, 487, 21992, 3645, 4, 2])
+                self.assertSequenceEqual(tokens_p["input_ids"], [
+                                         0, 250, 6, 50264, 3823, 487, 21992, 3645, 4, 2])
+                self.assertSequenceEqual(tokens_r["input_ids"], [
+                                         0, 250, 6, 50264, 3823, 487, 21992, 3645, 4, 2])
 
                 self.assertSequenceEqual(
-                    tokens_p_str, ["<s>", "A", ",", "<mask>", "ĠAllen", "N", "LP", "Ġsentence", ".", "</s>"]
+                    tokens_p_str, ["<s>", "A", ",", "<mask>",
+                                   "ĠAllen", "N", "LP", "Ġsentence", ".", "</s>"]
                 )
                 self.assertSequenceEqual(
-                    tokens_r_str, ["<s>", "A", ",", "<mask>", "ĠAllen", "N", "LP", "Ġsentence", ".", "</s>"]
+                    tokens_r_str, ["<s>", "A", ",", "<mask>",
+                                   "ĠAllen", "N", "LP", "Ġsentence", ".", "</s>"]
                 )

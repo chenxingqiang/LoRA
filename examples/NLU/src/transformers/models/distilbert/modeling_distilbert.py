@@ -72,7 +72,8 @@ DISTILBERT_PRETRAINED_MODEL_ARCHIVE_LIST = [
 
 
 def create_sinusoidal_embeddings(n_pos, dim, out):
-    position_enc = np.array([[pos / np.power(10000, 2 * (j // 2) / dim) for j in range(dim)] for pos in range(n_pos)])
+    position_enc = np.array([[pos / np.power(10000, 2 * (j // 2) / dim)
+                            for j in range(dim)] for pos in range(n_pos)])
     out.requires_grad = False
     out[:, 0::2] = torch.FloatTensor(np.sin(position_enc[:, 0::2]))
     out[:, 1::2] = torch.FloatTensor(np.cos(position_enc[:, 1::2]))
@@ -82,8 +83,10 @@ def create_sinusoidal_embeddings(n_pos, dim, out):
 class Embeddings(nn.Module):
     def __init__(self, config):
         super().__init__()
-        self.word_embeddings = nn.Embedding(config.vocab_size, config.dim, padding_idx=config.pad_token_id)
-        self.position_embeddings = nn.Embedding(config.max_position_embeddings, config.dim)
+        self.word_embeddings = nn.Embedding(
+            config.vocab_size, config.dim, padding_idx=config.pad_token_id)
+        self.position_embeddings = nn.Embedding(
+            config.max_position_embeddings, config.dim)
         if config.sinusoidal_pos_embds:
             create_sinusoidal_embeddings(
                 n_pos=config.max_position_embeddings, dim=config.dim, out=self.position_embeddings.weight
@@ -101,13 +104,18 @@ class Embeddings(nn.Module):
         embeddings)
         """
         seq_length = input_ids.size(1)
-        position_ids = torch.arange(seq_length, dtype=torch.long, device=input_ids.device)  # (max_seq_length)
-        position_ids = position_ids.unsqueeze(0).expand_as(input_ids)  # (bs, max_seq_length)
+        position_ids = torch.arange(
+            seq_length, dtype=torch.long, device=input_ids.device)  # (max_seq_length)
+        position_ids = position_ids.unsqueeze(
+            0).expand_as(input_ids)  # (bs, max_seq_length)
 
-        word_embeddings = self.word_embeddings(input_ids)  # (bs, max_seq_length, dim)
-        position_embeddings = self.position_embeddings(position_ids)  # (bs, max_seq_length, dim)
+        word_embeddings = self.word_embeddings(
+            input_ids)  # (bs, max_seq_length, dim)
+        position_embeddings = self.position_embeddings(
+            position_ids)  # (bs, max_seq_length, dim)
 
-        embeddings = word_embeddings + position_embeddings  # (bs, max_seq_length, dim)
+        embeddings = word_embeddings + \
+            position_embeddings  # (bs, max_seq_length, dim)
         embeddings = self.LayerNorm(embeddings)  # (bs, max_seq_length, dim)
         embeddings = self.dropout(embeddings)  # (bs, max_seq_length, dim)
         return embeddings
@@ -126,7 +134,8 @@ class MultiHeadSelfAttention(nn.Module):
         self.q_lin = nn.Linear(in_features=config.dim, out_features=config.dim)
         self.k_lin = nn.Linear(in_features=config.dim, out_features=config.dim)
         self.v_lin = nn.Linear(in_features=config.dim, out_features=config.dim)
-        self.out_lin = nn.Linear(in_features=config.dim, out_features=config.dim)
+        self.out_lin = nn.Linear(
+            in_features=config.dim, out_features=config.dim)
 
         self.pruned_heads = set()
 
@@ -134,7 +143,8 @@ class MultiHeadSelfAttention(nn.Module):
         attention_head_size = self.dim // self.n_heads
         if len(heads) == 0:
             return
-        heads, index = find_pruneable_heads_and_indices(heads, self.n_heads, attention_head_size, self.pruned_heads)
+        heads, index = find_pruneable_heads_and_indices(
+            heads, self.n_heads, attention_head_size, self.pruned_heads)
         # Prune linear layers
         self.q_lin = prune_linear_layer(self.q_lin, index)
         self.k_lin = prune_linear_layer(self.k_lin, index)
@@ -178,19 +188,25 @@ class MultiHeadSelfAttention(nn.Module):
         k = shape(self.k_lin(key))  # (bs, n_heads, k_length, dim_per_head)
         v = shape(self.v_lin(value))  # (bs, n_heads, k_length, dim_per_head)
 
-        q = q / math.sqrt(dim_per_head)  # (bs, n_heads, q_length, dim_per_head)
-        scores = torch.matmul(q, k.transpose(2, 3))  # (bs, n_heads, q_length, k_length)
-        mask = (mask == 0).view(mask_reshp).expand_as(scores)  # (bs, n_heads, q_length, k_length)
-        scores.masked_fill_(mask, -float("inf"))  # (bs, n_heads, q_length, k_length)
+        # (bs, n_heads, q_length, dim_per_head)
+        q = q / math.sqrt(dim_per_head)
+        # (bs, n_heads, q_length, k_length)
+        scores = torch.matmul(q, k.transpose(2, 3))
+        mask = (mask == 0).view(mask_reshp).expand_as(
+            scores)  # (bs, n_heads, q_length, k_length)
+        # (bs, n_heads, q_length, k_length)
+        scores.masked_fill_(mask, -float("inf"))
 
-        weights = nn.Softmax(dim=-1)(scores)  # (bs, n_heads, q_length, k_length)
+        # (bs, n_heads, q_length, k_length)
+        weights = nn.Softmax(dim=-1)(scores)
         weights = self.dropout(weights)  # (bs, n_heads, q_length, k_length)
 
         # Mask heads if we want to
         if head_mask is not None:
             weights = weights * head_mask
 
-        context = torch.matmul(weights, v)  # (bs, n_heads, q_length, dim_per_head)
+        # (bs, n_heads, q_length, dim_per_head)
+        context = torch.matmul(weights, v)
         context = unshape(context)  # (bs, q_length, dim)
         context = self.out_lin(context)  # (bs, q_length, dim)
 
@@ -206,8 +222,10 @@ class FFN(nn.Module):
         self.dropout = nn.Dropout(p=config.dropout)
         self.chunk_size_feed_forward = config.chunk_size_feed_forward
         self.seq_len_dim = 1
-        self.lin1 = nn.Linear(in_features=config.dim, out_features=config.hidden_dim)
-        self.lin2 = nn.Linear(in_features=config.hidden_dim, out_features=config.dim)
+        self.lin1 = nn.Linear(in_features=config.dim,
+                              out_features=config.hidden_dim)
+        self.lin2 = nn.Linear(
+            in_features=config.hidden_dim, out_features=config.dim)
         assert config.activation in ["relu", "gelu"], "activation ({}) must be in ['relu', 'gelu']".format(
             config.activation
         )
@@ -231,10 +249,12 @@ class TransformerBlock(nn.Module):
         assert config.dim % config.n_heads == 0
 
         self.attention = MultiHeadSelfAttention(config)
-        self.sa_layer_norm = nn.LayerNorm(normalized_shape=config.dim, eps=1e-12)
+        self.sa_layer_norm = nn.LayerNorm(
+            normalized_shape=config.dim, eps=1e-12)
 
         self.ffn = FFN(config)
-        self.output_layer_norm = nn.LayerNorm(normalized_shape=config.dim, eps=1e-12)
+        self.output_layer_norm = nn.LayerNorm(
+            normalized_shape=config.dim, eps=1e-12)
 
     def forward(self, x, attn_mask=None, head_mask=None, output_attentions=False):
         """
@@ -256,7 +276,8 @@ class TransformerBlock(nn.Module):
             output_attentions=output_attentions,
         )
         if output_attentions:
-            sa_output, sa_weights = sa_output  # (bs, seq_length, dim), (bs, n_heads, seq_length, seq_length)
+            # (bs, seq_length, dim), (bs, n_heads, seq_length, seq_length)
+            sa_output, sa_weights = sa_output
         else:  # To handle these `output_attentions` or `output_hidden_states` cases returning tuples
             assert type(sa_output) == tuple
             sa_output = sa_output[0]
@@ -264,7 +285,8 @@ class TransformerBlock(nn.Module):
 
         # Feed Forward Network
         ffn_output = self.ffn(sa_output)  # (bs, seq_length, dim)
-        ffn_output = self.output_layer_norm(ffn_output + sa_output)  # (bs, seq_length, dim)
+        ffn_output = self.output_layer_norm(
+            ffn_output + sa_output)  # (bs, seq_length, dim)
 
         output = (ffn_output,)
         if output_attentions:
@@ -278,7 +300,8 @@ class Transformer(nn.Module):
         self.n_layers = config.n_layers
 
         layer = TransformerBlock(config)
-        self.layer = nn.ModuleList([copy.deepcopy(layer) for _ in range(config.n_layers)])
+        self.layer = nn.ModuleList([copy.deepcopy(layer)
+                                   for _ in range(config.n_layers)])
 
     def forward(
         self, x, attn_mask=None, head_mask=None, output_attentions=False, output_hidden_states=False, return_dict=None
@@ -306,7 +329,8 @@ class Transformer(nn.Module):
                 all_hidden_states = all_hidden_states + (hidden_state,)
 
             layer_outputs = layer_module(
-                x=hidden_state, attn_mask=attn_mask, head_mask=head_mask[i], output_attentions=output_attentions
+                x=hidden_state, attn_mask=attn_mask, head_mask=head_mask[
+                    i], output_attentions=output_attentions
             )
             hidden_state = layer_outputs[-1]
 
@@ -344,11 +368,13 @@ class DistilBertPreTrainedModel(PreTrainedModel):
         if isinstance(module, nn.Linear):
             # Slightly different from the TF version which uses truncated_normal for initialization
             # cf https://github.com/pytorch/pytorch/pull/5617
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            module.weight.data.normal_(
+                mean=0.0, std=self.config.initializer_range)
             if module.bias is not None:
                 module.bias.data.zero_()
         elif isinstance(module, nn.Embedding):
-            module.weight.data.normal_(mean=0.0, std=self.config.initializer_range)
+            module.weight.data.normal_(
+                mean=0.0, std=self.config.initializer_range)
             if module.padding_idx is not None:
                 module.weight.data[module.padding_idx].zero_()
         elif isinstance(module, nn.LayerNorm):
@@ -462,21 +488,25 @@ class DistilBertModel(DistilBertPreTrainedModel):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
 
         if input_ids is not None and inputs_embeds is not None:
-            raise ValueError("You cannot specify both input_ids and inputs_embeds at the same time")
+            raise ValueError(
+                "You cannot specify both input_ids and inputs_embeds at the same time")
         elif input_ids is not None:
             input_shape = input_ids.size()
         elif inputs_embeds is not None:
             input_shape = inputs_embeds.size()[:-1]
         else:
-            raise ValueError("You have to specify either input_ids or inputs_embeds")
+            raise ValueError(
+                "You have to specify either input_ids or inputs_embeds")
 
         device = input_ids.device if input_ids is not None else inputs_embeds.device
 
         if attention_mask is None:
-            attention_mask = torch.ones(input_shape, device=device)  # (bs, seq_length)
+            attention_mask = torch.ones(
+                input_shape, device=device)  # (bs, seq_length)
 
         # Prepare head mask if needed
-        head_mask = self.get_head_mask(head_mask, self.config.num_hidden_layers)
+        head_mask = self.get_head_mask(
+            head_mask, self.config.num_hidden_layers)
 
         if inputs_embeds is None:
             inputs_embeds = self.embeddings(input_ids)  # (bs, seq_length, dim)
@@ -549,14 +579,18 @@ class DistilBertForMaskedLM(DistilBertPreTrainedModel):
             return_dict=return_dict,
         )
         hidden_states = dlbrt_output[0]  # (bs, seq_length, dim)
-        prediction_logits = self.vocab_transform(hidden_states)  # (bs, seq_length, dim)
+        prediction_logits = self.vocab_transform(
+            hidden_states)  # (bs, seq_length, dim)
         prediction_logits = gelu(prediction_logits)  # (bs, seq_length, dim)
-        prediction_logits = self.vocab_layer_norm(prediction_logits)  # (bs, seq_length, dim)
-        prediction_logits = self.vocab_projector(prediction_logits)  # (bs, seq_length, vocab_size)
+        prediction_logits = self.vocab_layer_norm(
+            prediction_logits)  # (bs, seq_length, dim)
+        prediction_logits = self.vocab_projector(
+            prediction_logits)  # (bs, seq_length, vocab_size)
 
         mlm_loss = None
         if labels is not None:
-            mlm_loss = self.mlm_loss_fct(prediction_logits.view(-1, prediction_logits.size(-1)), labels.view(-1))
+            mlm_loss = self.mlm_loss_fct(
+                prediction_logits.view(-1, prediction_logits.size(-1)), labels.view(-1))
 
         if not return_dict:
             output = (prediction_logits,) + dlbrt_output[1:]
@@ -638,7 +672,8 @@ class DistilBertForSequenceClassification(DistilBertPreTrainedModel):
                 loss = loss_fct(logits.view(-1), labels.view(-1))
             else:
                 loss_fct = nn.CrossEntropyLoss()
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+                loss = loss_fct(
+                    logits.view(-1, self.num_labels), labels.view(-1))
 
         if not return_dict:
             output = (logits,) + distilbert_output[1:]
@@ -814,11 +849,13 @@ class DistilBertForTokenClassification(DistilBertPreTrainedModel):
                 active_loss = attention_mask.view(-1) == 1
                 active_logits = logits.view(-1, self.num_labels)
                 active_labels = torch.where(
-                    active_loss, labels.view(-1), torch.tensor(loss_fct.ignore_index).type_as(labels)
+                    active_loss, labels.view(-1), torch.tensor(
+                        loss_fct.ignore_index).type_as(labels)
                 )
                 loss = loss_fct(active_logits, active_labels)
             else:
-                loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+                loss = loss_fct(
+                    logits.view(-1, self.num_labels), labels.view(-1))
 
         if not return_dict:
             output = (logits,) + outputs[1:]
@@ -851,7 +888,8 @@ class DistilBertForMultipleChoice(DistilBertPreTrainedModel):
         self.init_weights()
 
     @add_start_docstrings_to_model_forward(
-        DISTILBERT_INPUTS_DOCSTRING.format("batch_size, num_choices, sequence_length")
+        DISTILBERT_INPUTS_DOCSTRING.format(
+            "batch_size, num_choices, sequence_length")
     )
     @replace_return_docstrings(output_type=MultipleChoiceModelOutput, config_class=_CONFIG_FOR_DOC)
     def forward(
@@ -896,10 +934,13 @@ class DistilBertForMultipleChoice(DistilBertPreTrainedModel):
         return_dict = return_dict if return_dict is not None else self.config.use_return_dict
         num_choices = input_ids.shape[1] if input_ids is not None else inputs_embeds.shape[1]
 
-        input_ids = input_ids.view(-1, input_ids.size(-1)) if input_ids is not None else None
-        attention_mask = attention_mask.view(-1, attention_mask.size(-1)) if attention_mask is not None else None
+        input_ids = input_ids.view(-1, input_ids.size(-1)
+                                   ) if input_ids is not None else None
+        attention_mask = attention_mask.view(
+            -1, attention_mask.size(-1)) if attention_mask is not None else None
         inputs_embeds = (
-            inputs_embeds.view(-1, inputs_embeds.size(-2), inputs_embeds.size(-1))
+            inputs_embeds.view(-1, inputs_embeds.size(-2),
+                               inputs_embeds.size(-1))
             if inputs_embeds is not None
             else None
         )
@@ -916,7 +957,8 @@ class DistilBertForMultipleChoice(DistilBertPreTrainedModel):
 
         hidden_state = outputs[0]  # (bs * num_choices, seq_len, dim)
         pooled_output = hidden_state[:, 0]  # (bs * num_choices, dim)
-        pooled_output = self.pre_classifier(pooled_output)  # (bs * num_choices, dim)
+        pooled_output = self.pre_classifier(
+            pooled_output)  # (bs * num_choices, dim)
         pooled_output = nn.ReLU()(pooled_output)  # (bs * num_choices, dim)
         pooled_output = self.dropout(pooled_output)  # (bs * num_choices, dim)
         logits = self.classifier(pooled_output)  # (bs * num_choices, 1)

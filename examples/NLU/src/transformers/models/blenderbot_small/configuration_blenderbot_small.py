@@ -164,7 +164,8 @@ class BlenderbotSmallConfig(PretrainedConfig):
         self.use_cache = use_cache
         self.num_hidden_layers = encoder_layers
         self.gradient_checkpointing = gradient_checkpointing
-        self.scale_embedding = scale_embedding  # scale factor will be sqrt(d_model) if True
+        # scale factor will be sqrt(d_model) if True
+        self.scale_embedding = scale_embedding
 
     @property
     def num_attention_heads(self) -> int:

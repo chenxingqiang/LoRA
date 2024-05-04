@@ -107,7 +107,8 @@ class Text2TextGenerationPipeline(Pipeline):
             )
 
         with self.device_placement():
-            inputs = self._parse_and_tokenize(*args, padding=padding, truncation=truncation)
+            inputs = self._parse_and_tokenize(
+                *args, padding=padding, truncation=truncation)
 
             if self.framework == "pt":
                 inputs = self.ensure_tensor_on_device(**inputs)
@@ -115,8 +116,10 @@ class Text2TextGenerationPipeline(Pipeline):
             elif self.framework == "tf":
                 input_length = tf.shape(inputs["input_ids"])[-1].numpy()
 
-            min_length = generate_kwargs.get("min_length", self.model.config.min_length)
-            max_length = generate_kwargs.get("max_length", self.model.config.max_length)
+            min_length = generate_kwargs.get(
+                "min_length", self.model.config.min_length)
+            max_length = generate_kwargs.get(
+                "max_length", self.model.config.max_length)
             self.check_inputs(input_length, min_length, max_length)
 
             generations = self.model.generate(
